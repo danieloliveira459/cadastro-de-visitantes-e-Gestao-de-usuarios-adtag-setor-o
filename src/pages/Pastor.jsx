@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react"; 
 import { FaArrowLeft, FaUsers, FaTrash, FaFilePdf } from "react-icons/fa6";
 import jsPDF from "jspdf";
-import "jspdf-autotable"; // IMPORTANTE
+import autoTable from "jspdf-autotable"; // ✅ Import correto
 import "./Pastor.css";
 
 export default function Pastor() {
   const navigate = useNavigate();
-
   const [visitantes, setVisitantes] = useState([]);
 
   // CARREGA OS DADOS
@@ -41,13 +40,9 @@ export default function Pastor() {
     doc.setTextColor(220, 38, 38);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-
-    doc.text(
-      "Visitantes Cadastrados",
-      doc.internal.pageSize.getWidth() / 2,
-      15,
-      { align: "center" }
-    );
+    doc.text("Visitantes Cadastrados", doc.internal.pageSize.getWidth() / 2, 15, {
+      align: "center",
+    });
 
     doc.setFont("helvetica", "normal");
     doc.setTextColor(0, 0, 0);
@@ -60,8 +55,8 @@ export default function Pastor() {
       v.data,
     ]);
 
-    // TABELA
-    doc.autoTable({
+    // ✅ Usa autoTable corretamente
+    autoTable(doc, {
       head: [["Nome", "Cargo", "Telefone", "Igreja", "Data"]],
       body: tabela,
       startY: 20,
@@ -84,7 +79,6 @@ export default function Pastor() {
       <Header />
 
       <div className="pastor-container">
-
         {/* VOLTAR */}
         <div className="back" onClick={() => navigate("/")}>
           <FaArrowLeft />
@@ -92,7 +86,6 @@ export default function Pastor() {
         </div>
 
         <div className="painel">
-
           {/* ESQUERDA */}
           <div className="card">
             <h2 className="card-title">
@@ -107,7 +100,6 @@ export default function Pastor() {
 
             <div className="ultimos">
               <strong>Últimos Cadastros</strong>
-
               {visitantes.length === 0 ? (
                 <p>Nenhum visitante ainda</p>
               ) : (
@@ -135,17 +127,15 @@ export default function Pastor() {
                 alignItems: "center"
               }}
             >
-              
               <h2 className="card-title">
                 <FaUsers className="icon" />
                 Visitantes Cadastrados
               </h2>
 
-              {/*  BOTÃO PDF SEMPRE VISÍVEL */}
+              {/* BOTÃO PDF */}
               <button onClick={gerarPDF} className="btn-pdf">
                 <FaFilePdf /> Gerar PDF
               </button>
-
             </div>
 
             <span>Total: {visitantes.length}</span>
@@ -167,7 +157,6 @@ export default function Pastor() {
                     <th>Ações</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {visitantes.map((v, i) => (
                     <tr key={i}>
@@ -188,7 +177,6 @@ export default function Pastor() {
               </table>
             )}
           </div>
-
         </div>
       </div>
     </>
