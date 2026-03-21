@@ -12,7 +12,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 20px;
+  margin-block-end: 20px;
   cursor: pointer;
   color: #374151;
   align-self: flex-start; 
@@ -23,8 +23,8 @@
   display: grid;
   grid-template-columns: 1fr 2fr;
   gap: 20px;
-  width: 100%;
-  max-width: 1200px; 
+  inline-size: 100%;
+  max-inline-size: 1200px; 
 }
 
 /* CARD ( ISOLADO) */
@@ -33,8 +33,8 @@
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-  width: 85%;          
-  max-width: none;      
+  inline-size: 85%;          
+  max-inline-size: none;      
 }
 
 /* HEADER CARD */
@@ -61,7 +61,7 @@
 .pastor-container .stats-box h1 {
   color: #e11d1d;
   font-size: 32px;
-  margin-top: 5px;
+  margin-block-start: 5px;
 }
 
 /* ÚLTIMOS */
@@ -74,7 +74,7 @@
 .pastor-container .ultimo-item {
   display: flex;
   flex-direction: column;
-  margin-bottom: 10px;
+  margin-block-end: 10px;
 }
 
 .pastor-container .ultimo-item strong {
@@ -93,23 +93,23 @@
 
 /* TABELA */
 .pastor-container .tabela {
-  width: 100%;
+  inline-size: 100%;
   border-collapse: collapse;
-  margin-top: 10px;
+  margin-block-end: 10px;
   table-layout: fixed;
 }
 
 .pastor-container .tabela th {
-  text-align: left;
+  text-align: start;
   padding: 10px;
   font-size: 14px;
-  border-bottom: 1px solid #e5e7eb;
+  border-block-end: 1px solid #e5e7eb;
 }
 
 .pastor-container .tabela td {
   padding: 10px;
   font-size: 14px;
-  border-bottom: 1px solid #f1f1f1;
+  border-block-end: 1px solid #f1f1f1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
@@ -119,8 +119,8 @@
 .pastor-container .tabela th:last-child,
 .pastor-container .tabela td:last-child {
   text-align: center;
-  width: 70px;
-  min-width: 70px;
+  inline-size: 70px;
+  min-inline-size: 70px;
 }
 
 /* HOVER */
@@ -147,13 +147,33 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 250px;
+  block-size: 250px;
   color: #6b7280;
   text-align: center;
 }
 
 .pastor-container .link {
   color: #e11d1d;
-  margin-top: 10px;
+  margin-block-start: 10px;
   cursor: pointer;
 }
+
+.btn-pdf {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.btn-pdf.disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+
+}
+/*pdf gerado gerar*/

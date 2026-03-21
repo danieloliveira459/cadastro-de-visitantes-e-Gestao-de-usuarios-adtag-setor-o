@@ -1,7 +1,9 @@
 import Header from "../components/Header";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react"; 
-import { FaArrowLeft, FaUsers, FaTrash } from "react-icons/fa6";
+import { FaArrowLeft, FaUsers, FaTrash, FaFilePdf } from "react-icons/fa6";
+import jsPDF from "jspdf";
+import "jspdf-autotable"; // IMPORTANTE
 import "./Pastor.css";
 
 export default function Pastor() {
@@ -9,7 +11,7 @@ export default function Pastor() {
 
   const [visitantes, setVisitantes] = useState([]);
 
-  // CARREGA OS DADOS COM SEGURANÇA
+  // CARREGA OS DADOS
   useEffect(() => {
     try {
       const dados = JSON.parse(localStorage.getItem("visitantes"));
@@ -26,9 +28,59 @@ export default function Pastor() {
     localStorage.setItem("visitantes", JSON.stringify(novaLista));
   };
 
+  // GERAR PDF
+  const gerarPDF = () => {
+    if (visitantes.length === 0) {
+      alert("Nenhum visitante cadastrado!");
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    // TÍTULO
+    doc.setTextColor(220, 38, 38);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+
+    doc.text(
+      "Visitantes Cadastrados",
+      doc.internal.pageSize.getWidth() / 2,
+      15,
+      { align: "center" }
+    );
+
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(0, 0, 0);
+
+    const tabela = visitantes.map((v) => [
+      v.nome,
+      v.cargo,
+      v.telefone,
+      v.igreja,
+      v.data,
+    ]);
+
+    // TABELA
+    doc.autoTable({
+      head: [["Nome", "Cargo", "Telefone", "Igreja", "Data"]],
+      body: tabela,
+      startY: 20,
+      headStyles: {
+        fillColor: [220, 38, 38],
+        textColor: [255, 255, 255],
+        halign: "center",
+        fontStyle: "bold",
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+    });
+
+    doc.save("visitantes.pdf");
+  };
+
   return (
     <>
-      {/*  HEADER IGUAL AO PROTÓTIPO */}
       <Header />
 
       <div className="pastor-container">
@@ -71,19 +123,32 @@ export default function Pastor() {
                   ))
               )}
             </div>
-
           </div>
 
           {/* DIREITA */}
           <div className="card">
-            <div className="card-header">
+            <div 
+              className="card-header"
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center"
+              }}
+            >
+              
               <h2 className="card-title">
                 <FaUsers className="icon" />
                 Visitantes Cadastrados
               </h2>
 
-              <span>Total: {visitantes.length}</span>
+              {/* 🔥 BOTÃO PDF SEMPRE VISÍVEL */}
+              <button onClick={gerarPDF} className="btn-pdf">
+                <FaFilePdf /> Gerar PDF
+              </button>
+
             </div>
+
+            <span>Total: {visitantes.length}</span>
 
             {visitantes.length === 0 ? (
               <div className="empty">

@@ -1,0 +1,172 @@
+.header {
+  display: flex;
+  align-items: center; 
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: #fff;
+  border-block-end: 1px solid var(--border);
+}
+
+/* LOGO */
+.logo {
+  background: var(--primary);
+  color: #fff;
+  padding: 6px 14px; 
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* TÍTULO */
+.titulo {
+  flex: 1;
+  margin-inline-start: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #374151;
+  letter-spacing: 0.2px;
+}
+
+/* AÇÕES */
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* BOTÃO PRINCIPAL */
+.btn-primary {
+  display: flex; 
+  align-items: center;
+  gap: 8px;
+
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: #c81e1e;
+  transform: translateY(-1px);
+}
+
+/* BOTÃO OUTLINE */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  padding: 10px 16px;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* CONTAINER */
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  block-size: calc(100vh - 80px);
+}
+
+
+/* CARD */
+.card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  inline-size: 420px;
+}
+
+/* TÍTULO DO CARD */
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 18px;
+  font-weight: 800; 
+  color: #111827;
+
+  letter-spacing: 0.2px;
+  margin-block-end: 20px;
+}
+
+/* ÍCONE */
+.icon {
+  color: #e11d1d;
+  font-size: 18px;
+  margin-block-start: 2px;
+}
+
+/* FORM */
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  margin-block-start: 10px;
+  margin-block-end: 5px;
+  font-size: 14px;
+}
+
+/* INPUT MELHORADO */
+input {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: #f9fafb;
+  outline: none;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+input::placeholder {
+  color: #9ca3af;
+}
+
+input:focus {
+  border: 2px solid var(--primary);
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(225, 29, 29, 0.15);
+}
+
+/* BOTÃO FINAL */
+.btn-submit {
+  margin-block-start: 25px;
+  background: var(--primary);
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+
+  font-weight: 600;
+  font-size: 15px;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-submit:hover {
+  background-color: #c81e1e;
+  transform: translateY(-1px);
+}

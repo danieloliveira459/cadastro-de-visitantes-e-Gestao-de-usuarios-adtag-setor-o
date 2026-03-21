@@ -3,14 +3,14 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Header() {
   const navigate = useNavigate();
-  const location = useLocation(); // 🔥 pega rota atual
+  const location = useLocation(); // pega rota atual
 
   const isPastor = location.pathname === "/pastor";
 
   return (
     <header className="header">
       
-      <div className="logo">ADTAG SETOR O</div>
+      <div className="logo">ADTAG Expansão do Setor "O"</div>
 
       <h1 className="titulo">
         Sistema de Cadastro de Visitantes
