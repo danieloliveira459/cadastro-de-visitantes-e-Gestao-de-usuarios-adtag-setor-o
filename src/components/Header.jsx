@@ -10,7 +10,7 @@ export default function Header() {
   return (
     <header className="header">
       
-      <div className="logo">ADTAG Expansão Setor "O"</div>
+      <div className="logo">ADTAG Expansão Setor "Os"</div>
 
       <h1 className="titulo">
         Sistema de Cadastro de Visitantes
