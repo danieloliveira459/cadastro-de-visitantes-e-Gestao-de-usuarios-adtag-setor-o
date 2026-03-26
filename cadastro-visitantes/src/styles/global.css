@@ -1,0 +1,37 @@
+:root {
+    --primary: #e11d1d;
+    --bg: #f3f4f6;
+    --text: #111827;
+    --border: #e5e7eb;
+}
+
+* {
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg);;
+}
+
+input {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background: #f9fafb;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+/* Placeholder mais suave */
+input::placeholder {
+  color: #9ca3af;
+}
+
+/* EFEITO AO CLICAR (FOCO) */
+input:focus {
+  border: 2px solid #e11d1d;
+  background: #fff;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(225, 29, 29, 0.15);
+}

@@ -1,0 +1,179 @@
+/* CONTAINER CENTRALIZADO */
+.pastor-container {
+  display: flex; 
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+}
+
+/* VOLTAR */
+.pastor-container .back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 20px;
+  cursor: pointer;
+  color: #374151;
+  align-self: flex-start; 
+}
+
+/* GRID */
+.pastor-container .painel {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 20px;
+  inline-size: 100%;
+  max-inline-size: 1200px; 
+}
+
+/* CARD ( ISOLADO) */
+.pastor-container .card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  inline-size: 85%;          
+  max-inline-size: none;      
+}
+
+/* HEADER CARD */
+.pastor-container .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ESTATÍSTICAS */
+.pastor-container .stats-box {
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 15px 0;
+}
+
+.pastor-container .stats-box span {
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.pastor-container .stats-box h1 {
+  color: #e11d1d;
+  font-size: 32px;
+  margin-block-start: 5px;
+}
+
+/* ÚLTIMOS */
+.pastor-container .ultimos {
+  background: #f3f4f6;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.pastor-container .ultimo-item {
+  display: flex;
+  flex-direction: column;
+  margin-block-end: 10px;
+}
+
+.pastor-container .ultimo-item strong {
+  font-weight: 600;
+}
+
+.pastor-container .ultimo-item span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.pastor-container .ultimo-item small {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* TABELA */
+.pastor-container .tabela {
+  inline-size: 100%;
+  border-collapse: collapse;
+  margin-block-end: 10px;
+  table-layout: fixed;
+}
+
+.pastor-container .tabela th {
+  text-align: start;
+  padding: 10px;
+  font-size: 14px;
+  border-block-end: 1px solid #e5e7eb;
+}
+
+.pastor-container .tabela td {
+  padding: 10px;
+  font-size: 14px;
+  border-block-end: 1px solid #f1f1f1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+/* COLUNA AÇÕES */
+.pastor-container .tabela th:last-child,
+.pastor-container .tabela td:last-child {
+  text-align: center;
+  inline-size: 70px;
+  min-inline-size: 70px;
+}
+
+/* HOVER */
+.pastor-container .tabela tr:hover {
+  background: #f9fafb;
+}
+
+/* AÇÕES */
+.pastor-container .delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #e11d1d;
+  cursor: pointer;
+}
+
+.pastor-container .delete:hover {
+  opacity: 0.7;
+}
+
+/* EMPTY */
+.pastor-container .empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  block-size: 250px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.pastor-container .link {
+  color: #e11d1d;
+  margin-block-start: 10px;
+  cursor: pointer;
+}
+
+.btn-pdf {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+
+.btn-pdf.disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+
+}
+/*pdf gerado gerar*/
