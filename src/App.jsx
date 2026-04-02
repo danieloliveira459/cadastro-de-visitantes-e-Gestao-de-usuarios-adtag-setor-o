@@ -7,6 +7,8 @@ import Pastor from "./pages/Pastor";
 import Admin from "./pages/Admin";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import AceitaramJesus from "./pages/AceitaramJesus";
+import ResetPassword from "./pages/ResetPasword";
+
 
 // FUNÇÃO SEGURA
 function getUsuario() {
@@ -76,6 +78,12 @@ export default function App() {
               <AceitaramJesus />
             </ProtectedRoute>
           }
+        />
+
+        {/* RESET PASSWORD */}
+        <Route
+          path="/reset"
+          element={<ResetPassword />}
         />
 
       </Routes>

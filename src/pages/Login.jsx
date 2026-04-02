@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { GiChurch } from "react-icons/gi";
 import { useNavigate } from "react-router-dom";
+import { TbUserShare } from "react-icons/tb";
 import "./Login.css";
+
+const API = "http://localhost:3000/auth";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -9,123 +12,159 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
+  const [mensagem, setMensagem] = useState("");
 
-  // 🔥 NOVO STATE
-  const [perfilPreview, setPerfilPreview] = useState("");
-
-  // cadastro
   const [mostrarCadastro, setMostrarCadastro] = useState(false);
   const [nome, setNome] = useState("");
   const [emailCad, setEmailCad] = useState("");
   const [senhaCad, setSenhaCad] = useState("");
   const [nivel, setNivel] = useState("USER");
+  //  NOVO ESTADO PARA EXIBIR NÍVEL DO LOGIN
+  const [nivelUsuario, setNivelUsuario] = useState("");
+  //  BUSCAR NÍVEL PELO EMAIL
+  const buscarNivel = async (emailDigitado) => {
+    if (!emailDigitado) {
+      setNivelUsuario("");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/nivel`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: emailDigitado }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setNivelUsuario(data.nivel);
+      } else {
+        setNivelUsuario("");
+      }
+    } catch (err) {
+      console.log(err);
+      setNivelUsuario("");
+    }
+  };
 
   useEffect(() => {
-    try {
-      const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+    const token = localStorage.getItem("token");
 
-      if (usuarios.length === 0) {
-        const admin = [
-          {
-            id: 1,
-            nome: "Admin",
-            email: "admin@admin.com",
-            senha: "123456",
-            nivel: "ADM",
-          },
-        ];
-        localStorage.setItem("usuarios", JSON.stringify(admin));
-      }
-
-      const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado"));
-
-      if (usuarioLogado) {
-        navigate("/home", { replace: true });
-      }
-    } catch (error) {
-      console.error("Erro no login:", error);
+    if (token) {
+      navigate("/home", { replace: true });
     }
   }, [navigate]);
-
   // LOGIN
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-
-    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
-
-    const usuarioValido = usuarios.find(
-      (u) =>
-        u.email.trim() === email.trim() &&
-        u.senha.trim() === senha.trim()
-    );
-
-    if (usuarioValido) {
-      localStorage.setItem("usuarioLogado", JSON.stringify(usuarioValido));
-      setErro("");
-      navigate("/home", { replace: true });
-    } else {
-      setErro("Email ou senha incorretos");
-    }
-  };
-
-  const abrirCadastro = () => {
-    setMostrarCadastro(!mostrarCadastro);
     setErro("");
-  };
+    setMensagem("");
 
-  const recuperarSenha = () => {
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, senha }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErro(data.erro || "Erro no login");
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
+
+      navigate("/home");
+
+    } catch (err) {
+      setErro("Erro ao conectar com servidor");
+    }
+  };
+  // ESQUECI SENHA (EMAIL REAL)
+
+  const recuperarSenha = async () => {
+    setErro("");
+    setMensagem("");
+
     if (!email) {
-      setErro("Digite seu email para recuperar a senha");
+      setErro("Digite seu email");
       return;
     }
 
-    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
-    const usuario = usuarios.find((u) => u.email === email);
+    try {
+      const res = await fetch(`${API}/forgot`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
 
-    if (!usuario) {
-      setErro("Email não encontrado");
-      return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErro(data.erro || "Erro ao recuperar senha");
+        return;
+      }
+
+      setMensagem(" Email de recuperação enviado! Verifique sua caixa de entrada.");
+
+    } catch (err) {
+      setErro("Erro ao solicitar reset");
     }
-
-    alert(`Sua senha é: ${usuario.senha}`);
   };
+  // CADASTRO
+  const handleCadastrarUsuario = async () => {
+    setErro("");
+    setMensagem("");
 
-  const handleCadastrarUsuario = () => {
     if (!nome || !emailCad || !senhaCad) {
       setErro("Preencha todos os campos");
       return;
     }
 
-    const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+    try {
+      const res = await fetch(`${API}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome,
+          email: emailCad,
+          senha: senhaCad,
+          nivel,
+        }),
+      });
 
-    const existe = usuarios.some((u) => u.email === emailCad);
+      const data = await res.json();
 
-    if (existe) {
-      setErro("Este usuário já existe");
-      return;
+      if (!res.ok) {
+        setErro(data.erro || "Erro ao cadastrar");
+        return;
+      }
+
+      setMensagem(" Usuário cadastrado com sucesso!");
+
+      // limpa campos
+      setNome("");
+      setEmailCad("");
+      setSenhaCad("");
+      setNivel("USER");
+
+      setMostrarCadastro(false);
+
+    } catch {
+      setErro("Erro ao cadastrar");
     }
-
-    const novoUsuario = {
-      id: Date.now(),
-      nome,
-      email: emailCad,
-      senha: senhaCad,
-      nivel,
-    };
-
-    const atualizados = [...usuarios, novoUsuario];
-
-    localStorage.setItem("usuarios", JSON.stringify(atualizados));
-
-    setErro("");
-    setMostrarCadastro(false);
-
-    setNome("");
-    setEmailCad("");
-    setSenhaCad("");
-    setNivel("USER");
-
-    alert("Usuário cadastrado com sucesso!");
   };
 
   return (
@@ -135,29 +174,26 @@ export default function Login() {
         <h2>LOGIN</h2>
 
         {erro && <p className="erro">{erro}</p>}
+        {mensagem && <p className="sucesso">{mensagem}</p>}
 
         <form onSubmit={handleLogin}>
-          
-          {/* 🔥 EMAIL COM DETECÇÃO DE PERFIL */}
           <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => {
-              const valor = e.target.value;
-              setEmail(valor);
-
-              const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
-              const usuario = usuarios.find((u) => u.email === valor);
-
-              if (usuario) {
-                setPerfilPreview(usuario.nivel);
-              } else {
-                setPerfilPreview("");
-              }
+              setEmail(e.target.value);
+              buscarNivel(e.target.value); //  CHAMA FUNÇÃO
             }}
             required
           />
+
+          {/*  EXIBE NÍVEL */}
+          {nivelUsuario && (
+            <p style={{ color: "#e02020", insetBlockStart: "5px" }}>
+             <TbUserShare /> <strong>{nivelUsuario}</strong>
+            </p>
+          )}
 
           <input
             type="password"
@@ -167,37 +203,19 @@ export default function Login() {
             required
           />
 
-          {/*  MOSTRAR PERFIL */}
-          {perfilPreview && (
-            <div style={{
-             insetBlockStart: "10px",
-              padding: "8px",
-              background: "#f15252",
-              borderRadius: "6px",
-              fontSize: "14px"
-            }}>
-              Perfil: <strong>
-                {{
-                  USER: "Usuário",
-                  PASTOR: "Pastor",
-                  VICE: "Vice",
-                  DIRIGENTE: "Dirigente",
-                  ADM: "Administrador"
-                }[perfilPreview]}
-              </strong>
-            </div>
-          )}
-
           <button type="submit" className="btn-login">
             Entrar
           </button>
         </form>
 
-        <button type="button" className="btn-login" onClick={recuperarSenha}>
+        <button className="btn-login" onClick={recuperarSenha}>
           Esqueci minha senha
         </button>
 
-        <button type="button" className="btn-register" onClick={abrirCadastro}>
+        <button
+          className="btn-register"
+          onClick={() => setMostrarCadastro(!mostrarCadastro)}
+        >
           Cadastrar Usuário
         </button>
 
@@ -232,11 +250,7 @@ export default function Login() {
               <option value="ADM">Administrador</option>
             </select>
 
-            <button
-              type="button"
-              onClick={handleCadastrarUsuario}
-              className="btn-login"
-            >
+            <button onClick={handleCadastrarUsuario} className="btn-login">
               Salvar Usuário
             </button>
           </div>

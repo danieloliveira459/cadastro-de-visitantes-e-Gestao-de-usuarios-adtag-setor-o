@@ -1,22 +1,35 @@
 import Header from "../components/Header";
 import "./AceitaramJesus.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaUserSlash } from "react-icons/fa";
 import { PiUserSwitchLight } from "react-icons/pi";
 
 export default function AceitaramJesus() {
-
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [endereco, setEndereco] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
-  const [total, setTotal] = useState(() => {
-    const dados = JSON.parse(localStorage.getItem("aceitaramJesus") || "[]");
-    return dados.length;
-  });
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const handleCadastrar = () => {
+  // BUSCAR TOTAL NO BANCO
+  const fetchDados = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/aceitaramJesus");
+      const data = await res.json();
+      setTotal(data.length);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDados();
+  }, []);
+
+  // CADASTRAR NO BANCO
+  const handleCadastrar = async () => {
     if (!nome) {
       alert("Preencha os campos obrigatórios!");
       return;
@@ -27,24 +40,40 @@ export default function AceitaramJesus() {
       telefone,
       endereco,
       observacoes,
-      data: new Date().toLocaleDateString("pt-BR"),
+      data: new Date().toISOString().split("T")[0],
     };
 
-    const lista = JSON.parse(localStorage.getItem("aceitaramJesus")) || [];
-    lista.push(novo);
+    try {
+      setLoading(true);
 
-    localStorage.setItem("aceitaramJesus", JSON.stringify(lista));
+      const res = await fetch("http://localhost:3000/aceitaramJesus", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(novo),
+      });
 
-    // Atualiza total
-    setTotal(lista.length);
+      if (!res.ok) {
+        throw new Error("Erro ao salvar no banco");
+      }
 
-    // Limpa campos
-    setNome("");
-    setTelefone("");
-    setEndereco("");
-    setObservacoes("");
+      // Atualiza lista/totais após salvar
+      await fetchDados();
 
-    alert("Cadastro realizado com sucesso!");
+      // Limpa campos
+      setNome("");
+      setTelefone("");
+      setEndereco("");
+      setObservacoes("");
+
+      alert("Cadastro realizado com sucesso!");
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao cadastrar!");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -56,7 +85,9 @@ export default function AceitaramJesus() {
 
           {/* FORMULÁRIO */}
           <div className="card">
-            <h2><PiUserSwitchLight color="#e02020" /> Cadastro de quem aceitou Jesus</h2>
+            <h2>
+              <PiUserSwitchLight color="#e02020" /> Cadastro de quem aceitou Jesus
+            </h2>
 
             <label>Nome *</label>
             <input
@@ -89,14 +120,20 @@ export default function AceitaramJesus() {
               onChange={(e) => setObservacoes(e.target.value)}
             />
 
-            <button className="btn-cadastrar" onClick={handleCadastrar}>
-              Cadastrar 
+            <button
+              className="btn-cadastrar"
+              onClick={handleCadastrar}
+              disabled={loading}
+            >
+              {loading ? "Cadastrando..." : "Cadastrar"}
             </button>
           </div>
 
           {/* LADO DIREITO */}
           <div className="card">
-            <h2><PiUserSwitchLight color="#e02020" /> Informações</h2>
+            <h2>
+              <PiUserSwitchLight color="#e02020" /> Informações
+            </h2>
 
             <div className="alert">
               <FaUserSlash color="#e02020" />

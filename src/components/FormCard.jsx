@@ -1,61 +1,62 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import { FaUserPlus } from "react-icons/fa6";
 
-// FUNÇÃO SEGURA PARA PEGAR VISITANTES
-function getVisitantes() {
-  try {
-    const data = localStorage.getItem("visitantes");
-
-    if (!data || data === "undefined") return [];
-
-    return JSON.parse(data);
-  } catch (error) {
-    console.error("Erro ao ler visitantes:", error);
-    return [];
-  }
-}
-
 export default function FormCard() {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const [nome, setNome] = useState("");
-  const [cargo, setCargo] = useState("");
+  const [funcao, setFuncao] = useState("");
   const [telefone, setTelefone] = useState("");
   const [igreja, setIgreja] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     // validação simples
-    if (!nome || !cargo || !telefone || !igreja) {
+    if (!nome || !funcao || !telefone || !igreja) {
       alert("Preencha todos os campos!");
       return;
     }
 
-    const visitante = {
-      nome,
-      cargo,
-      telefone,
-      igreja,
-      data: new Date().toLocaleString(),
-    };
+    try {
+      setLoading(true);
 
-    // 🔥 USANDO FUNÇÃO SEGURA
-    const lista = getVisitantes();
+      const response = await fetch("http://localhost:3000/visitantes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome,
+          funcao,
+          telefone,
+          igreja,
+          data: new Date().toLocaleString(),
+        }),
+      });
 
-    lista.push(visitante);
+      if (!response.ok) {
+        throw new Error("Erro ao salvar no banco");
+      }
 
-    localStorage.setItem("visitantes", JSON.stringify(lista));
+      alert("Visitante cadastrado com sucesso!");
 
-    // REDIRECIONA PRO PAINEL
-    navigate("/pastor");
+      // limpar campos
+      setNome("");
+      setFuncao("");
+      setTelefone("");
+      setIgreja("");
 
-    // limpar campos
-    setNome("");
-    setCargo("");
-    setTelefone("");
-    setIgreja("");
+      // redireciona
+      navigate("/pastor");
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao cadastrar visitante");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -66,7 +67,7 @@ export default function FormCard() {
       </h2>
 
       <form onSubmit={handleSubmit}>
-        <label>Nome </label>
+        <label>Nome</label>
         <input
           placeholder="Ex: Carlos"
           value={nome}
@@ -76,8 +77,8 @@ export default function FormCard() {
         <label>Função/ND</label>
         <input
           placeholder="Ex: Membro, Pastor, Líder, etc."
-          value={cargo}
-          onChange={(e) => setCargo(e.target.value)}
+          value={funcao}
+          onChange={(e) => setFuncao(e.target.value)}
         />
 
         <label>Telefone</label>
@@ -87,15 +88,15 @@ export default function FormCard() {
           onChange={(e) => setTelefone(e.target.value)}
         />
 
-        <label>Igreja/ Visitando, Frequentando</label>
+        <label>Igreja / Visitando</label>
         <input
           placeholder="Ex: Igreja do Visitante"
           value={igreja}
           onChange={(e) => setIgreja(e.target.value)}
         />
 
-        <button className="btn-submit" type="submit">
-          Cadastrar Visitante
+        <button className="btn-submit" type="submit" disabled={loading}>
+          {loading ? "Cadastrando..." : "Cadastrar Visitante"}
         </button>
       </form>
     </div>

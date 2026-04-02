@@ -7,125 +7,216 @@ import { PiUserSwitchLight } from "react-icons/pi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./Pastor.css";
+const API = "http://localhost:3000";
 
 export default function Pastor() {
   const navigate = useNavigate();
+
   const [visitantes, setVisitantes] = useState([]);
   const [avisos, setAvisos] = useState([]);
   const [programacoes, setProgramacoes] = useState([]);
+  const [aceitaramJesus, setAceitaramJesus] = useState([]);
+
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
+
   const [dia, setDia] = useState("");
   const [horario, setHorario] = useState("");
   const [atividade, setAtividade] = useState("");
   const [responsavel, setResponsavel] = useState("");
+
   const [aba, setAba] = useState("visitantes");
- const [aceitaramJesus, setAceitaramJesus] = useState([]);
+
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [endereco, setEndereco] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
   useEffect(() => {
-    try {
-      const dados = JSON.parse(localStorage.getItem("visitantes"));
-      const dadosAvisos = JSON.parse(localStorage.getItem("avisos"));
-      const dadosProg = JSON.parse(localStorage.getItem("programacoes"));
-      const dadosJesus = JSON.parse(localStorage.getItem("aceitaramJesus"));
-
-      setVisitantes(Array.isArray(dados) ? dados : []);
-      setAvisos(Array.isArray(dadosAvisos) ? dadosAvisos : []);
-      setProgramacoes(Array.isArray(dadosProg) ? dadosProg : []);
-      setAceitaramJesus(Array.isArray(dadosJesus) ? dadosJesus : []);
-
-      // LIMPA A ABA SALVA
-      localStorage.removeItem("abaAtiva");
-    } catch {
-      setVisitantes([]);
-      setAvisos([]);
-      setProgramacoes([]);
-      setAceitaramJesus([]);
-    }
+    carregarTudo();
   }, []);
 
-  // EXCLUIR VISITANTE
-  const handleDelete = (index) => {
-    const novaLista = visitantes.filter((_, i) => i !== index);
-    setVisitantes(novaLista);
-    localStorage.setItem("visitantes", JSON.stringify(novaLista));
-  };
+  const carregarTudo = async () => {
+    try {
+      const resVisitantes = await fetch(`${API}/visitantes`);
+      const visitantesData = await resVisitantes.json();
+      setVisitantes(visitantesData);
 
-  // ADICIONAR VISITANTE (NOVO)
-  const adicionarVisitante = () => {
-    if (!nome || !telefone) {
-      alert("Preencha os campos obrigatórios!");
-      return;
+      const resAvisos = await fetch(`${API}/avisos`);
+      const avisosData = await resAvisos.json();
+      setAvisos(avisosData);
+
+      try {
+        const resProgramacoes = await fetch(`${API}/programacoes`);
+        if (resProgramacoes.ok) {
+          const programacoesData = await resProgramacoes.json();
+          setProgramacoes(programacoesData);
+        }
+      } catch {}
+
+      try {
+        const resJesus = await fetch(`${API}/aceitaramJesus`);
+        if (resJesus.ok) {
+          const jesusData = await resJesus.json();
+          setAceitaramJesus(jesusData);
+        }
+      } catch {}
+
+    } catch (err) {
+      console.log("Erro ao carregar dados:", err);
     }
+  }
+  // VISITANTES
+  const adicionarVisitante = async () => {
+    if (!nome || !telefone) return alert("Preencha os campos!");
 
-    const novoVisitante = {
-      nome,
-      cargo: "Visitante", 
-      telefone,
-      igreja: endereco,   
-      data: new Date().toLocaleString("pt-BR"),
-      observacoes,
-    };
+    await fetch(`${API}/visitantes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome,
+        cargo: "Visitante",
+        telefone,
+        igreja: endereco,
+        data: new Date().toISOString(),
+        observacoes,
+      }),
+    });
 
-    const novaLista = [...visitantes, novoVisitante];
-    setVisitantes(novaLista);
-    localStorage.setItem("visitantes", JSON.stringify(novaLista));
+    await carregarTudo();
 
-    // limpa os campos
     setNome("");
     setTelefone("");
     setEndereco("");
     setObservacoes("");
   };
 
-  // ADICIONAR AVISO
-  const adicionarAviso = () => {
-    if (!titulo || !descricao) {
-      alert("Preencha os campos!");
-      return;
+  const handleDeleteVisitante = async (id) => {
+    const confirmar = window.confirm("Deseja excluir este visitante?");
+    if (!confirmar) return;
+
+    try {
+      await fetch(`${API}/visitantes/${id}`, {
+        method: "DELETE",
+      });
+
+      await carregarTudo();
+    } catch (err) {
+      console.log("Erro ao deletar visitante:", err);
     }
+  };
+  // AVISOS
 
-    const dataAtual = new Date().toLocaleDateString("pt-BR");
+  const adicionarAviso = async () => {
+    if (!titulo || !descricao) return alert("Preencha os campos!");
 
-    const novo = {
-      titulo,
-      descricao,
-      data: dataAtual,
-    };
-
-    const novaLista = [...avisos, novo];
-    setAvisos(novaLista);
-    localStorage.setItem("avisos", JSON.stringify(novaLista));
+    await fetch(`${API}/avisos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        titulo,
+        descricao,
+      }),
+    });
 
     setTitulo("");
     setDescricao("");
+
+    await carregarTudo();
   };
 
-  // ADICIONAR PROGRAMAÇÃO
-  const adicionarProgramacao = () => {
-    if (!dia || !horario || !atividade) {
-      alert("Preencha todos os campos!");
-      return;
+  const handleDeleteAviso = async (id) => {
+    const confirmar = window.confirm("Deseja excluir este aviso?");
+    if (!confirmar) return;
+
+    try {
+      await fetch(`${API}/avisos/${id}`, {
+        method: "DELETE",
+      });
+
+      await carregarTudo();
+    } catch (err) {
+      console.log("Erro ao deletar aviso:", err);
     }
+  };
+  // PROGRAMAÇÃO
+  const adicionarProgramacao = async () => {
+    if (!dia || !horario || !atividade) return;
 
-    const nova = { dia, horario, atividade, responsavel };
+    try {
+      await fetch(`${API}/programacoes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dia,
+          horario,
+          atividade,
+          responsavel,
+        }),
+      });
 
-    const novaLista = [...programacoes, nova];
-    setProgramacoes(novaLista);
-    localStorage.setItem("programacoes", JSON.stringify(novaLista));
+      setDia("");
+      setHorario("");
+      setAtividade("");
+      setResponsavel("");
 
-    setDia("");
-    setHorario("");
-    setAtividade("");
-    setResponsavel("");
+      await carregarTudo();
+    } catch (err) {
+      console.log("Erro programação:", err);
+    }
   };
 
-  // PDF DINÂMICO PARA TODAS AS ABAS
-// PDF DINÂMICO PARA TODAS AS ABAS
+  const handleDeleteProgramacao = async (id) => {
+    const confirmar = window.confirm("Deseja excluir esta programação?");
+    if (!confirmar) return;
+
+    try {
+      await fetch(`${API}/programacoes/${id}`, {
+        method: "DELETE",
+      });
+
+      await carregarTudo();
+    } catch (err) {
+      console.log("Erro ao deletar programação:", err);
+    }
+  };
+  // ACEITARAM JESUS
+  const adicionarAceitouJesus = async () => {
+    if (!nome) return alert("Nome obrigatório!");
+
+    const res = await fetch(`${API}/aceitaramJesus`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        nome,
+        telefone,
+        endereco,
+        observacoes,
+      }),
+    });
+
+    const data = await res.json();
+    console.log("RESPOSTA DO BACKEND:", data);
+
+    await carregarTudo();
+  };
+
+  const handleDeleteAceitouJesus = async (id) => {
+    const confirmar = window.confirm("Deseja excluir este registro?");
+    if (!confirmar) return;
+
+    try {
+      await fetch(`${API}/aceitaramJesus/${id}`, {
+        method: "DELETE",
+      });
+
+      await carregarTudo();
+    } catch (err) {
+      console.log("Erro ao deletar registro:", err);
+    }
+  };
 const gerarPDF = (tipo) => {
   const doc = new jsPDF();
 
@@ -133,7 +224,6 @@ const gerarPDF = (tipo) => {
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
 
-  //  TÍTULO CORRIGIDO
   let tituloPDF = tipo.toUpperCase();
 
   if (tipo === "programacao") {
@@ -218,7 +308,6 @@ const gerarPDF = (tipo) => {
       : {},
   });
 
-  //  NOME DO ARQUIVO CORRIGIDO
   let nomeArquivo = tipo;
 
   if (tipo === "aceitaramJesus") {
@@ -228,32 +317,14 @@ const gerarPDF = (tipo) => {
   doc.save(`${nomeArquivo}.pdf`);
 };
 
-function adicionarAceitouJesus() {
-  if (!nome.trim()) {
-    alert("Nome é obrigatório!");
-    return;
-  }
+const deletarAviso = async (id) => {
+  await fetch(`${API}/avisos/${id}`, {
+    method: "DELETE",
+  });
 
-  const novo = {
-    nome: nome.trim(),
-    telefone,
-    endereco,
-    observacoes,
-  };
+  carregarTudo();
+};
 
-  const listaAtual = JSON.parse(localStorage.getItem("aceitaramJesus") || "[]");
-
-  const listaAtualizada = [...listaAtual, novo];
-
-  localStorage.setItem("aceitaramJesus", JSON.stringify(listaAtualizada));
-
-  setAceitaramJesus(listaAtualizada);
-
-  setNome("");
-  setTelefone("");
-  setEndereco("");
-  setObservacoes("");
-}
 return (
     <>
       <Header />
@@ -295,7 +366,7 @@ return (
           </button>
         </div>
 
-     {/* VISITANTES */}
+{/* VISITANTES */}
 {aba === "visitantes" && (
   <div className="painel">
     <div className="card">
@@ -334,25 +405,26 @@ return (
               <th>Nome</th>
               <th>Função/ND</th>
               <th>Telefone</th>
-              <th>Igreja/ Visitando, Frequentando</th>
+              <th>Igreja</th>
               <th>Data</th>
               <th>Ações</th>
             </tr>
           </thead> 
 
           <tbody>
-            {visitantes.map((v, i) => (
-              <tr key={i}>
+            {visitantes.map((v) => (
+              <tr key={v.id}>
                 <td>{v.nome}</td>
                 <td>{v.cargo}</td>
                 <td>{v.telefone}</td>
                 <td>{v.igreja}</td>
-                <td>{v.data}</td>
-
                 <td>
+                  {new Date(v.data).toLocaleString("pt-BR")}
+                </td>
+                <td style={{ textAlign: "center" }}>
                   <FaTrash
                     className="delete"
-                    onClick={() => handleDelete(i)}
+                    onClick={() => handleDeleteVisitante(v.id)}
                   />
                 </td>
               </tr>
@@ -363,163 +435,160 @@ return (
     </div>
   </div>
 )}
-        {/* AVISOS */}
-        {aba === "avisos" && (
-          <div className="avisos-grid">
-            <div className="card">
-              <h3><MdWarning color="#e02020"/> Novo Aviso</h3>
 
-              <div className="total-box">
-                <span>Total de Avisos</span>
-                <h1>{avisos.length}</h1>
-              </div>
-
-              <label>Título</label>
-              <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Digite o título" />
-
-              <label>Descrição</label>
-              <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Digite a descrição" />
-
-              <button className="btn-red" onClick={adicionarAviso}>
-                Adicionar Aviso
-              </button>
-            </div>
-
-            <div className="card">
-              <div className="card-header">
-                <h3><MdWarning color="#e02020"/> Avisos Importantes</h3>
-                <button onClick={() => gerarPDF("avisos")} className="btn-pdf">
-              <FaFilePdf /> Gerar PDF
-               </button>
-                <span>Total: 
-                  {avisos.length}</span>
-              </div>
-
-              {/*  NOVA TABELA */}
-              <table className="tabela">
-                <thead>
-                  <tr>
-                    <th>Título</th>
-                    <th>Descrição</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {avisos.map((a, i) => (
-                    <tr key={i}>
-                      <td>{a.titulo}</td>
-                      <td>{a.descricao}</td>
-                      <td>{a.data}</td>
-                      <td>
-                        <FaTrash
-                          className="delete"
-                          onClick={() => {
-                            const novaLista = avisos.filter((_, index) => index !== i);
-                            setAvisos(novaLista);
-                            localStorage.setItem("avisos", JSON.stringify(novaLista));
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* PROGRAMAÇÃO */}
-        {aba === "programacao" && (
-          <div className="avisos-grid">
-
-            <div className="card">
-              <h3><FaCalendarAlt color="#e02020"/> Novo Evento</h3>
-
-              <label>Dia</label>
-              <select value={dia} onChange={(e) => setDia(e.target.value)}>
-                <option value="">Selecione</option>
-                <option>Domingo</option>
-                <option>Segunda-feira</option>
-                <option>Terça-feira</option>
-                <option>Quarta-feira</option>
-                <option>Quinta-feira</option>
-                <option>Sexta-feira</option>
-                <option>Sábado</option>
-              </select>
-
-              <label>Horário</label>
-              <input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} />
-
-              <label>Atividade</label>
-              <input value={atividade} onChange={(e) => setAtividade(e.target.value)} placeholder="Digite a atividade" />
-
-              <button className="btn-red" onClick={adicionarProgramacao}>
-                Adicionar
-              </button>
-            </div>
-
-            <div className="card">
-              <h3><FaCalendarAlt color="#e02020"/>Programação da Semana <button onClick={() => gerarPDF("programacao")} className="btn-pdf">
-             <FaFilePdf /> Gerar PDF
-              </button></h3>
-
-              {/*  NOVA TABELA */}
-<table className="tabela">
-  <thead>
-    <tr>
-      <th>Dia</th>
-      <th>Horário</th>
-      <th>Atividade</th>
-      <th>Data</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
-  <tbody>
-    {programacoes.map((p, i) => (
-      <tr key={i}>
-        <td>{p.dia}</td>
-        <td>{p.horario}</td>
-        <td>{p.atividade}</td>
-        <td>{p.data}</td>
-        <td>
-          <FaTrash
-            className="delete"
-            onClick={() => {
-              const novaLista = programacoes.filter((_, index) => index !== i);
-              setProgramacoes(novaLista);
-              localStorage.setItem("programacoes", JSON.stringify(novaLista));
-            }}
-          />
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
-            </div>
-
-          </div>
-        )}
-
-        {/*Aceitaram Jesus*/}
-        {aba === "aceitaramJesus" && (
+{/* AVISOS */}
+{aba === "avisos" && (
   <div className="avisos-grid">
     <div className="card">
-      <h3> <PiUserSwitchLight color="#e02020"/> Estastiscas  aceitou Jesus</h3>
+      <h3><MdWarning color="#e02020"/> Novo Aviso</h3>
 
       <div className="total-box">
-        <span>Total de Registros</span>
+        <span>Total de Avisos</span>
+        <h1>{avisos.length}</h1>
+      </div>
+
+      <label>Título</label>
+      <input value={titulo} onChange={(e) => setTitulo(e.target.value)} />
+
+      <label>Descrição</label>
+      <textarea value={descricao} onChange={(e) => setDescricao(e.target.value)} />
+
+      <button className="btn-red" onClick={adicionarAviso}>
+        Adicionar Aviso
+      </button>
+    </div>
+
+    <div className="card">
+      <div className="card-header">
+        <h3><MdWarning color="#e02020"/> Avisos Importantes</h3>
+
+        <button onClick={() => gerarPDF("avisos")} className="btn-pdf">
+          <FaFilePdf /> Gerar PDF
+        </button>
+
+        <span>Total: {avisos.length}</span>
+      </div>
+
+      <table className="tabela">
+        <thead>
+          <tr>
+            <th>Título</th>
+            <th>Descrição</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {avisos.map((a) => (
+            <tr key={a.id}>
+              <td>{a.titulo}</td>
+              <td>{a.descricao}</td>
+              <td>{new Date(a.data).toLocaleString("pt-BR")}</td>
+              <td style={{ textAlign: "center" }}>
+                <FaTrash
+                  className="delete"
+                  onClick={() => handleDeleteAviso(a.id)}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
+{/* PROGRAMAÇÃO */}
+{aba === "programacao" && (
+  <div className="avisos-grid">
+
+    <div className="card">
+      <h3><FaCalendarAlt color="#e02020"/> Novo Evento</h3>
+
+      <label>Dia</label>
+      <select value={dia} onChange={(e) => setDia(e.target.value)}>
+        <option value="">Selecione</option>
+        <option>Domingo</option>
+        <option>Segunda-feira</option>
+        <option>Terça-feira</option>
+        <option>Quarta-feira</option>
+        <option>Quinta-feira</option>
+        <option>Sexta-feira</option>
+        <option>Sábado</option>
+      </select>
+
+      <label>Horário</label>
+      <input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} />
+
+      <label>Atividade</label>
+      <input value={atividade} onChange={(e) => setAtividade(e.target.value)} />
+
+      <button className="btn-red" onClick={adicionarProgramacao}>
+        Adicionar
+      </button>
+    </div>
+
+    <div className="card">
+      <h3>
+        <FaCalendarAlt color="#e02020"/> Programação
+        <button onClick={() => gerarPDF("programacao")} className="btn-pdf">
+          <FaFilePdf /> Gerar PDF
+        </button>
+      </h3>
+
+      <table className="tabela">
+        <thead>
+          <tr>
+            <th>Dia</th>
+            <th>Horário</th>
+            <th>Atividade</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tbody>
+          {programacoes.map((p) => (
+            <tr key={p.id}>
+              <td>{p.dia}</td>
+              <td>{p.horario}</td>
+              <td>{p.atividade}</td>
+              <td>{new Date(p.data).toLocaleString("pt-BR")}</td>
+              <td style={{ textAlign: "center" }}>
+                <FaTrash
+                  className="delete"
+                  onClick={() => handleDeleteProgramacao(p.id)}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
+{/* ACEITARAM JESUS */}
+{aba === "aceitaramJesus" && (
+  <div className="avisos-grid">
+    <div className="card">
+      <h3><PiUserSwitchLight color="#e02020"/> Estatísticas</h3>
+
+      <div className="total-box">
+        <span>Total</span>
         <h1>{aceitaramJesus.length}</h1>
       </div>
     </div>
-    {/* TABELA */}
+
     <div className="card">
       <div className="card-header">
-        <h3> <PiUserSwitchLight color="#e02020"/> Aceitou a Jesus</h3>
-        <span>Total: {aceitaramJesus.length}</span>
+        <h3><PiUserSwitchLight color="#e02020"/> Aceitou Jesus</h3>
+
         <button onClick={() => gerarPDF("aceitaramJesus")} className="btn-pdf">
-  <FaFilePdf /> Gerar PDF
-</button>
+          <FaFilePdf /> Gerar PDF
+        </button>
+
+        <span>Total: {aceitaramJesus.length}</span>
       </div>
 
       <table className="tabela">
@@ -534,21 +603,17 @@ return (
           </tr>
         </thead>
         <tbody>
-          {aceitaramJesus.map((p, i) => (
-            <tr key={i}>
+          {aceitaramJesus.map((p) => (
+            <tr key={p.id}>
               <td>{p.nome}</td>
               <td>{p.telefone}</td>
               <td>{p.endereco}</td>
               <td>{p.observacoes}</td>
-              <td>{p.data}</td>
-              <td>
+              <td>{new Date(p.data).toLocaleString("pt-BR")}</td>
+              <td style={{ textAlign: "center" }}>
                 <FaTrash
                   className="delete"
-                  onClick={() => {
-                    const novaLista = aceitaramJesus.filter((_, index) => index !== i);
-                    setAceitaramJesus(novaLista);
-                    localStorage.setItem("aceitaramJesus", JSON.stringify(novaLista));
-                  }}
+                  onClick={() => handleDeleteAceitouJesus(p.id)}
                 />
               </td>
             </tr>
@@ -556,11 +621,11 @@ return (
         </tbody>
       </table>
     </div>
-
   </div>
 )}
 
-      </div>
-    </>
-  );
-}
+            </div>
+          </>
+    
+        );
+    }
