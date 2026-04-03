@@ -1,5 +1,24 @@
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# env
 .env
-node_modules
-backend/
-.env.*
-backend/node_modules
+.env.local
+.env.production
+
+# build
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# backend (se tiver separado)
+backend/node_modules/
+backend/.env
