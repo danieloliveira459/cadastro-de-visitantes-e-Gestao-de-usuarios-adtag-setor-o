@@ -1,0 +1,125 @@
+.container {
+  padding: 30px;
+}
+
+/* GRID LADO A LADO */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-inline-size: 1100px;
+  margin: 0 auto;
+}
+
+/* CARD */
+.card {
+  background: #fff;
+  padding: 8px;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.08);
+}
+
+/* TÍTULOS */
+.card h2 {
+  margin-block-end:  20px;
+}
+
+/* INPUTS */
+label {
+  display: block;
+  margin-block-start: 10px;
+  margin-block-end: 5px;
+}
+
+input, textarea {
+  inline-size: 100%;
+  margin-block-end: 10px;
+}
+
+textarea {
+  block-size: 100px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+}
+
+/* BOTÃO */
+.btn-red {
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* CARD DIREITO */
+.alert {
+  background: #ffe5e5;
+  padding: 20px;
+  border-radius: 10px;
+  color: #e02020;
+  margin-block-end: 20px;
+}
+
+.alert h1 {
+  margin: 0;
+}
+
+/* BOTÃO OUTLINE */
+.btn-outline {
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* RESPONSIVO */
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+.card .alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px; 
+  margin-block-end: 15px;
+}
+.card .total-info {
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start; 
+}
+
+.card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+  margin-block-end: 15px;
+}
+
+.card h3 {
+  margin-block-start: 20px; 
+  margin-block-end: 10px;
+}
+
+.card p {
+  margin-block-end: 10px; 
+  line-height: 1.6;
+}
+
+.card h1 {
+  margin: 5px 0 0 0; 
+}
+.btn-cadastrar {
+  inline-size: 200px; 
+  block-size: 50px; 
+  background-color: #e02020; 
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 20px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.btn-cadastrar:hover {
+  background-color: #c01b1b; 
+}

@@ -1,0 +1,81 @@
+.admin-container {
+  padding: 30px;
+  background-color: #f5f5f5;
+  min-block-size: 100vh;
+}
+
+.admin-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-inline-size: 800px;
+  margin: 0 auto;
+}
+
+.admin-card h2 {
+  text-align: center;
+  margin-block-end: 20px;
+}
+
+/* FORM */
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-block-end: 20px;
+}
+
+.admin-form input {
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.admin-form button {
+  padding: 12px;
+  background-color: #e02020;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.admin-form button:hover {
+  background-color: #c01b1b;
+}
+
+/* LISTA */
+.admin-list {
+  margin-block-start: 20px;
+}
+
+.admin-user {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+  padding: 12px;
+  border-radius: 5px;
+  margin-block-end: 10px;
+  border: 1px solid #eee;
+}
+
+.admin-user span {
+  font-size: 14px;
+}
+
+.admin-user button {
+  background-color: #e02020;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.admin-user button:hover {
+  background-color: #c01b1b;
+}
+
