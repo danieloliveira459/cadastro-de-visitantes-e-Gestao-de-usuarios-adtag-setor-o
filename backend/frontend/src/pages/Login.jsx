@@ -19,9 +19,10 @@ export default function Login() {
   const [emailCad, setEmailCad] = useState("");
   const [senhaCad, setSenhaCad] = useState("");
   const [nivel, setNivel] = useState("USER");
-  //  NOVO ESTADO PARA EXIBIR NÍVEL DO LOGIN
+
   const [nivelUsuario, setNivelUsuario] = useState("");
-  //  BUSCAR NÍVEL PELO EMAIL
+
+  // BUSCAR NÍVEL
   const buscarNivel = async (emailDigitado) => {
     if (!emailDigitado) {
       setNivelUsuario("");
@@ -31,32 +32,33 @@ export default function Login() {
     try {
       const res = await fetch(`${API}/nivel`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: emailDigitado }),
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        setNivelUsuario("");
+        return;
+      }
 
       if (res.ok) {
         setNivelUsuario(data.nivel);
       } else {
         setNivelUsuario("");
       }
-    } catch (err) {
-      console.log(err);
+    } catch {
       setNivelUsuario("");
     }
   };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-
-    if (token) {
-      navigate("/home", { replace: true });
-    }
+    if (token) navigate("/home", { replace: true });
   }, [navigate]);
+
   // LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -66,13 +68,17 @@ export default function Login() {
     try {
       const res = await fetch(`${API}/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha }),
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        setErro("Erro: servidor não retornou JSON");
+        return;
+      }
 
       if (!res.ok) {
         setErro(data.erro || "Erro no login");
@@ -83,13 +89,12 @@ export default function Login() {
       localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
 
       navigate("/home");
-
-    } catch (err) {
+    } catch {
       setErro("Erro ao conectar com servidor");
     }
   };
-  // ESQUECI SENHA (EMAIL REAL)
 
+  // RECUPERAR SENHA
   const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
@@ -102,25 +107,29 @@ export default function Login() {
     try {
       const res = await fetch(`${API}/forgot`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        setErro("Servidor não retornou resposta válida");
+        return;
+      }
 
       if (!res.ok) {
         setErro(data.erro || "Erro ao recuperar senha");
         return;
       }
 
-      setMensagem(" Email de recuperação enviado! Verifique sua caixa de entrada.");
-
-    } catch (err) {
+      setMensagem("Email de recuperação enviado!");
+    } catch {
       setErro("Erro ao solicitar reset");
     }
   };
+
   // CADASTRO
   const handleCadastrarUsuario = async () => {
     setErro("");
@@ -134,9 +143,7 @@ export default function Login() {
     try {
       const res = await fetch(`${API}/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome,
           email: emailCad,
@@ -145,23 +152,26 @@ export default function Login() {
         }),
       });
 
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch {
+        setErro("Servidor não retornou JSON");
+        return;
+      }
 
       if (!res.ok) {
         setErro(data.erro || "Erro ao cadastrar");
         return;
       }
 
-      setMensagem(" Usuário cadastrado com sucesso!");
+      setMensagem("Usuário cadastrado com sucesso!");
 
-      // limpa campos
       setNome("");
       setEmailCad("");
       setSenhaCad("");
       setNivel("USER");
-
       setMostrarCadastro(false);
-
     } catch {
       setErro("Erro ao cadastrar");
     }
@@ -170,7 +180,9 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h1><GiChurch color="#e02020" /> ADTAG</h1>
+        <h1>
+          <GiChurch color="#e02020" /> ADTAG
+        </h1>
         <h2>LOGIN</h2>
 
         {erro && <p className="erro">{erro}</p>}
@@ -183,15 +195,14 @@ export default function Login() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              buscarNivel(e.target.value); //  CHAMA FUNÇÃO
+              buscarNivel(e.target.value);
             }}
             required
           />
 
-          {/*  EXIBE NÍVEL */}
           {nivelUsuario && (
-            <p style={{ color: "#e02020", insetBlockStart: "5px" }}>
-             <TbUserShare /> <strong>{nivelUsuario}</strong>
+            <p style={{ color: "#e02020" }}>
+              <TbUserShare /> <strong>{nivelUsuario}</strong>
             </p>
           )}
 
