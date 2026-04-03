@@ -16,7 +16,8 @@ export default function AceitaramJesus() {
   // BUSCAR TOTAL NO BANCO
   const fetchDados = async () => {
     try {
-      const res = await fetch("http://localhost:3000/aceitaramJesus");
+      const API = import.meta.env.VITE_API_URL;
+      const res = await fetch(`${API}/aceitaramJesus`);
       const data = await res.json();
       setTotal(data.length);
     } catch (error) {
@@ -46,7 +47,7 @@ export default function AceitaramJesus() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://localhost:3000/aceitaramJesus", {
+      const res = await fetch(`${API}/aceitaramJesus`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

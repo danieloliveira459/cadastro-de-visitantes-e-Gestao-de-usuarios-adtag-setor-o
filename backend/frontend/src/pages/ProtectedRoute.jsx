@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to="/login" replace />;
   }
 
-  // 👇 USA O CAMPO CERTO
+  //  USA O CAMPO CERTO
   const nivel = usuario.nivel?.toUpperCase();
 
   if (allowedRoles && (!nivel || !allowedRoles.includes(nivel))) {

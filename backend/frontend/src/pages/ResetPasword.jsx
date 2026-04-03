@@ -14,7 +14,8 @@ export default function ResetPassword() {
       return alert("Digite a nova senha");
     }
 
-    const res = await fetch("http://localhost:3000/auth/reset", {
+    const API = import.meta.env.VITE_API_URL;
+    const res = await fetch(`${API}/auth/reset`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

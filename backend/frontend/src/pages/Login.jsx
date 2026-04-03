@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
 import "./Login.css";
 
-const API = "http://localhost:3000/auth";
+const API = import.meta.env.VITE_API_URL;
 
 export default function Login() {
   const navigate = useNavigate();
