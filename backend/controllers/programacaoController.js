@@ -16,7 +16,7 @@ export const criarProgramacao = async (req, res) => {
   try {
     const { dia, horario, atividade, data } = req.body;
 
-    // validação básica
+    // validação
     if (!dia || !horario || !atividade) {
       return res.status(400).json({
         error: "Dia, horário e atividade são obrigatórios",
@@ -25,20 +25,10 @@ export const criarProgramacao = async (req, res) => {
 
     console.log("BODY RECEBIDO:", req.body);
 
-    // 🔥 CORREÇÃO DEFINITIVA DA DATA (MySQL safe)
-    let dataFormatada;
-
-    if (data) {
-      dataFormatada = new Date(data)
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " ");
-    } else {
-      dataFormatada = new Date()
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " ");
-    }
+    // ✔️ DATA SEGURA PARA MYSQL
+    const dataFormatada = data
+      ? new Date(data).toISOString().slice(0, 19).replace("T", " ")
+      : new Date().toISOString().slice(0, 19).replace("T", " ");
 
     await db.query(
       `INSERT INTO programacao (dia, horario, atividade, data)
@@ -51,10 +41,7 @@ export const criarProgramacao = async (req, res) => {
     });
   } catch (err) {
     console.error("ERRO CRIAR PROGRAMAÇÃO:", err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -80,14 +67,11 @@ export const deletarProgramacao = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
+    return res.json({
       msg: "Excluído com sucesso",
     });
   } catch (err) {
     console.error("ERRO DELETAR PROGRAMAÇÃO:", err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    return res.status(500).json({ error: err.message });
   }
 };

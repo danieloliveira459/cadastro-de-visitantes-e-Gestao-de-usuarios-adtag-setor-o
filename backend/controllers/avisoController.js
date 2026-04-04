@@ -1,65 +1,49 @@
 import { db } from "../config/db.js";
 
-// LISTAR
-export const listarProgramacoes = async (req, res) => {
+// LISTAR AVISOS
+export const listarAvisos = async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM programacao");
+    const [rows] = await db.query("SELECT * FROM aviso");
     return res.json(rows);
   } catch (err) {
-    console.error("ERRO LISTAR PROGRAMAÇÕES:", err);
+    console.error("ERRO LISTAR AVISOS:", err);
     return res.status(500).json({ error: err.message });
   }
 };
 
-// CRIAR
-export const criarProgramacao = async (req, res) => {
+// CRIAR AVISO
+export const criarAviso = async (req, res) => {
   try {
-    const { dia, horario, atividade, data } = req.body;
+    const { titulo, mensagem, data } = req.body;
 
-    // 🔥 validação básica
-    if (!dia || !horario || !atividade) {
+    if (!titulo || !mensagem) {
       return res.status(400).json({
-        error: "Dia, horário e atividade são obrigatórios",
+        error: "Título e mensagem são obrigatórios",
       });
     }
 
-    console.log("BODY RECEBIDO:", req.body);
-
-    // 🔥 CORREÇÃO DA DATA (evita erro MySQL com ISO)
-    let dataFormatada = null;
-
-    if (data) {
-      dataFormatada = new Date(data)
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " ");
-    } else {
-      dataFormatada = new Date()
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " ");
-    }
+    const dataFormatada = (data ? new Date(data) : new Date())
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
 
     await db.query(
-      `INSERT INTO programacao (dia, horario, atividade, data)
-       VALUES (?, ?, ?, ?)`,
-      [dia, horario, atividade, dataFormatada]
+      `INSERT INTO aviso (titulo, mensagem, data)
+       VALUES (?, ?, ?)`,
+      [titulo, mensagem, dataFormatada]
     );
 
     return res.status(201).json({
-      msg: "Programação criada com sucesso",
+      msg: "Aviso criado com sucesso",
     });
   } catch (err) {
-    console.error("ERRO CRIAR PROGRAMAÇÃO:", err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    console.error("ERRO CRIAR AVISO:", err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// DELETAR
-export const deletarProgramacao = async (req, res) => {
+// DELETAR AVISO
+export const deletarAviso = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -70,24 +54,21 @@ export const deletarProgramacao = async (req, res) => {
     }
 
     const [result] = await db.query(
-      "DELETE FROM programacao WHERE id = ?",
+      "DELETE FROM aviso WHERE id = ?",
       [id]
     );
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
-        error: "Programação não encontrada",
+        error: "Aviso não encontrado",
       });
     }
 
-    return res.status(200).json({
-      msg: "Excluído com sucesso",
+    return res.json({
+      msg: "Aviso excluído com sucesso",
     });
   } catch (err) {
-    console.error("ERRO DELETAR PROGRAMAÇÃO:", err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    console.error("ERRO DELETAR AVISO:", err);
+    return res.status(500).json({ error: err.message });
   }
 };
