@@ -7,10 +7,14 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const SECRET = "segredo_super";
+const SECRET = process.env.JWT_SECRET || "segredo_super";
 
 let tokens = [];
+
+//////////////////////////////////////////////////////
 // LOGIN
+//////////////////////////////////////////////////////
+
 export const login = async (req, res) => {
   const { email, senha } = req.body;
 
@@ -38,17 +42,26 @@ export const login = async (req, res) => {
       { expiresIn: "8h" }
     );
 
-    res.json({
+    return res.json({
       token,
-      usuario,
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email,
+        nivel: usuario.nivel
+      }
     });
 
   } catch (err) {
-    console.log(" ERRO LOGIN:", err);
-    res.status(500).json({ erro: err.message });
+    console.log("ERRO LOGIN:", err);
+    return res.status(500).json({ erro: err.message });
   }
 };
+
+//////////////////////////////////////////////////////
 // REGISTER
+//////////////////////////////////////////////////////
+
 export const register = async (req, res) => {
   const { nome, email, senha, nivel } = req.body;
 
@@ -60,14 +73,18 @@ export const register = async (req, res) => {
       [nome, email, hash, nivel]
     );
 
-    res.status(201).json({ msg: "Usuário criado" });
+    return res.status(201).json({ msg: "Usuário criado" });
 
   } catch (err) {
-    console.log(" ERRO REGISTER:", err);
-    res.status(500).json({ erro: err.message });
+    console.log("ERRO REGISTER:", err);
+    return res.status(500).json({ erro: err.message });
   }
 };
+
+//////////////////////////////////////////////////////
 // EMAIL TRANSPORTER
+//////////////////////////////////////////////////////
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
   secure: true,
@@ -77,18 +94,19 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// TESTA CONEXÃO COM EMAIL
-transporter.verify((error, success) => {
+transporter.verify((error) => {
   if (error) {
-    console.log(" Erro no transporter:", error);
+    console.log("Erro no email transporter:", error);
   } else {
-    console.log(" Servidor de email pronto");
+    console.log("Servidor de email pronto");
   }
 });
-// FORGOT PASSWORD
-export const forgotPassword = async (req, res) => {
-  console.log(" BODY:", req.body);
 
+//////////////////////////////////////////////////////
+// FORGOT PASSWORD
+//////////////////////////////////////////////////////
+
+export const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   if (!email) {
@@ -107,32 +125,41 @@ export const forgotPassword = async (req, res) => {
 
     const token = crypto.randomBytes(32).toString("hex");
 
-    tokens.push({ email, token });
+    tokens.push({
+      email,
+      token,
+      expires: Date.now() + 1000 * 60 * 30 // 30 min
+    });
 
-    const link = `http://localhost:5173/reset?token=${token}`;
+    //  IMPORTANTE: URL dinâmica (produção)
+    const frontendURL =
+      process.env.FRONTEND_URL || "http://localhost:5173";
 
-    console.log(" Enviando email para:", email);
+    const link = `${frontendURL}/reset?token=${token}`;
 
     await transporter.sendMail({
-      from: `"ADTAG recuperação de senha" <${process.env.EMAIL_USER}>`,
+      from: `"Sistema" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: "Recuperação de senha",
       html: `
         <h2>Recuperar senha</h2>
-        <p>Clique no link abaixo para redefinir sua senha:</p>
+        <p>Clique no link abaixo:</p>
         <a href="${link}">${link}</a>
-        <p>Se não foi você, ignore este email.</p>
       `,
     });
 
-    res.json({ msg: "Email enviado com sucesso" });
+    return res.json({ msg: "Email enviado com sucesso" });
 
   } catch (err) {
-    console.log(" ERRO FORGOT:", err);
-    res.status(500).json({ erro: err.message });
+    console.log("ERRO FORGOT:", err);
+    return res.status(500).json({ erro: err.message });
   }
 };
+
+//////////////////////////////////////////////////////
 // RESET PASSWORD
+//////////////////////////////////////////////////////
+
 export const resetPassword = async (req, res) => {
   const { token, novaSenha } = req.body;
 
@@ -143,7 +170,13 @@ export const resetPassword = async (req, res) => {
   const registro = tokens.find((t) => t.token === token);
 
   if (!registro) {
-    return res.status(400).json({ erro: "Token inválido" });
+    return res.status(400).json({ erro: "Token inválido ou expirado" });
+  }
+
+  // Expiração do token
+  if (Date.now() > registro.expires) {
+    tokens = tokens.filter((t) => t.token !== token);
+    return res.status(400).json({ erro: "Token expirado" });
   }
 
   try {
@@ -156,13 +189,17 @@ export const resetPassword = async (req, res) => {
 
     tokens = tokens.filter((t) => t.token !== token);
 
-    res.json({ msg: "Senha atualizada com sucesso" });
+    return res.json({ msg: "Senha atualizada com sucesso" });
 
   } catch (err) {
-    console.log(" ERRO RESET:", err);
-    res.status(500).json({ erro: err.message });
+    console.log("ERRO RESET:", err);
+    return res.status(500).json({ erro: err.message });
   }
 };
+
+//////////////////////////////////////////////////////
+// NIVEL POR EMAIL
+//////////////////////////////////////////////////////
 
 export const getNivelByEmail = async (req, res) => {
   const { email } = req.body;
@@ -177,10 +214,10 @@ export const getNivelByEmail = async (req, res) => {
       return res.status(404).json({ erro: "Usuário não encontrado" });
     }
 
-    res.json({ nivel: rows[0].nivel });
+    return res.json({ nivel: rows[0].nivel });
 
   } catch (err) {
     console.log("ERRO NIVEL:", err);
-    res.status(500).json({ erro: err.message });
+    return res.status(500).json({ erro: err.message });
   }
 };

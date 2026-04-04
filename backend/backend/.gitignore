@@ -1,24 +1,54 @@
-# dependencies
+# =====================
+# DEPENDENCIES
+# =====================
 node_modules/
+backend/node_modules/
+frontend/node_modules/
 
-# logs
+# =====================
+# LOGS
+# =====================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# env
+# =====================
+# ENV FILES
+# =====================
 .env
 .env.local
+.env.development
 .env.production
+backend/.env
+frontend/.env
 
-# build
+# =====================
+# BUILD OUTPUT
+# =====================
 dist/
 build/
+out/
 
-# OS
+# =====================
+# VITE / REACT
+# =====================
+.vite/
+.cache/
+
+# =====================
+# OS FILES
+# =====================
 .DS_Store
 Thumbs.db
 
-# backend (se tiver separado)
-backend/node_modules/
-backend/.env
+# =====================
+# IDE
+# =====================
+.vscode/
+.idea/
+
+# =====================
+# OPTIONAL (se usar Docker)
+# =====================
+docker-compose.override.yml
