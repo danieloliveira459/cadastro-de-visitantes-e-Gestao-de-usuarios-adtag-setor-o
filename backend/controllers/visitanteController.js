@@ -16,24 +16,41 @@ export const criarVisitante = async (req, res) => {
   try {
     const { nome, funcao, telefone, igreja, data } = req.body;
 
-    // 🔥 VALIDAÇÃO (evita erro 500 silencioso)
+    // VALIDACAO
     if (!nome || !telefone) {
       return res.status(400).json({
         error: "Nome e telefone são obrigatórios",
       });
     }
 
-    // 🔥 DEBUG (remove depois se quiser)
     console.log("BODY RECEBIDO:", req.body);
+
+    // 🔥 CORREÇÃO DA DATA (ISO -> MySQL)
+    let dataFormatada = null;
+
+    if (data) {
+      dataFormatada = new Date(data)
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+    }
 
     await db.query(
       `INSERT INTO visitantes 
       (nome, funcao, telefone, igreja, \`data\`) 
       VALUES (?, ?, ?, ?, ?)`,
-      [nome, funcao || null, telefone, igreja || null, data || null]
+      [
+        nome,
+        funcao || null,
+        telefone,
+        igreja || null,
+        dataFormatada, // 🔥 agora correto para MySQL
+      ]
     );
 
-    return res.status(201).json({ msg: "Visitante criado com sucesso" });
+    return res.status(201).json({
+      msg: "Visitante criado com sucesso",
+    });
   } catch (err) {
     console.error("ERRO CRIAR VISITANTE:", err);
 
@@ -58,12 +75,14 @@ export const deletarVisitante = async (req, res) => {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: "Visitante não encontrado" });
+      return res.status(404).json({
+        error: "Visitante não encontrado",
+      });
     }
 
-    return res
-      .status(200)
-      .json({ msg: "Excluído com sucesso" });
+    return res.status(200).json({
+      msg: "Excluído com sucesso",
+    });
   } catch (err) {
     console.error("ERRO DELETAR:", err);
 

@@ -14,9 +14,9 @@ export const listarProgramacoes = async (req, res) => {
 // CRIAR
 export const criarProgramacao = async (req, res) => {
   try {
-    const { dia, horario, atividade } = req.body;
+    const { dia, horario, atividade, data } = req.body;
 
-    // 🔥 validação básica
+    // validação básica
     if (!dia || !horario || !atividade) {
       return res.status(400).json({
         error: "Dia, horário e atividade são obrigatórios",
@@ -25,12 +25,25 @@ export const criarProgramacao = async (req, res) => {
 
     console.log("BODY RECEBIDO:", req.body);
 
-    const data = new Date();
+    // 🔥 CORREÇÃO DEFINITIVA DA DATA (MySQL safe)
+    let dataFormatada;
+
+    if (data) {
+      dataFormatada = new Date(data)
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+    } else {
+      dataFormatada = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+    }
 
     await db.query(
       `INSERT INTO programacao (dia, horario, atividade, data)
        VALUES (?, ?, ?, ?)`,
-      [dia, horario, atividade, data]
+      [dia, horario, atividade, dataFormatada]
     );
 
     return res.status(201).json({
