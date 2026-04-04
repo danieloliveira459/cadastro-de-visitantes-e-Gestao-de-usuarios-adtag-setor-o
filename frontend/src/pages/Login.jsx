@@ -1,10 +1,12 @@
+
 import { useState, useEffect } from "react";
 import { GiChurch } from "react-icons/gi";
 import { useNavigate } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
 import "./Login.css";
 
-const API = import.meta.env.VITE_API_URL;
+// API CORRIGIDA
+const API = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -19,9 +21,10 @@ export default function Login() {
   const [emailCad, setEmailCad] = useState("");
   const [senhaCad, setSenhaCad] = useState("");
   const [nivel, setNivel] = useState("USER");
-  //  NOVO ESTADO PARA EXIBIR NÍVEL DO LOGIN
+
   const [nivelUsuario, setNivelUsuario] = useState("");
-  //  BUSCAR NÍVEL PELO EMAIL
+
+  //  BUSCAR NÍVEL
   const buscarNivel = async (emailDigitado) => {
     if (!emailDigitado) {
       setNivelUsuario("");
@@ -44,12 +47,12 @@ export default function Login() {
       } else {
         setNivelUsuario("");
       }
-    } catch (err) {
-      console.log(err);
+    } catch {
       setNivelUsuario("");
     }
   };
 
+  //  REDIRECIONA SE JÁ ESTIVER LOGADO
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -57,7 +60,8 @@ export default function Login() {
       navigate("/home", { replace: true });
     }
   }, [navigate]);
-  // LOGIN
+
+  //  LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
@@ -83,13 +87,12 @@ export default function Login() {
       localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
 
       navigate("/home");
-
-    } catch (err) {
+    } catch {
       setErro("Erro ao conectar com servidor");
     }
   };
-  // ESQUECI SENHA (EMAIL REAL)
 
+  //  RECUPERAR SENHA
   const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
@@ -115,13 +118,13 @@ export default function Login() {
         return;
       }
 
-      setMensagem(" Email de recuperação enviado! Verifique sua caixa de entrada.");
-
-    } catch (err) {
+      setMensagem("Email de recuperação enviado!");
+    } catch {
       setErro("Erro ao solicitar reset");
     }
   };
-  // CADASTRO
+
+  //  CADASTRO
   const handleCadastrarUsuario = async () => {
     setErro("");
     setMensagem("");
@@ -152,16 +155,13 @@ export default function Login() {
         return;
       }
 
-      setMensagem(" Usuário cadastrado com sucesso!");
+      setMensagem("Usuário cadastrado com sucesso!");
 
-      // limpa campos
       setNome("");
       setEmailCad("");
       setSenhaCad("");
       setNivel("USER");
-
       setMostrarCadastro(false);
-
     } catch {
       setErro("Erro ao cadastrar");
     }
@@ -183,15 +183,14 @@ export default function Login() {
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              buscarNivel(e.target.value); //  CHAMA FUNÇÃO
+              buscarNivel(e.target.value);
             }}
             required
           />
 
-          {/*  EXIBE NÍVEL */}
           {nivelUsuario && (
-            <p style={{ color: "#e02020", insetBlockStart: "5px" }}>
-             <TbUserShare /> <strong>{nivelUsuario}</strong>
+            <p style={{ color: "#e02020" }}>
+              <TbUserShare /> <strong>{nivelUsuario}</strong>
             </p>
           )}
 
