@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { GiChurch } from "react-icons/gi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
 import "./Login.css";
 
@@ -8,6 +8,7 @@ const API = `${import.meta.env.VITE_API_URL}/api/auth`;
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -22,6 +23,8 @@ export default function Login() {
 
   const [nivelUsuario, setNivelUsuario] = useState("");
   const [loadingNivel, setLoadingNivel] = useState(false);
+
+  const [checkedAuth, setCheckedAuth] = useState(false);
 
   //////////////////////////////////////////////////////
   // BUSCAR NÍVEL COM DELAY (DEBOUNCE)
@@ -62,18 +65,22 @@ export default function Login() {
       } finally {
         setLoadingNivel(false);
       }
-    }, 500); // 🔥 espera 500ms antes de chamar API
+    }, 500);
 
     return () => clearTimeout(delay);
   }, [email]);
 
   //////////////////////////////////////////////////////
-  // REDIRECIONA SE JÁ ESTIVER LOGADO
+  // REDIRECIONA SE JÁ ESTIVER LOGADO (CORRIGIDO 🔥)
   //////////////////////////////////////////////////////
   useEffect(() => {
     const token = localStorage.getItem("token");
-    if (token) navigate("/home", { replace: true });
-  }, [navigate]);
+
+    if (token && !checkedAuth && location.pathname !== "/home") {
+      setCheckedAuth(true);
+      navigate("/home", { replace: true });
+    }
+  }, [navigate, location.pathname, checkedAuth]);
 
   //////////////////////////////////////////////////////
   // LOGIN
@@ -108,7 +115,7 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
 
-      navigate("/home");
+      navigate("/home", { replace: true });
     } catch {
       setErro("Erro ao conectar com servidor");
     }

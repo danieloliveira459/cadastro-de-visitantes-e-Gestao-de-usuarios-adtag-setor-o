@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -8,7 +8,6 @@ import Admin from "./pages/Admin";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import AceitaramJesus from "./pages/AceitaramJesus";
 import ResetPassword from "./pages/ResetPasword";
-
 
 // FUNÇÃO SEGURA
 function getUsuario() {
@@ -30,10 +29,12 @@ export default function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* ROTA INICIAL SEM LOOP */}
+        {/*  ROTA INICIAL CORRIGIDA */}
         <Route
           path="/"
-          element={usuario ? <Home /> : <Login />}
+          element={
+            usuario ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />
+          }
         />
 
         {/* PÚBLICAS */}
@@ -44,7 +45,7 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={["ADM"]}>
               <Admin />
             </ProtectedRoute>
           }
@@ -84,6 +85,12 @@ export default function App() {
         <Route
           path="/reset"
           element={<ResetPassword />}
+        />
+
+        {/*  ROTA CORINGA (EVITA BUG) */}
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
         />
 
       </Routes>

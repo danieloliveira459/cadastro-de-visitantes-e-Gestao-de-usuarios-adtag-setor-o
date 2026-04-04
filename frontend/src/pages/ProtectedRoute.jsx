@@ -1,24 +1,38 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 export default function ProtectedRoute({ children, allowedRoles }) {
+  const location = useLocation();
+
   let usuario = null;
 
   try {
-    usuario = JSON.parse(localStorage.getItem("usuarioLogado"));
+    const data = localStorage.getItem("usuarioLogado");
+
+    if (data && data !== "undefined") {
+      usuario = JSON.parse(data);
+    }
   } catch {
     usuario = null;
   }
-
+  // NÃO LOGADO → LOGIN
   if (!usuario) {
-    return <Navigate to="/login" replace />;
-  }
+    // evita loop infinito
+    if (location.pathname !== "/login") {
+      return <Navigate to="/login" replace />;
+    }
 
-  //  USA O CAMPO CERTO
+    return null;
+  }
+  //  VERIFICA PERMISSÃ
   const nivel = usuario.nivel?.toUpperCase();
 
   if (allowedRoles && (!nivel || !allowedRoles.includes(nivel))) {
-    return <Navigate to="/home" replace />;
-  }
+    // evita ficar redirecionando sem parar
+    if (location.pathname !== "/home") {
+      return <Navigate to="/home" replace />;
+    }
 
+    return null;
+  }
   return children;
 }
