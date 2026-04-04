@@ -1,42 +1,80 @@
 import { db } from "../config/db.js";
 
+// LISTAR
 export const listarProgramacoes = async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM programacao");
-    res.json(rows);
+    return res.json(rows);
   } catch (err) {
-    console.log("ERRO LISTAR PROGRAMAÇÕES:", err);
-    res.status(500).json(err);
+    console.error("ERRO LISTAR PROGRAMAÇÕES:", err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
+// CRIAR
 export const criarProgramacao = async (req, res) => {
-  const { dia, horario, atividade } = req.body;
-
-  const data = new Date();
-
   try {
+    const { dia, horario, atividade } = req.body;
+
+    // 🔥 validação básica
+    if (!dia || !horario || !atividade) {
+      return res.status(400).json({
+        error: "Dia, horário e atividade são obrigatórios",
+      });
+    }
+
+    console.log("BODY RECEBIDO:", req.body);
+
+    const data = new Date();
+
     await db.query(
-      "INSERT INTO programacao (dia, horario, atividade, data) VALUES (?, ?, ?, ?)",
+      `INSERT INTO programacao (dia, horario, atividade, data)
+       VALUES (?, ?, ?, ?)`,
       [dia, horario, atividade, data]
     );
 
-    res.status(201).json({ msg: "OK" });
+    return res.status(201).json({
+      msg: "Programação criada com sucesso",
+    });
   } catch (err) {
-    console.log("ERRO CRIAR PROGRAMAÇÃO:", err);
-    res.status(500).json(err);
+    console.error("ERRO CRIAR PROGRAMAÇÃO:", err);
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
+// DELETAR
 export const deletarProgramacao = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await db.query("DELETE FROM programacao WHERE id = ?", [id]);
+    if (!id) {
+      return res.status(400).json({
+        error: "ID é obrigatório",
+      });
+    }
 
-    res.status(200).json({ msg: "Excluído com sucesso" });
+    const [result] = await db.query(
+      "DELETE FROM programacao WHERE id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        error: "Programação não encontrada",
+      });
+    }
+
+    return res.status(200).json({
+      msg: "Excluído com sucesso",
+    });
   } catch (err) {
-    console.log("ERRO DELETAR:", err);
-    res.status(500).json(err);
+    console.error("ERRO DELETAR PROGRAMAÇÃO:", err);
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };

@@ -1,40 +1,74 @@
 import { db } from "../config/db.js";
 
+// LISTAR
 export const listarVisitantes = async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM visitantes");
-    res.json(rows);
+    return res.json(rows);
   } catch (err) {
-    console.log("ERRO LISTAR VISITANTES:", err);
-    res.status(500).json(err);
+    console.error("ERRO LISTAR VISITANTES:", err);
+    return res.status(500).json({ error: err.message });
   }
 };
 
+// CRIAR
 export const criarVisitante = async (req, res) => {
-  const { nome, funcao, telefone, igreja, data } = req.body;
-
   try {
+    const { nome, funcao, telefone, igreja, data } = req.body;
+
+    // 🔥 VALIDAÇÃO (evita erro 500 silencioso)
+    if (!nome || !telefone) {
+      return res.status(400).json({
+        error: "Nome e telefone são obrigatórios",
+      });
+    }
+
+    // 🔥 DEBUG (remove depois se quiser)
+    console.log("BODY RECEBIDO:", req.body);
+
     await db.query(
-      "INSERT INTO visitantes (nome, funcao, telefone, igreja, data) VALUES (?, ?, ?, ?, ?)",
-      [nome, funcao, telefone, igreja, data]
+      `INSERT INTO visitantes 
+      (nome, funcao, telefone, igreja, \`data\`) 
+      VALUES (?, ?, ?, ?, ?)`,
+      [nome, funcao || null, telefone, igreja || null, data || null]
     );
 
-    res.status(201).json({ msg: "OK" });
+    return res.status(201).json({ msg: "Visitante criado com sucesso" });
   } catch (err) {
-    console.log("ERRO CRIAR VISITANTE:", err);
-    res.status(500).json(err);
+    console.error("ERRO CRIAR VISITANTE:", err);
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
+// DELETAR
 export const deletarVisitante = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await db.query("DELETE FROM visitantes WHERE id = ?", [id]);
+    if (!id) {
+      return res.status(400).json({ error: "ID é obrigatório" });
+    }
 
-    res.status(200).json({ msg: "Excluído com sucesso" });
+    const [result] = await db.query(
+      "DELETE FROM visitantes WHERE id = ?",
+      [id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Visitante não encontrado" });
+    }
+
+    return res
+      .status(200)
+      .json({ msg: "Excluído com sucesso" });
   } catch (err) {
-    console.log("ERRO DELETAR:", err);
-    res.status(500).json(err);
+    console.error("ERRO DELETAR:", err);
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
