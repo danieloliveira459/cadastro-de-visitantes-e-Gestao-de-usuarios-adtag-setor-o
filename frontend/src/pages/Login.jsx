@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
-import logo from "../assets/adtag.png";
 import "./Login.css";
+
+// Logo direto da pasta public/assets
+const logoPath = "/assets/adtag.png";
 
 const API = `${import.meta.env.VITE_API_URL}/api/auth`;
 
@@ -26,7 +28,7 @@ export default function Login() {
 
   const [checkedAuth, setCheckedAuth] = useState(false);
 
-  // 🔥 BUSCAR NÍVEL (SEM DELAY)
+  // 🔥 Buscar nível do usuário
   useEffect(() => {
     if (!email) {
       setNivelUsuario("");
@@ -35,18 +37,14 @@ export default function Login() {
 
     const buscarNivel = async () => {
       setLoadingNivel(true);
-
       try {
         const res = await fetch(`${API}/nivel`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
         });
 
         const data = await res.json().catch(() => ({}));
-
         if (res.ok && data.nivel) {
           setNivelUsuario(data.nivel);
         } else {
@@ -62,10 +60,9 @@ export default function Login() {
     buscarNivel();
   }, [email]);
 
-  // 🔐 REDIRECIONA SE JÁ LOGADO
+  // 🔐 Redireciona se já logado
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (token && !checkedAuth && location.pathname !== "/home") {
       setCheckedAuth(true);
       navigate("/home", { replace: true });
@@ -86,7 +83,6 @@ export default function Login() {
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setErro(data.erro || "Erro no login");
         return;
@@ -94,7 +90,6 @@ export default function Login() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
-
       navigate("/home", { replace: true });
     } catch {
       setErro("Erro ao conectar com servidor");
@@ -119,7 +114,6 @@ export default function Login() {
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setErro(data.erro || "Erro ao recuperar senha");
         return;
@@ -140,7 +134,6 @@ export default function Login() {
       DIRIGENTE: "Dirigente",
       ADM: "Administrador",
     };
-
     return mapa[nivel] || nivel;
   };
 
@@ -158,23 +151,16 @@ export default function Login() {
       const res = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome,
-          email: emailCad,
-          senha: senhaCad,
-          nivel,
-        }),
+        body: JSON.stringify({ nome, email: emailCad, senha: senhaCad, nivel }),
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setErro(data.erro || "Erro ao cadastrar");
         return;
       }
 
       setMensagem("Usuário cadastrado com sucesso!");
-
       setNome("");
       setEmailCad("");
       setSenhaCad("");
@@ -188,10 +174,9 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-
         {/* LOGO */}
         <h1 className="logo-title">
-          <img src={logo} alt="ADTAG Logo" className="logo" />
+          <img src={logoPath} alt="ADTAG Logo" className="logo" />
           ADTAG
         </h1>
 
@@ -209,9 +194,7 @@ export default function Login() {
             required
           />
 
-          {loadingNivel && (
-            <p style={{ fontSize: "12px" }}>Verificando nível...</p>
-          )}
+          {loadingNivel && <p style={{ fontSize: "12px" }}>Verificando nível...</p>}
 
           {nivelUsuario && !loadingNivel && (
             <p style={{ color: "#e02020" }}>
@@ -279,7 +262,6 @@ export default function Login() {
             </button>
           </div>
         )}
-
       </div>
     </div>
   );

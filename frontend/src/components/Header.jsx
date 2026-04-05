@@ -4,8 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./Header.css";
 import { RiAdminFill } from "react-icons/ri";
 
-//  IMPORT CORRETO DA LOGO
-import logo from "../assets/adtag.png";
+// Se a logo estiver na pasta "public/assets", use caminho absoluto:
+const logoPath = "/assets/adtag.png";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function Header() {
   return (
     <header className="header">
       <h1 className="ADTAG">
-        <img src={logo} alt="ADTAG Logo" className="logo-inline" />
+        <img src={logoPath} alt="ADTAG Logo" className="logo-inline" />
         Sistema de recepção, acompanhamento e gestão de visitantes
       </h1>
 
