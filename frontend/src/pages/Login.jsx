@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
-import logo from "../assents/image/LOGOMARCA_ADTAG_page-0005.jpg";
+import logo from "../assets/image/adtag.png";
 import "./Login.css";
 
 const API = `${import.meta.env.VITE_API_URL}/api/auth`;

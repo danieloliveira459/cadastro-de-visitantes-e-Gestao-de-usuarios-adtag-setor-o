@@ -5,7 +5,7 @@ import "./Header.css";
 import { RiAdminFill } from "react-icons/ri";
 
 //  IMPORT CORRETO DA LOGO
-import logo from "../assets/image/LOGOMARCA_ADTAG_page-0005.jpg";
+import logo from "../assets/image/adtag.png";
 
 export default function Header() {
   const navigate = useNavigate();
