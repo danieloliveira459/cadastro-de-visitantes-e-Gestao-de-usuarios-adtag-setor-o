@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
-import fs from "fs"; 
+import fs from "fs";
 
 // ROTAS
 import visitanteRoutes from "./routes/visitanteRoutes.js";
@@ -17,7 +17,9 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-//  MIDDLEWARES
+// =====================
+// MIDDLEWARES
+// =====================
 app.use(
   cors({
     origin: "*",
@@ -28,7 +30,7 @@ app.use(
 app.use(express.json());
 
 // =====================
-// ROTAS API
+// ROTAS API (PRIMEIRO)
 // =====================
 app.use("/api/visitantes", visitanteRoutes);
 app.use("/api/aceitaramJesus", aceitaramJesusRoutes);
@@ -39,8 +41,8 @@ app.use("/api/auth", authRoutes);
 // =====================
 // TESTE API
 // =====================
-app.get("/", (req, res) => {
-  res.json({ message: " API rodando com sucesso!" });
+app.get("/api", (req, res) => {
+  res.json({ message: "API rodando com sucesso!" });
 });
 
 // =====================
@@ -52,11 +54,11 @@ const frontendPath = path.join(__dirname, "../frontend/dist");
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
 
-  // fallback React SPA
-  app.get("*", (req, res) => {
-    // não intercepta API
+  // 🔥 CORREÇÃO AQUI
+  app.get("*", (req, res, next) => {
+    // deixa API passar
     if (req.path.startsWith("/api")) {
-      return res.status(404).json({ message: "API route not found" });
+      return next(); // 🔥 ESSENCIAL
     }
 
     res.sendFile(path.join(frontendPath, "index.html"));
@@ -64,10 +66,17 @@ if (fs.existsSync(frontendPath)) {
 }
 
 // =====================
-// PORTA (Render)
+// 404 API (FINAL)
+// =====================
+app.use("/api", (req, res) => {
+  res.status(404).json({ message: "Rota da API não encontrada" });
+});
+
+// =====================
+// PORTA
 // =====================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(` Servidor rodando na porta ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
