@@ -4,8 +4,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "./Header.css";
 import { RiAdminFill } from "react-icons/ri";
 
-// ✅ IMPORT CORRETO DA LOGO
-import logo from "../assets/image/LOGOMARCA_ADTAG_page-0005.jpg";
+//  IMPORT CORRETO DA LOGO
+import logo from "../assents/image/LOGOMARCA_ADTAG_page-0005.jpg";
 
 export default function Header() {
   const navigate = useNavigate();
