@@ -44,12 +44,11 @@ input:focus {
   justify-content: space-between;
   padding: 15px 30px;
   background: #f4f4f4;
-  border-bottom: 1px solid #ddd;
+  border-block-end: 1px solid #ddd;
 }
 
 /* LOGO */
 .logo {
-  background: var(--primary);
   color: #fff;
   padding: 8px 14px;
   border-radius: 8px;
