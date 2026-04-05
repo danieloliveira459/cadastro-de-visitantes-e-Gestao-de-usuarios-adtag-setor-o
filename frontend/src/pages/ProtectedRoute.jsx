@@ -4,6 +4,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const location = useLocation();
 
   let usuario = null;
+  const token = localStorage.getItem("token");
 
   try {
     const data = localStorage.getItem("usuarioLogado");
@@ -14,25 +15,19 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   } catch {
     usuario = null;
   }
-  // NÃO LOGADO → LOGIN
-  if (!usuario) {
-    // evita loop infinito
-    if (location.pathname !== "/login") {
-      return <Navigate to="/login" replace />;
-    }
 
-    return null;
+  //  NÃO LOGADO → LOGIN
+  if (!usuario || !token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
-  //  VERIFICA PERMISSÃ
-  const nivel = usuario.nivel?.toUpperCase();
+
+  //  VERIFICA PERMISSÃO
+  const nivel = usuario?.nivel?.toUpperCase();
 
   if (allowedRoles && (!nivel || !allowedRoles.includes(nivel))) {
-    // evita ficar redirecionando sem parar
-    if (location.pathname !== "/home") {
-      return <Navigate to="/home" replace />;
-    }
-
-    return null;
+    return <Navigate to="/home" replace />;
   }
+
+  //  LIBERADO
   return children;
 }

@@ -4,17 +4,17 @@ import { RiAdminFill } from "react-icons/ri";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Header.css";
 
-// ✅ Logo na pasta public
+//  Logo na pasta public
 const logoPath = "/assets/adtag.png";
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔥 Função para verificar rota ativa (melhor que várias variáveis)
+  //  Função para verificar rota ativa (melhor que várias variáveis)
   const isActive = (path) => location.pathname === path;
 
-  // 🔐 Usuário logado (seguro)
+  //  Usuário logado (seguro)
   let usuario = null;
   try {
     const stored = localStorage.getItem("usuarioLogado");
@@ -23,7 +23,7 @@ export default function Header() {
     usuario = null;
   }
 
-  // 🔓 Logout completo
+  //  Logout completo
   function handleLogout() {
     localStorage.removeItem("usuarioLogado");
     localStorage.removeItem("token"); // 🔥 importante

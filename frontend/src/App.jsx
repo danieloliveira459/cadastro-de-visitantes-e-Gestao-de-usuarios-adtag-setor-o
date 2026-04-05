@@ -87,7 +87,7 @@ export default function App() {
           element={<ResetPassword />}
         />
 
-        {/*  ROTA CORINGA (EVITA BUG) */}
+        {/*  ROTA que (EVITA BUG) */}
         <Route
           path="*"
           element={<Navigate to="/" replace />}
