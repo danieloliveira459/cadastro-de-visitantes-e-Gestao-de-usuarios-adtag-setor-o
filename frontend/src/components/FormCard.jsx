@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUserPlus } from "react-icons/fa6";
+
 export default function FormCard() {
   const navigate = useNavigate();
 
+  // garante string segura
   const API = import.meta.env.VITE_API_URL;
 
   const [nome, setNome] = useState("");
@@ -37,7 +39,10 @@ export default function FormCard() {
         }),
       });
 
+      // 🔥 MELHOR DEBUG DE ERRO (IMPORTANTE)
       if (!response.ok) {
+        const erro = await response.text();
+        console.error("Erro backend:", erro);
         throw new Error("Erro ao salvar no banco");
       }
 

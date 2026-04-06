@@ -10,7 +10,7 @@ import logo from "../assets/adtag.png";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 if (!BASE_URL) {
-  console.error("❌ VITE_API_URL não definida!");
+  console.error(" VITE_API_URL não definida!");
 }
 
 const API = `${BASE_URL}/api/auth`;
@@ -142,7 +142,7 @@ export default function Login() {
     }
   };
 
-  // 🎯 FORMATAR NÍVEL
+  // FORMATAR NÍVEL
   const formatarNivel = (nivel) => {
     const mapa = {
       USER: "Usuário",
