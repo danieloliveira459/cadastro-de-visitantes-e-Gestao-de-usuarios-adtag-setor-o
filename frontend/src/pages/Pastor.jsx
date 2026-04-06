@@ -7,7 +7,9 @@ import { PiUserSwitchLight } from "react-icons/pi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./Pastor.css";
-const API = import.meta.env.VITE_API_URL;
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+console.log(import.meta.env.VITE_API_URL);
 
 export default function Pastor() {
   const navigate = useNavigate();
