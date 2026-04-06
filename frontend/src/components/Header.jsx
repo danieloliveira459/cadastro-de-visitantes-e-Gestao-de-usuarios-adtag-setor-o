@@ -1,8 +1,8 @@
-import { FaUserPlus, FaRightFromBracket } from "react-icons/fa6";
+import { FaUserPlus, FaUserSlash, FaRightFromBracket } from "react-icons/fa6";
 import { PiUserSwitchLight } from "react-icons/pi";
-import { RiAdminFill } from "react-icons/ri";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Header.css";
+import { RiAdminFill } from "react-icons/ri";
 import adtagLogo from "../assets/adtag.png";
 
 export default function Header() {
@@ -12,6 +12,7 @@ export default function Header() {
   const isPastor = location.pathname === "/pastor";
   const isAceitaramJesus = location.pathname === "/aceitaram-jesus";
 
+  // forma segura
   let usuario = null;
 
   try {
@@ -27,18 +28,8 @@ export default function Header() {
 
   return (
     <header className="header">
-      <div className="logo">
-        <img
-          src={adtagLogo}
-          alt="Logo ADTAG"
-          style={{ width: "32px", height: "32px", marginRight: "8px" }}
-        />
-        ADTAG
-      </div>
-
-      <h1 className="titulo">
-        Sistema de recepção, acompanhamento e gestão de visitantes
-      </h1>
+      <div className="logo">ADTAG</div>
+      <h1 className="titulo">Sistema de recepção, acompanhamento e gestão de visitantes <GiChurch color="#e02020"/></h1>
 
       <div className="acoes">
         <button
@@ -52,7 +43,7 @@ export default function Header() {
           className={`btn-outline ${isAceitaramJesus ? "active-outline" : ""}`}
           onClick={() => navigate("/aceitaram-jesus")}
         >
-          <PiUserSwitchLight color="#e02020" /> Cadastrar quem aceitou Jesus
+          <PiUserSwitchLight color="#e02020"/> Cadastrar quem aceitou Jesus
         </button>
 
         <button
