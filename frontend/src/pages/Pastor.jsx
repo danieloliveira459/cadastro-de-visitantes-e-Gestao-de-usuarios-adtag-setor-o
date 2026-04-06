@@ -67,156 +67,132 @@ export default function Pastor() {
     }
   }
   // VISITANTES
-  const adicionarVisitante = async () => {
-    if (!nome || !telefone) return alert("Preencha os campos!");
+ const adicionarVisitante = async () => {
+  if (!nome || !telefone) return alert("Preencha os campos!");
 
-    await fetch(`${API}/visitantes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nome,
-        cargo: "Visitante",
-        telefone,
-        igreja: endereco,
-        data: new Date().toISOString(),
-        observacoes,
-      }),
-    });
+  await request(`${API}/visitantes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nome,
+      cargo: "Visitante",
+      telefone,
+      igreja: endereco,
+      observacoes,
+      // ❌ removido data manual (backend deve gerar)
+    }),
+  });
 
-    await carregarTudo();
+  await carregarTudo();
 
-    setNome("");
-    setTelefone("");
-    setEndereco("");
-    setObservacoes("");
-  };
+  setNome("");
+  setTelefone("");
+  setEndereco("");
+  setObservacoes("");
+};
 
-  const handleDeleteVisitante = async (id) => {
-    const confirmar = window.confirm("Deseja excluir este visitante?");
-    if (!confirmar) return;
+const handleDeleteVisitante = async (id) => {
+  const confirmar = window.confirm("Deseja excluir este visitante?");
+  if (!confirmar) return;
 
-    try {
-      await fetch(`${API}/visitantes/${id}`, {
-        method: "DELETE",
-      });
+  await request(`${API}/visitantes/${id}`, {
+    method: "DELETE",
+  });
 
-      await carregarTudo();
-    } catch (err) {
-      console.log("Erro ao deletar visitante:", err);
-    }
-  };
+  await carregarTudo();
+};
   // AVISOS
-
   const adicionarAviso = async () => {
-    if (!titulo || !descricao) return alert("Preencha os campos!");
+  if (!titulo || !descricao) return alert("Preencha os campos!");
 
-    await fetch(`${API}/avisos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        titulo,
-        descricao,
-      }),
-    });
+  await request(`${API}/avisos`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ titulo, descricao }),
+  });
 
-    setTitulo("");
-    setDescricao("");
+  setTitulo("");
+  setDescricao("");
 
-    await carregarTudo();
-  };
+  await carregarTudo();
+};
 
-  const handleDeleteAviso = async (id) => {
-    const confirmar = window.confirm("Deseja excluir este aviso?");
-    if (!confirmar) return;
+const handleDeleteAviso = async (id) => {
+  const confirmar = window.confirm("Deseja excluir este aviso?");
+  if (!confirmar) return;
 
-    try {
-      await fetch(`${API}/avisos/${id}`, {
-        method: "DELETE",
-      });
+  await request(`${API}/avisos/${id}`, {
+    method: "DELETE",
+  });
 
-      await carregarTudo();
-    } catch (err) {
-      console.log("Erro ao deletar aviso:", err);
-    }
-  };
+  await carregarTudo();
+};
   // PROGRAMAÇÃO
   const adicionarProgramacao = async () => {
-    if (!dia || !horario || !atividade) return;
+  if (!dia || !horario || !atividade) return;
 
-    try {
-      await fetch(`${API}/programacoes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          dia,
-          horario,
-          atividade,
-          responsavel,
-        }),
-      });
+  await request(`${API}/programacoes`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      dia,
+      horario,
+      atividade,
+      responsavel,
+    }),
+  });
 
-      setDia("");
-      setHorario("");
-      setAtividade("");
-      setResponsavel("");
+  setDia("");
+  setHorario("");
+  setAtividade("");
+  setResponsavel("");
 
-      await carregarTudo();
-    } catch (err) {
-      console.log("Erro programação:", err);
-    }
-  };
+  await carregarTudo();
+};
 
-  const handleDeleteProgramacao = async (id) => {
-    const confirmar = window.confirm("Deseja excluir esta programação?");
-    if (!confirmar) return;
+const handleDeleteProgramacao = async (id) => {
+  const confirmar = window.confirm("Deseja excluir esta programação?");
+  if (!confirmar) return;
 
-    try {
-      await fetch(`${API}/programacoes/${id}`, {
-        method: "DELETE",
-      });
+  await request(`${API}/programacoes/${id}`, {
+    method: "DELETE",
+  });
 
-      await carregarTudo();
-    } catch (err) {
-      console.log("Erro ao deletar programação:", err);
-    }
-  };
+  await carregarTudo();
+};
   // ACEITARAM JESUS
   const adicionarAceitouJesus = async () => {
-    if (!nome) return alert("Nome obrigatório!");
+  if (!nome) return alert("Nome obrigatório!");
 
-    const res = await fetch(`${API}/aceitaramJesus`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        nome,
-        telefone,
-        endereco,
-        observacoes,
-      }),
-    });
+  const data = await request(`${API}/aceitaramJesus`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      nome,
+      telefone,
+      endereco,
+      observacoes,
+    }),
+  });
 
-    const data = await res.json();
-    console.log("RESPOSTA DO BACKEND:", data);
+  console.log("RESPOSTA DO BACKEND:", data);
 
-    await carregarTudo();
-  };
+  await carregarTudo();
+};
 
-  const handleDeleteAceitouJesus = async (id) => {
-    const confirmar = window.confirm("Deseja excluir este registro?");
-    if (!confirmar) return;
+const handleDeleteAceitouJesus = async (id) => {
+  const confirmar = window.confirm("Deseja excluir este registro?");
+  if (!confirmar) return;
 
-    try {
-      await fetch(`${API}/aceitaramJesus/${id}`, {
-        method: "DELETE",
-      });
+  await request(`${API}/aceitaramJesus/${id}`, {
+    method: "DELETE",
+  });
 
-      await carregarTudo();
-    } catch (err) {
-      console.log("Erro ao deletar registro:", err);
-    }
-  };
+  await carregarTudo();
+};
+//PDF
 const gerarPDF = (tipo) => {
   const doc = new jsPDF();
 
