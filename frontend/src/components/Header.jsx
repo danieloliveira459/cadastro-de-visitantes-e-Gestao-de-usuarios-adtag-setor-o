@@ -21,25 +21,29 @@ export default function Header() {
     usuario = null;
   }
 
-  // 🔒 PROTEÇÃO: se não estiver logado, volta pro login
+  // 🔒 PROTEÇÃO: se não estiver logado, redireciona
   useEffect(() => {
     if (!usuario) {
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
-  }, []);
+  }, [usuario, navigate]);
 
-  // 🚪 LOGOUT
+  // 🚪 LOGOUT CORRETO
   const handleLogout = () => {
     localStorage.removeItem("usuarioLogado");
 
-    // 🔥 força redirecionamento garantido
-    window.location.href = "/login";
+    // ✅ usar navigate (evita tela preta)
+    navigate("/login", { replace: true });
   };
 
   return (
     <header className="header">
       {/* LOGO + NOME */}
-      <div className="logo-container" onClick={() => navigate("/home")} style={{ cursor: "pointer" }}>
+      <div
+        className="logo-container"
+        onClick={() => navigate("/home")}
+        style={{ cursor: "pointer" }}
+      >
         <img src={adtagLogo} alt="ADTAG Logo" className="logo-img" />
         <span className="logo-text">ADTAG</span>
       </div>
@@ -50,14 +54,18 @@ export default function Header() {
 
       <div className="acoes">
         <button
-          className={`btn-outline ${!isPastor && !isAceitaramJesus ? "active-outline" : ""}`}
+          className={`btn-outline ${
+            !isPastor && !isAceitaramJesus ? "active-outline" : ""
+          }`}
           onClick={() => navigate("/home")}
         >
           <FaUserPlus /> Cadastrar Visitante
         </button>
 
         <button
-          className={`btn-outline ${isAceitaramJesus ? "active-outline" : ""}`}
+          className={`btn-outline ${
+            isAceitaramJesus ? "active-outline" : ""
+          }`}
           onClick={() => navigate("/aceitaram-jesus")}
         >
           <PiUserSwitchLight color="#e02020" /> Cadastrar quem aceitou Jesus
