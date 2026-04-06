@@ -4,17 +4,17 @@ import { RiAdminFill } from "react-icons/ri";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Header.css";
 
-// ✅ Caminho correto (public)
-const logoPath = "/assets/adtag.png";
+//  IMPORT CORRETO DA LOGO (src/assets)
+import logo from "../assets/adtag.png";
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ✅ Verifica rota ativa
+  //  Verifica rota ativa
   const isActive = (path) => location.pathname === path;
 
-  // ✅ Usuário logado (mais seguro)
+  //  Usuário logado (seguro)
   let usuario = null;
   try {
     const stored = localStorage.getItem("usuarioLogado");
@@ -24,14 +24,14 @@ export default function Header() {
     usuario = null;
   }
 
-  // ✅ Logout completo
+  //  Logout completo
   function handleLogout() {
     localStorage.removeItem("usuarioLogado");
     localStorage.removeItem("token");
     navigate("/login", { replace: true });
   }
 
-  // ✅ Navegação segura (evita reload desnecessário)
+  // Navegação segura
   function goTo(path) {
     if (location.pathname !== path) {
       navigate(path);
@@ -42,11 +42,11 @@ export default function Header() {
     <header className="header">
       <h1 className="ADTAG">
         <img
-          src={logoPath}
+          src={logo}
           alt="ADTAG Logo"
           className="logo-inline"
           onError={(e) => {
-            console.warn("❌ Logo não carregou:", logoPath);
+            console.warn("❌ Logo não carregou:", logo);
             e.target.style.display = "none";
           }}
         />

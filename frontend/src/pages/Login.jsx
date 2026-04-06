@@ -3,10 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
 import "./Login.css";
 
-// ✅ Logo na pasta public
-const logoPath = "/assets/adtag.png";
+//  IMPORT CORRETO DA LOGO (src/assets)
+import logo from "../assets/adtag.png";
 
-// 🔐 API
+//  API
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 if (!BASE_URL) {
@@ -35,7 +35,7 @@ export default function Login() {
 
   const [checkedAuth, setCheckedAuth] = useState(false);
 
-  // 🔎 Buscar nível
+  //  Buscar nível do usuário pelo email
   useEffect(() => {
     if (!email || email.length < 5) {
       setNivelUsuario("");
@@ -71,7 +71,7 @@ export default function Login() {
     return () => clearTimeout(delay);
   }, [email]);
 
-  // 🔐 Redirecionamento
+  //  Redirecionamento automático se já logado
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -81,7 +81,7 @@ export default function Login() {
     }
   }, [navigate, location.pathname, checkedAuth]);
 
-  // 🔑 LOGIN
+  //  LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
@@ -111,7 +111,7 @@ export default function Login() {
     }
   };
 
-  // 🔄 RECUPERAR SENHA
+  //  RECUPERAR SENHA
   const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
@@ -168,7 +168,12 @@ export default function Login() {
       const res = await fetch(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email: emailCad, senha: senhaCad, nivel }),
+        body: JSON.stringify({
+          nome,
+          email: emailCad,
+          senha: senhaCad,
+          nivel,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -193,10 +198,11 @@ export default function Login() {
   return (
     <div className="login-container">
       <div className="login-card">
-        {/* ✅ LOGO CORRETA */}
+
+        {/*  LOGO CORRIGIDA (IMPORT REACT) */}
         <h1 className="logo-title">
           <img
-            src={logoPath}
+            src={logo}
             alt="ADTAG Logo"
             className="logo"
             onError={(e) => (e.target.style.display = "none")}
@@ -218,7 +224,9 @@ export default function Login() {
             required
           />
 
-          {loadingNivel && <p style={{ fontSize: "12px" }}>Verificando nível...</p>}
+          {loadingNivel && (
+    <p style={{ fontSize: "12px" }}>Verificando nível...</p>
+          )}
 
           {nivelUsuario && !loadingNivel && (
             <p style={{ color: "#e02020" }}>
@@ -273,7 +281,10 @@ export default function Login() {
               onChange={(e) => setSenhaCad(e.target.value)}
             />
 
-            <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
+            <select
+              value={nivel}
+              onChange={(e) => setNivel(e.target.value)}
+            >
               <option value="USER">Usuário</option>
               <option value="PASTOR">Pastor</option>
               <option value="VICE">Vice</option>
