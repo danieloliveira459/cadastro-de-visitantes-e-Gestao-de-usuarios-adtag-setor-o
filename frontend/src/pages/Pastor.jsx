@@ -7,8 +7,7 @@ import { PiUserSwitchLight } from "react-icons/pi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./Pastor.css";
-
-const BASE_URL = import.meta.env.VITE_API_URL
+const API = "https://cadatro-de-visitantes-e-gest-o-de.onrender.com/api";
 
 export default function Pastor() {
   const navigate = useNavigate();
@@ -39,16 +38,16 @@ export default function Pastor() {
 
   const carregarTudo = async () => {
     try {
-      const resVisitantes = await fetch(`${BASE_URL}/visitantes`);
+      const resVisitantes = await fetch(`${API}/visitantes`);
       const visitantesData = await resVisitantes.json();
       setVisitantes(visitantesData);
 
-      const resAvisos = await fetch(`${BASE_URL}/avisos`);
+      const resAvisos = await fetch(`${API}/avisos`);
       const avisosData = await resAvisos.json();
       setAvisos(avisosData);
 
       try {
-        const resProgramacoes = await fetch(`${BASE_URL}/programacoes`);
+        const resProgramacoes = await fetch(`${API}/programacoes`);
         if (resProgramacoes.ok) {
           const programacoesData = await resProgramacoes.json();
           setProgramacoes(programacoesData);
@@ -56,7 +55,7 @@ export default function Pastor() {
       } catch {}
 
       try {
-        const resJesus = await fetch(`${BASE_URL}/aceitaramJesus`);
+        const resJesus = await fetch(`${API}/aceitaramJesus`);
         if (resJesus.ok) {
           const jesusData = await resJesus.json();
           setAceitaramJesus(jesusData);
@@ -71,7 +70,7 @@ export default function Pastor() {
   const adicionarVisitante = async () => {
     if (!nome || !telefone) return alert("Preencha os campos!");
 
-    await fetch(`${BASE_URL}/visitantes`, {
+    await fetch(`${API}/visitantes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -97,7 +96,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${BASE_URL}/visitantes/${id}`, {
+      await fetch(`${API}/visitantes/${id}`, {
         method: "DELETE",
       });
 
@@ -111,7 +110,7 @@ export default function Pastor() {
   const adicionarAviso = async () => {
     if (!titulo || !descricao) return alert("Preencha os campos!");
 
-    await fetch(`${BASE_URL}/avisos`, {
+    await fetch(`${API}/avisos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -131,7 +130,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${BASE_URL}/avisos/${id}`, {
+      await fetch(`${API}/avisos/${id}`, {
         method: "DELETE",
       });
 
@@ -145,7 +144,7 @@ export default function Pastor() {
     if (!dia || !horario || !atividade) return;
 
     try {
-      await fetch(`${BASE_URL}/programacoes`, {
+      await fetch(`${API}/programacoes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -172,7 +171,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${BASE_URL}/programacoes/${id}`, {
+      await fetch(`${API}/programacoes/${id}`, {
         method: "DELETE",
       });
 
@@ -185,7 +184,7 @@ export default function Pastor() {
   const adicionarAceitouJesus = async () => {
     if (!nome) return alert("Nome obrigatório!");
 
-    const res = await fetch(`${BASE_URL}/aceitaramJesus`, {
+    const res = await fetch(`${API}/aceitaramJesus`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -209,7 +208,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${BASE_URL}/aceitaramJesus/${id}`, {
+      await fetch(`${API}/aceitaramJesus/${id}`, {
         method: "DELETE",
       });
 
@@ -319,7 +318,7 @@ const gerarPDF = (tipo) => {
 };
 
 const deletarAviso = async (id) => {
-  await fetch(`${BASE_URL}/avisos/${id}`, {
+  await fetch(`${API}/avisos/${id}`, {
     method: "DELETE",
   });
 
