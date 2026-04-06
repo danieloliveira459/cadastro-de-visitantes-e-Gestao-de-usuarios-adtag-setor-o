@@ -609,7 +609,9 @@ return (
               <td>{p.telefone}</td>
               <td>{p.endereco}</td>
               <td>{p.observacoes}</td>
-              <td>{new Date(p.data).toLocaleString("pt-BR")}</td>
+              <td>{new Date(p.data).toLocaleString("pt-BR", {
+                timeZone: "America/Brasilia"
+              })}</td>
               <td style={{ textAlign: "center" }}>
                 <FaTrash
                   className="delete"
