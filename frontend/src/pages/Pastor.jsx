@@ -39,16 +39,16 @@ export default function Pastor() {
 
   const carregarTudo = async () => {
     try {
-      const resVisitantes = await fetch(`${API}/visitantes`);
+      const resVisitantes = await fetch(`${BASE_URL}/visitantes`);
       const visitantesData = await resVisitantes.json();
       setVisitantes(visitantesData);
 
-      const resAvisos = await fetch(`${API}/avisos`);
+      const resAvisos = await fetch(`${BASE_URL}/avisos`);
       const avisosData = await resAvisos.json();
       setAvisos(avisosData);
 
       try {
-        const resProgramacoes = await fetch(`${API}/programacoes`);
+        const resProgramacoes = await fetch(`${BASE_URL}/programacoes`);
         if (resProgramacoes.ok) {
           const programacoesData = await resProgramacoes.json();
           setProgramacoes(programacoesData);
@@ -56,7 +56,7 @@ export default function Pastor() {
       } catch {}
 
       try {
-        const resJesus = await fetch(`${API}/aceitaramJesus`);
+        const resJesus = await fetch(`${BASE_URL}/aceitaramJesus`);
         if (resJesus.ok) {
           const jesusData = await resJesus.json();
           setAceitaramJesus(jesusData);
@@ -71,7 +71,7 @@ export default function Pastor() {
   const adicionarVisitante = async () => {
     if (!nome || !telefone) return alert("Preencha os campos!");
 
-    await fetch(`${API}/visitantes`, {
+    await fetch(`${BASE_URL}/visitantes`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -97,7 +97,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${API}/visitantes/${id}`, {
+      await fetch(`${BASE_URL}/visitantes/${id}`, {
         method: "DELETE",
       });
 
@@ -111,7 +111,7 @@ export default function Pastor() {
   const adicionarAviso = async () => {
     if (!titulo || !descricao) return alert("Preencha os campos!");
 
-    await fetch(`${API}/avisos`, {
+    await fetch(`${BASE_URL}/avisos`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -131,7 +131,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${API}/avisos/${id}`, {
+      await fetch(`${BASE_URL}/avisos/${id}`, {
         method: "DELETE",
       });
 
@@ -145,7 +145,7 @@ export default function Pastor() {
     if (!dia || !horario || !atividade) return;
 
     try {
-      await fetch(`${API}/programacoes`, {
+      await fetch(`${BASE_URL}/programacoes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -172,7 +172,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${API}/programacoes/${id}`, {
+      await fetch(`${BASE_URL}/programacoes/${id}`, {
         method: "DELETE",
       });
 
@@ -185,7 +185,7 @@ export default function Pastor() {
   const adicionarAceitouJesus = async () => {
     if (!nome) return alert("Nome obrigatório!");
 
-    const res = await fetch(`${API}/aceitaramJesus`, {
+    const res = await fetch(`${BASE_URL}/aceitaramJesus`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -209,7 +209,7 @@ export default function Pastor() {
     if (!confirmar) return;
 
     try {
-      await fetch(`${API}/aceitaramJesus/${id}`, {
+      await fetch(`${BASE_URL}/aceitaramJesus/${id}`, {
         method: "DELETE",
       });
 
@@ -319,7 +319,7 @@ const gerarPDF = (tipo) => {
 };
 
 const deletarAviso = async (id) => {
-  await fetch(`${API}/avisos/${id}`, {
+  await fetch(`${BASE_URL}/avisos/${id}`, {
     method: "DELETE",
   });
 
