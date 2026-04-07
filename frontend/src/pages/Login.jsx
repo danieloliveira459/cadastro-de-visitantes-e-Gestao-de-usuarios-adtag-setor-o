@@ -2,15 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
 import "./Login.css";
-
-//  IMPORT CORRETO DA LOGO (src/assets)
 import logo from "../assets/adtag.png";
 
-//  API
-const BASE_URL = import.meta.env.VITE_API_URL;
+// ✅ GARANTE URL
+const BASE_URL = import.meta.env.VITE_API_URL || "";
 
 if (!BASE_URL) {
-  console.error(" VITE_API_URL não definida!");
+  console.error("❌ VITE_API_URL não definida!");
 }
 
 const API = `${BASE_URL}/api/auth`;
@@ -32,10 +30,25 @@ export default function Login() {
 
   const [nivelUsuario, setNivelUsuario] = useState("");
   const [loadingNivel, setLoadingNivel] = useState(false);
-
   const [checkedAuth, setCheckedAuth] = useState(false);
 
-  //  Buscar nível do usuário pelo email
+  // ✅ FUNÇÃO FETCH SEGURA (com timeout)
+  const fetchComTimeout = async (url, options = {}, timeout = 8000) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      return response;
+    } finally {
+      clearTimeout(id);
+    }
+  };
+
+  // 🔎 BUSCAR NÍVEL
   useEffect(() => {
     if (!email || email.length < 5) {
       setNivelUsuario("");
@@ -46,7 +59,7 @@ export default function Login() {
       setLoadingNivel(true);
 
       try {
-        const res = await fetch(`${API}/nivel`, {
+        const res = await fetchComTimeout(`${API}/nivel`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
@@ -57,10 +70,15 @@ export default function Login() {
           return;
         }
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         setNivelUsuario(data?.nivel || "");
       } catch (err) {
         console.error("Erro ao buscar nível:", err);
+
+        if (err.name === "AbortError") {
+          setErro("Servidor demorou para responder.");
+        }
+
         setNivelUsuario("");
       } finally {
         setLoadingNivel(false);
@@ -71,7 +89,7 @@ export default function Login() {
     return () => clearTimeout(delay);
   }, [email]);
 
-  //  Redirecionamento automático se já logado
+  // 🔁 REDIRECIONAMENTO
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -81,14 +99,14 @@ export default function Login() {
     }
   }, [navigate, location.pathname, checkedAuth]);
 
-  //  LOGIN
+  // 🔐 LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
     setMensagem("");
 
     try {
-      const res = await fetch(`${API}/login`, {
+      const res = await fetchComTimeout(`${API}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha }),
@@ -97,7 +115,7 @@ export default function Login() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setErro(data?.erro || "Erro no login");
+        setErro(data?.erro || "Email ou senha inválidos");
         return;
       }
 
@@ -107,11 +125,16 @@ export default function Login() {
       navigate("/home", { replace: true });
     } catch (err) {
       console.error(err);
-      setErro("Erro ao conectar com servidor");
+
+      if (err.name === "AbortError") {
+        setErro("Servidor demorou para responder.");
+      } else {
+        setErro("Erro de conexão (CORS ou servidor offline)");
+      }
     }
   };
 
-  //  RECUPERAR SENHA
+  // 🔁 RECUPERAR SENHA
   const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
@@ -122,7 +145,7 @@ export default function Login() {
     }
 
     try {
-      const res = await fetch(`${API}/forgot`, {
+      const res = await fetchComTimeout(`${API}/forgot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -142,7 +165,7 @@ export default function Login() {
     }
   };
 
-  // FORMATAR NÍVEL
+  // 🎯 FORMATAR NÍVEL
   const formatarNivel = (nivel) => {
     const mapa = {
       USER: "Usuário",
@@ -165,7 +188,7 @@ export default function Login() {
     }
 
     try {
-      const res = await fetch(`${API}/register`, {
+      const res = await fetchComTimeout(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -199,7 +222,6 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
 
-        {/*  LOGO CORRIGIDA (IMPORT REACT) */}
         <h1 className="logo-title">
           <img
             src={logo}
@@ -224,9 +246,7 @@ export default function Login() {
             required
           />
 
-          {loadingNivel && (
-    <p style={{ fontSize: "12px" }}>Verificando nível...</p>
-          )}
+          {loadingNivel && <p style={{ fontSize: "12px" }}>Verificando nível...</p>}
 
           {nivelUsuario && !loadingNivel && (
             <p style={{ color: "#e02020" }}>
@@ -281,10 +301,7 @@ export default function Login() {
               onChange={(e) => setSenhaCad(e.target.value)}
             />
 
-            <select
-              value={nivel}
-              onChange={(e) => setNivel(e.target.value)}
-            >
+            <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
               <option value="USER">Usuário</option>
               <option value="PASTOR">Pastor</option>
               <option value="VICE">Vice</option>

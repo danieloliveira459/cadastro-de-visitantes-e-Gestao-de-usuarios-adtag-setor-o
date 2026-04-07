@@ -36,31 +36,27 @@ app.use((req, res, next) => {
 });
 
 // =========================
-// 🌐 CORS (CORRIGIDO)
+// 🌐 CORS (USANDO MIDDLEWARE)
 // =========================
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com",
 ];
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-  }
-
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-
-  // 👇 RESPONDE PRELIGHT (ESSENCIAL)
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
-
-  next();
-});
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 // =========================
 // 🧩 MIDDLEWARE
@@ -88,40 +84,3 @@ app.get("/api", (req, res) => {
 // =========================
 const frontendPath = path.join(__dirname, "../frontend/dist");
 
-if (fs.existsSync(frontendPath)) {
-  app.use(express.static(frontendPath));
-
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api")) {
-      return next();
-    }
-
-    const indexFile = path.join(frontendPath, "index.html");
-
-    if (fs.existsSync(indexFile)) {
-      res.sendFile(indexFile);
-    } else {
-      res.status(500).send("Frontend não encontrado");
-    }
-  });
-} else {
-  console.warn("⚠️ Pasta dist não encontrada. Frontend não será servido.");
-}
-
-// =========================
-// ❌ 404 SOMENTE API
-// =========================
-app.use("/api", (req, res) => {
-  res.status(404).json({
-    message: "Rota da API não encontrada",
-  });
-});
-
-// =========================
-// 🚀 START
-// =========================
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
-});
