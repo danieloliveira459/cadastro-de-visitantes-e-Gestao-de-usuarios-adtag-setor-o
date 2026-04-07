@@ -36,22 +36,22 @@ const allowedOrigins = [
   "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com",
 ];
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-      console.warn("CORS bloqueado para:", origin);
-      return callback(null, false); 
-    },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    credentials: true,
-  })
-);
+    console.log("CORS bloqueado:", origin);
+    return callback(null, false);
+  },
+  credentials: true,
+}));
+
+//  ESSA LINHA É CRUCIAL
+app.options("*", cors());
 //  MIDDLEWARE
 app.use(express.json());
 //  ROTAS API
