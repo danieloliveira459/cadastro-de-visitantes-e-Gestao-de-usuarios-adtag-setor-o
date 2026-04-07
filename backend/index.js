@@ -13,10 +13,9 @@ import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 
-// __dirname em ESModules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// SECURITY HEADERS 
+// SECURITY HEADERS
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
@@ -24,7 +23,7 @@ app.use((req, res, next) => {
   );
   next();
 });
-// CORS (mais robusto)
+//  CORS
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com",
@@ -33,17 +32,20 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true); // permite Postman/mobile
+      if (!origin) return callback(null, true);
+
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-      return callback(new Error("Not allowed by CORS"));
+
+      console.warn("CORS bloqueado para:", origin);
+      return callback(null, false); 
     },
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
   })
 );
-// MIDDLEWARE
+//  MIDDLEWARE
 app.use(express.json());
 //  ROTAS API
 app.use("/api/visitantes", visitanteRoutes);
@@ -51,7 +53,6 @@ app.use("/api/aceitaramJesus", aceitaramJesusRoutes);
 app.use("/api/avisos", avisoRoutes);
 app.use("/api/programacoes", programacaoRoutes);
 app.use("/api/auth", authRoutes);
-
 // TESTE API
 app.get("/api", (req, res) => {
   res.json({ message: "API rodando com sucesso!" });
@@ -63,17 +64,23 @@ if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
 
   app.get("*", (req, res, next) => {
-    //  NÃO interceptar API
+    // NÃO interceptar API
     if (req.path.startsWith("/api")) {
       return next();
     }
 
-    res.sendFile(path.join(frontendPath, "index.html"));
+    const indexFile = path.join(frontendPath, "index.html");
+
+    if (fs.existsSync(indexFile)) {
+      res.sendFile(indexFile);
+    } else {
+      res.status(500).send("Frontend não encontrado");
+    }
   });
 } else {
-  console.warn("Pasta dist não encontrada. Frontend não será servido.");
+  console.warn("⚠️ Pasta dist não encontrada. Frontend não será servido.");
 }
-//  404 SOMENTE API
+// 404 SOMENTE API
 app.use("/api", (req, res) => {
   res.status(404).json({
     message: "Rota da API não encontrada",
@@ -83,5 +90,5 @@ app.use("/api", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+  console.log(` Servidor rodando em http://localhost:${PORT}`);
 });

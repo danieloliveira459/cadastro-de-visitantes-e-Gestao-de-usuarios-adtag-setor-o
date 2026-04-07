@@ -120,7 +120,7 @@ export const forgotPassword = async (req, res) => {
     await resend.emails.send({
       from: "onboarding@resend.dev",
       to: email,
-      subject: "Recuperação de senha",
+      subject: "ADTAG recuperação de senha!",
       html: `
         <h2>Recuperação de senha</h2>
         <p>Clique no link abaixo para redefinir sua senha:</p>
