@@ -13,65 +13,85 @@ import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 
+// __dirname (ESModules)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// SECURITY HEADERS
+
+// =========================
+// 🔐 SECURITY HEADERS (CSP)
+// =========================
 app.use((req, res, next) => {
   res.setHeader(
-  "Content-Security-Policy",
-  `
-  default-src 'self' https: data: blob:;
-  script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
-  style-src 'self' 'unsafe-inline' https:;
-  img-src 'self' https: data: blob:;
-  font-src 'self' https: data:;
-  connect-src 'self' https:;
-  `
-);
+    "Content-Security-Policy",
+    `
+    default-src 'self' https: data: blob:;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+    style-src 'self' 'unsafe-inline' https:;
+    img-src 'self' https: data: blob:;
+    font-src 'self' https: data:;
+    connect-src 'self' https:;
+    `
+  );
   next();
 });
-//  CORS
+
+// =========================
+// 🌐 CORS (CORRIGIDO)
+// =========================
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com",
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
 
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
 
-    console.log("CORS bloqueado:", origin);
-    return callback(null, false);
-  },
-  credentials: true,
-}));
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
 
-//  ESSA LINHA É CRUCIAL
-app.options("*", cors());
-//  MIDDLEWARE
+  // 👇 RESPONDE PRELIGHT (ESSENCIAL)
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
+// =========================
+// 🧩 MIDDLEWARE
+// =========================
 app.use(express.json());
-//  ROTAS API
+
+// =========================
+// 🚀 ROTAS API
+// =========================
 app.use("/api/visitantes", visitanteRoutes);
 app.use("/api/aceitaramJesus", aceitaramJesusRoutes);
 app.use("/api/avisos", avisoRoutes);
 app.use("/api/programacoes", programacaoRoutes);
 app.use("/api/auth", authRoutes);
-// TESTE API
+
+// =========================
+// 🧪 TESTE API
+// =========================
 app.get("/api", (req, res) => {
   res.json({ message: "API rodando com sucesso!" });
 });
-//  FRONTEND (React)
+
+// =========================
+// 🌍 FRONTEND (React)
+// =========================
 const frontendPath = path.join(__dirname, "../frontend/dist");
 
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
 
   app.get("*", (req, res, next) => {
-    // NÃO interceptar API
     if (req.path.startsWith("/api")) {
       return next();
     }
@@ -87,15 +107,21 @@ if (fs.existsSync(frontendPath)) {
 } else {
   console.warn("⚠️ Pasta dist não encontrada. Frontend não será servido.");
 }
-// 404 SOMENTE API
+
+// =========================
+// ❌ 404 SOMENTE API
+// =========================
 app.use("/api", (req, res) => {
   res.status(404).json({
     message: "Rota da API não encontrada",
   });
 });
-//  START
+
+// =========================
+// 🚀 START
+// =========================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(` Servidor rodando em http://localhost:${PORT}`);
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
