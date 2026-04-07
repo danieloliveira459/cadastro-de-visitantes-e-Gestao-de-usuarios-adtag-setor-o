@@ -79,12 +79,10 @@ export const register = async (req, res) => {
     return res.status(500).json({ erro: err.message });
   }
 };
-// EMAIL TRANSPORTER ( CORRIGIDO)
+// EMAIL TRANSPORTER 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  family: 4, //  resolve erro ENETUNREACH no Render
+  service: "gmail",
+  family: 4,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
