@@ -16,37 +16,46 @@ const app = express();
 // __dirname em ESModules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// MIDDLEWARES
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-}));
-
+// CORS CORRETO (PRODUÇÃO)
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+// MIDDLEWARE
 app.use(express.json());
-// ROTAS API
+//  ROTAS API 
 app.use("/api/visitantes", visitanteRoutes);
 app.use("/api/aceitaramJesus", aceitaramJesusRoutes);
 app.use("/api/avisos", avisoRoutes);
 app.use("/api/programacoes", programacaoRoutes);
 app.use("/api/auth", authRoutes);
-
 // TESTE API
 app.get("/api", (req, res) => {
   res.json({ message: "API rodando com sucesso!" });
 });
-
-// FRONTEND 
+// FRONTEND (React build)
 const frontendPath = path.join(__dirname, "../frontend/dist");
 
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
 
-  // SPA fallback (React Router)
-  app.get("*", (req, res) => {
+  //  CORREÇÃO IMPORTANTE:
+  // NÃO interceptar rotas da API
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      return next(); // deixa API passar
+    }
+
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
-// 404 API (SÓ API)
+//  404 SOMENTE PARA API
 app.use("/api", (req, res) => {
   res.status(404).json({
     message: "Rota da API não encontrada",
@@ -56,5 +65,5 @@ app.use("/api", (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
