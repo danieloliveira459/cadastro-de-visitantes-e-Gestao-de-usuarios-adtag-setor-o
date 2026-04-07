@@ -18,9 +18,16 @@ const __dirname = path.dirname(__filename);
 // SECURITY HEADERS
 app.use((req, res, next) => {
   res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self' https: data: blob:; font-src 'self' https: data:; img-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:;"
-  );
+  "Content-Security-Policy",
+  `
+  default-src 'self' https: data: blob:;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https:;
+  style-src 'self' 'unsafe-inline' https:;
+  img-src 'self' https: data: blob:;
+  font-src 'self' https: data:;
+  connect-src 'self' https:;
+  `
+);
   next();
 });
 //  CORS
