@@ -11,13 +11,8 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
 
   const redefinirSenha = async () => {
-    if (!token) {
-      return alert("Token inválido ou expirado.");
-    }
-
-    if (!novaSenha) {
-      return alert("Digite a nova senha");
-    }
+    if (!token) return alert("Token inválido ou expirado.");
+    if (!novaSenha) return alert("Digite a nova senha");
 
     try {
       setLoading(true);
@@ -26,9 +21,7 @@ export default function ResetPassword() {
 
       const res = await fetch(`${API}/auth/reset`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, novaSenha }),
       });
 
@@ -55,9 +48,7 @@ export default function ResetPassword() {
           <GiPadlock color="#e02020" /> Redefinir Senha
         </h2>
 
-        <p style={styles.subtitle}>
-          Digite sua nova senha abaixo
-        </p>
+        <p style={styles.subtitle}>Digite sua nova senha abaixo</p>
 
         <input
           type="password"
@@ -81,43 +72,45 @@ export default function ResetPassword() {
 
 const styles = {
   container: {
-    blockSize: "100vh",
+    height: "100vh",           
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f0f2f5",
   },
 
   card: {
     background: "#fff",
     padding: "40px",
     borderRadius: "12px",
-    inlineSize: "350px",
+    width: "350px",            
     textAlign: "center",
     boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
   },
 
   title: {
-    insetBlockEnd: "10px",
+    marginBottom: "10px",     
     color: "#333",
   },
 
   subtitle: {
-    insetBlockEnd: "20px",
-    color: "#000",
+    marginBottom: "20px",     
+    color: "#555",
     fontSize: "14px",
   },
 
   input: {
-    inlineSize: "100%",
+    width: "100%",           
     padding: "12px",
-    insetBlockEnd: "20px",
+    marginBottom: "20px",    
     borderRadius: "8px",
     border: "1px solid #ccc",
     fontSize: "14px",
+    boxSizing: "border-box",  
   },
 
   button: {
-    inlineSize: "100%",
+    width: "100%",            
     padding: "12px",
     background: "#e02020",
     color: "#fff",
@@ -125,6 +118,6 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
     fontWeight: "bold",
+    fontSize: "14px",
   },
 };
-//
