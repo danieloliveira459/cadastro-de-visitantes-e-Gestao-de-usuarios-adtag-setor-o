@@ -8,7 +8,7 @@ import Pastor from "./pages/Pastor";
 import Admin from "./pages/Admin";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import AceitaramJesus from "./pages/AceitaramJesus";
-import ResetPassword from "./pages/ResetPasword"; 
+import ResetPassword from "./pages/ResetPassword"; 
 
 // FUNÇÃO SEGURA
 function getUsuario() {
