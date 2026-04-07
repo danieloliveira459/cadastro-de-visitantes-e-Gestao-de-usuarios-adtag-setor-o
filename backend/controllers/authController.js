@@ -82,8 +82,8 @@ export const register = async (req, res) => {
 // EMAIL TRANSPORTER ( CORRIGIDO)
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
   family: 4, //  resolve erro ENETUNREACH no Render
   auth: {
     user: process.env.EMAIL_USER,
