@@ -209,3 +209,4 @@ export const getNivelByEmail = async (req, res) => {
     return res.status(500).json({ erro: err.message });
   }
 };
+//
