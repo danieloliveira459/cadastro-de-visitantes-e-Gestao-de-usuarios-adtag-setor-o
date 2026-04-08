@@ -29,14 +29,9 @@ export default function ResetPassword() {
     try {
       setLoading(true);
 
-      const API = import.meta.env.VITE_API_URL;
-
-      //  valida se variável existe
-      if (!API) {
-        console.error("VITE_API_URL não definida!");
-        return alert("Erro de configuração do sistema.");
-      }
-
+      const API = import.meta.env.VITE_API_URL 
+  || "https://cadatro-de-visitantes-e-gest-o-de.onrender.com/api";
+  
       const res = await fetch(`${API}/auth/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
