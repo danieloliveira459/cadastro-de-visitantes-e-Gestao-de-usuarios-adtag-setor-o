@@ -2,53 +2,38 @@ import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { GiPadlock } from "react-icons/gi";
 
+const API_URL = import.meta.env.VITE_API_URL || 
+  "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
+
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   const token = searchParams.get("token");
-
   const [novaSenha, setNovaSenha] = useState("");
   const [loading, setLoading] = useState(false);
 
   const redefinirSenha = async () => {
     if (loading) return;
 
-    if (!token) {
-      return alert("Token inválido ou expirado.");
-    }
-
-    if (!novaSenha) {
-      return alert("Digite a nova senha");
-    }
-
-    if (novaSenha.length < 6) {
-      return alert("A senha deve ter pelo menos 6 caracteres");
-    }
+    if (!token) return alert("Token inválido ou expirado.");
+    if (!novaSenha) return alert("Digite a nova senha");
+    if (novaSenha.length < 6) return alert("A senha deve ter pelo menos 6 caracteres");
 
     try {
       setLoading(true);
 
-      const API =
-        import.meta.env.VITE_API_URL ||
-        "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
-
-      const res = await fetch(`${API}/api/auth/reset`, {
+      const res = await fetch(`${API_URL}/api/auth/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, novaSenha }),
       });
 
-      let data = {};
-      try {
-        data = await res.json();
-      } catch {
+      const data = await res.json().catch(() => {
         throw new Error("Resposta inválida do servidor.");
-      }
+      });
 
-      if (!res.ok) {
-        throw new Error(data.erro || "Erro ao redefinir senha");
-      }
+      if (!res.ok) throw new Error(data.erro || "Erro ao redefinir senha");
 
       alert("Senha redefinida com sucesso!");
       navigate("/");
@@ -82,7 +67,6 @@ export default function ResetPassword() {
         <h2 style={styles.title}>
           <GiPadlock color="#e02020" /> Redefinir Senha
         </h2>
-
         <p style={styles.subtitle}>Digite sua nova senha abaixo</p>
 
         <input
