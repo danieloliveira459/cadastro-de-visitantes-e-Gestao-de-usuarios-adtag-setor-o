@@ -12,7 +12,7 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
 
   const redefinirSenha = async () => {
-    if (loading) return; // evita múltiplos cliques
+    if (loading) return;
 
     if (!token) {
       return alert("Token inválido ou expirado.");
@@ -29,16 +29,16 @@ export default function ResetPassword() {
     try {
       setLoading(true);
 
-      const API = import.meta.env.VITE_API_URL 
-  || "https://cadatro-de-visitantes-e-gest-o-de.onrender.com/api";
-  
-      const res = await fetch(`${API}/auth/reset`, {
+      const API =
+        import.meta.env.VITE_API_URL ||
+        "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
+
+      const res = await fetch(`${API}/api/auth/reset`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, novaSenha }),
       });
 
-      //  proteção contra resposta inválida (HTML, etc)
       let data = {};
       try {
         data = await res.json();
@@ -52,7 +52,6 @@ export default function ResetPassword() {
 
       alert("Senha redefinida com sucesso!");
       navigate("/");
-
     } catch (err) {
       console.error("Erro:", err.message);
       alert(err.message || "Erro ao conectar com o servidor");
@@ -61,7 +60,6 @@ export default function ResetPassword() {
     }
   };
 
-  //  caso não tenha token na URL
   if (!token) {
     return (
       <div style={styles.container}>
@@ -69,9 +67,7 @@ export default function ResetPassword() {
           <h2 style={{ ...styles.title, color: "#e02020" }}>
             <GiPadlock color="#e02020" /> Link inválido
           </h2>
-          <p style={styles.subtitle}>
-            Esse link expirou ou não é válido.
-          </p>
+          <p style={styles.subtitle}>Esse link expirou ou não é válido.</p>
           <button style={styles.button} onClick={() => navigate("/")}>
             Voltar
           </button>
@@ -122,7 +118,6 @@ const styles = {
     alignItems: "center",
     backgroundColor: "#f0f2f5",
   },
-
   card: {
     background: "#fff",
     padding: "40px",
@@ -131,18 +126,15 @@ const styles = {
     textAlign: "center",
     boxShadow: "0 10px 25px rgba(0,0,0,0.2)",
   },
-
   title: {
     marginBottom: "10px",
     color: "#333",
   },
-
   subtitle: {
     marginBottom: "20px",
     color: "#555",
     fontSize: "14px",
   },
-
   input: {
     width: "100%",
     padding: "12px",
@@ -152,7 +144,6 @@ const styles = {
     fontSize: "14px",
     boxSizing: "border-box",
   },
-
   button: {
     width: "100%",
     padding: "12px",
