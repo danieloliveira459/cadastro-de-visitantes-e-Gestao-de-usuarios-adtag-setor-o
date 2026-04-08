@@ -21,7 +21,7 @@ const __dirname = path.dirname(__filename);
 // =========================
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com",
+  "https://cadastro-de-visitantes-e-gestao-de-ukhv.onrender.com", // corrigido typo
 ];
 
 app.use(
