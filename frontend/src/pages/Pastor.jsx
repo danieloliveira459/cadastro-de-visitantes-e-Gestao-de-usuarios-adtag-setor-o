@@ -318,7 +318,7 @@ const gerarPDF = (tipo) => {
 };
 
 const deletarAviso = async (id) => {
-  await fetch(`${BASE_URL}/avisos/${id}`, {
+  await fetch(`${API}/avisos/${id}`, {
     method: "DELETE",
   });
 
