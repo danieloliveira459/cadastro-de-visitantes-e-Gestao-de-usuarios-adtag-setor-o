@@ -7,13 +7,7 @@ import { PiUserSwitchLight } from "react-icons/pi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./Pastor.css";
-
-const BASE_URL =
-  (import.meta.env && import.meta.env.VITE_API_URL)
-    ? import.meta.env.VITE_API_URL
-    : "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
-
-const API = `${BASE_URL}/api`;
+const API = "https://cadatro-de-visitantes-e-gest-o-de.onrender.com/api";
 
 export default function Pastor() {
   const navigate = useNavigate();
@@ -324,7 +318,7 @@ const gerarPDF = (tipo) => {
 };
 
 const deletarAviso = async (id) => {
-  await fetch(`${API}/avisos/${id}`, {
+  await fetch(`${BASE_URL}/avisos/${id}`, {
     method: "DELETE",
   });
 
