@@ -7,8 +7,12 @@ import { PiUserSwitchLight } from "react-icons/pi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import "./Pastor.css";
-const API = "https://cadatro-de-visitantes-e-gest-o-de.onrender.com/api";
 
+const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
+
+const API = `${BASE_URL}/api`;
 export default function Pastor() {
   const navigate = useNavigate();
 
