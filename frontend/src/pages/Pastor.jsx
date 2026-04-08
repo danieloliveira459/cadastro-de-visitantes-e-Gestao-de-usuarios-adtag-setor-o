@@ -366,7 +366,7 @@ return (
           </button>
         </div>
 
-{/* VISITANTES */}
+{/* VISITANTES */} 
 {aba === "visitantes" && (
   <div className="painel">
     <div className="card">
@@ -419,7 +419,11 @@ return (
                 <td>{v.telefone}</td>
                 <td>{v.igreja}</td>
                 <td>
-                  {new Date(v.data).toLocaleString("pt-BR")}
+                  {v.data
+                    ? new Date(v.data).toLocaleString("pt-BR", {
+                        timeZone: "America/Sao_Paulo",
+                      })
+                    : "-"}
                 </td>
                 <td style={{ textAlign: "center" }}>
                   <FaTrash
@@ -483,7 +487,13 @@ return (
             <tr key={a.id}>
               <td>{a.titulo}</td>
               <td>{a.descricao}</td>
-              <td>{new Date(a.data).toLocaleString("pt-BR")}</td>
+              <td>
+                {a.data
+                  ? new Date(a.data).toLocaleString("pt-BR", {
+                      timeZone: "America/Sao_Paulo",
+                    })
+                  : "-"}
+              </td>
               <td style={{ textAlign: "center" }}>
                 <FaTrash
                   className="delete"
@@ -553,7 +563,13 @@ return (
               <td>{p.dia}</td>
               <td>{p.horario}</td>
               <td>{p.atividade}</td>
-              <td>{new Date(p.data).toLocaleString("pt-BR")}</td>
+              <td>
+                {p.data
+                  ? new Date(p.data).toLocaleString("pt-BR", {
+                      timeZone: "America/Sao_Paulo",
+                    })
+                  : "-"}
+              </td>
               <td style={{ textAlign: "center" }}>
                 <FaTrash
                   className="delete"
