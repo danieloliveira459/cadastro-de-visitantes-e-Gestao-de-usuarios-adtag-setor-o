@@ -15,10 +15,7 @@ const app = express();
 // Corrigir __dirname no ESModules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// =========================
-// 🌐 CORS CONFIGURADO
-// =========================
+//  CORS CONFIGURADO
 const allowedOrigins = [
   "http://localhost:5173",
   "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com",
@@ -32,34 +29,21 @@ app.use(
     credentials: true,
   })
 );
-
 // Garante resposta ao preflight
 app.options("*", cors());
-
-// =========================
-// 🧩 MIDDLEWARE
-// =========================
+// MIDDLEWARE
 app.use(express.json());
-
-// =========================
-// 🚀 ROTAS API
-// =========================
+//  ROTAS API
 app.use("/api/visitantes", visitanteRoutes);
-app.use("/api/aceitaramJesus", aceitaramJesusRoutes);
+app.use("/api/aceitaram-jesus", aceitaramJesusRoutes);
 app.use("/api/avisos", avisoRoutes);
 app.use("/api/programacoes", programacaoRoutes);
 app.use("/api/auth", authRoutes);
-
-// =========================
-// 🧪 TESTE API
-// =========================
+//  TESTE API
 app.get("/api", (req, res) => {
-  res.json({ message: "🚀 API rodando com sucesso!" });
+  res.json({ message: " API rodando com sucesso!" });
 });
-
-// =========================
-// 🌍 FRONTEND (React)
-// =========================
+// FRONTEND (React)
 const frontendPath = path.join(__dirname, "../frontend/dist");
 
 if (fs.existsSync(frontendPath)) {
@@ -72,32 +56,23 @@ if (fs.existsSync(frontendPath)) {
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 } else {
-  console.warn("⚠️ Pasta dist não encontrada. Frontend não será servido.");
+  console.warn(" Pasta dist não encontrada. Frontend não será servido.");
 }
-
-// =========================
-// ❌ 404 SOMENTE API
-// =========================
+//  404 SOMENTE API
 app.use("/api", (req, res) => {
   res.status(404).json({ message: "Rota da API não encontrada" });
 });
-
-// =========================
-// 🚀 START
-// =========================
+//  START
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`✅ Servidor rodando na porta ${PORT}`);
+  console.log(` Servidor rodando na porta ${PORT}`);
 });
-
-// =========================
-// 🛡️ LOGS DE ERRO GLOBAIS
-// =========================
+// LOGS DE ERRO GLOBAIS
 process.on("uncaughtException", (err) => {
-  console.error("❌ Uncaught Exception:", err);
+  console.error(" Uncaught Exception:", err);
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error("❌ Unhandled Rejection:", reason);
+  console.error(" Unhandled Rejection:", reason);
 });

@@ -11,7 +11,7 @@ export default function FormCard() {
   const [funcao, setFuncao] = useState("");
   const [telefone, setTelefone] = useState("");
   const [igreja, setIgreja] = useState("");
-  const [aceitouJesus, setAceitouJesus] = useState(null); // null = não selecionado
+  const [aceitouJesus, setAceitouJesus] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -30,11 +30,10 @@ export default function FormCard() {
     try {
       setLoading(true);
 
+      // ✅ Sempre salva na tabela de visitantes
       const response = await fetch(`${API}/api/visitantes`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome,
           funcao,
@@ -44,10 +43,22 @@ export default function FormCard() {
         }),
       });
 
-      if (!response.ok) {
-        const erro = await response.text();
-        console.error("Erro backend:", erro);
-        throw new Error("Erro ao salvar no banco");
+      if (!response.ok) throw new Error("Erro ao salvar visitante");
+
+      // ✅ Se aceitou Jesus, salva também na tabela aceitaram_jesus
+      if (aceitouJesus === true) {
+        const responseJesus = await fetch(`${API}/api/aceitaram-jesus`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nome,
+            telefone,
+            endereco: igreja, // usa o campo igreja como endereço/origem
+            observacoes: `Função: ${funcao}`,
+          }),
+        });
+
+        if (!responseJesus.ok) throw new Error("Erro ao salvar em aceitaram Jesus");
       }
 
       setNome("");
@@ -58,7 +69,7 @@ export default function FormCard() {
 
       window.dispatchEvent(new Event("visitantesAtualizados"));
 
-      // ✅ Redireciona conforme a resposta
+      // ✅ Redireciona conforme escolha
       if (aceitouJesus === true) {
         navigate("/aceitou-jesus"); // troque pela rota correta
       } else {
@@ -108,14 +119,13 @@ export default function FormCard() {
           onChange={(e) => setIgreja(e.target.value)}
         />
 
-        {/* ✅ Checkbox Aceitou Jesus */}
+        {/* ✅ Radio Aceitou Jesus */}
         <label style={{ marginTop: "12px" }}>Já aceitou Jesus?</label>
         <div style={{ display: "flex", gap: "16px", marginTop: "6px" }}>
           <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
             <input
               type="radio"
               name="aceitouJesus"
-              value="sim"
               checked={aceitouJesus === true}
               onChange={() => setAceitouJesus(true)}
             />
@@ -126,7 +136,6 @@ export default function FormCard() {
             <input
               type="radio"
               name="aceitouJesus"
-              value="nao"
               checked={aceitouJesus === false}
               onChange={() => setAceitouJesus(false)}
             />
