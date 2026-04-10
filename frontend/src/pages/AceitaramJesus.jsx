@@ -18,7 +18,7 @@ export default function AceitaramJesus() {
   // BUSCAR TOTAL NO BANCO
   const fetchDados = async () => {
     try {
-      const res = await fetch(`${API}/api/aceitaramJesus`);
+      const res = await fetch(`${API}/api/aceitaram-jesus`);
 
       if (!res.ok) throw new Error("Erro ao buscar dados");
 
@@ -33,9 +33,7 @@ export default function AceitaramJesus() {
   useEffect(() => {
     fetchDados();
 
-    //  escuta atualização global (painel do pastor ou outras telas)
     const handleUpdate = () => fetchDados();
-
     window.addEventListener("aceitaram-jesus-updated", handleUpdate);
 
     return () => {
@@ -61,7 +59,7 @@ export default function AceitaramJesus() {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API}/api/aceitaramJesus`, {
+      const res = await fetch(`${API}/api/aceitaram-jesus`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(novo),
@@ -69,10 +67,7 @@ export default function AceitaramJesus() {
 
       if (!res.ok) throw new Error("Erro ao salvar no banco");
 
-      //  atualiza esta tela
       await fetchDados();
-
-      //  avisa outras telas (Painel do Pastor)
       window.dispatchEvent(new Event("aceitaram-jesus-updated"));
 
       setNome("");

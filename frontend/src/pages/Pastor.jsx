@@ -55,7 +55,7 @@ export default function Pastor() {
       } catch {}
 
       try {
-        const resJesus = await fetch(`${API}/aceitaramJesus`);
+        const resJesus = await fetch(`${API}/aceitaram-jesus`);
         if (resJesus.ok) {
           const jesusData = await resJesus.json();
           setAceitaramJesus(jesusData);
@@ -187,7 +187,7 @@ const handleDeleteProgramacao = async (id) => {
   const adicionarAceitouJesus = async () => {
     if (!nome) return alert("Nome obrigatório!");
 
-    const res = await fetch(`${API}/aceitaramJesus`, {
+    const res = await fetch(`${API}/aceitaram-jesus`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -211,7 +211,7 @@ const handleDeleteProgramacao = async (id) => {
     if (!confirmar) return;
 
     try {
-      await fetch(`${API}/aceitaramJesus/${id}`, {
+      await fetch(`${API}/aceitaram-jesus/${id}`, {
         method: "DELETE",
       });
 
@@ -233,7 +233,7 @@ const gerarPDF = (tipo) => {
     tituloPDF = "PROGRAMA\u00C7\u00C3O";
   }
 
-  if (tipo === "aceitaramJesus") {
+  if (tipo === "aceitaram-jesus") {
     tituloPDF = "ACEITARAM A JESUS";
   }
 
@@ -268,7 +268,7 @@ const gerarPDF = (tipo) => {
     tabela = programacoes.map((p) => [p.dia, p.horario, p.atividade, p.data]);
   }
 
-  if (tipo === "aceitaramJesus") {
+  if (tipo === "aceitaram-jesus") {
     head = [["Nome", "Telefone", "Endereço", "Observações", "Data"]];
     tabela = aceitaramJesus.map((v) => [
       v.nome,
@@ -300,7 +300,7 @@ const gerarPDF = (tipo) => {
       textColor: [255, 255, 255],
     },
 
-    columnStyles: tipo === "aceitaramJesus"
+    columnStyles: tipo === "aceitaram-jesus"
       ? {
           0: { cellWidth: 35 },
           1: { cellWidth: 30 },
@@ -313,7 +313,7 @@ const gerarPDF = (tipo) => {
 
   let nomeArquivo = tipo;
 
-  if (tipo === "aceitaramJesus") {
+  if (tipo === "aceitaram-jesus") {
     nomeArquivo = "aceitaram_a_jesus";
   }
 
