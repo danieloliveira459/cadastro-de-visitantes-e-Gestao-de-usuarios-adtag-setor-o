@@ -36,17 +36,16 @@ export const criarVisitante = async (req, res) => {
     }
 
     await db.query(
-      `INSERT INTO visitantes 
-      (nome, funcao, telefone, igreja, \`data\`) 
-      VALUES (?, ?, ?, ?, ?)`,
-      [
-        nome,
-        funcao || null,
-        telefone,
-        igreja || null,
-        dataFormatada, // 🔥 agora correto para MySQL
-      ]
-    );
+  `INSERT INTO visitantes 
+  (nome, funcao, telefone, igreja, data) 
+  VALUES (?, ?, ?, ?, NOW())`,
+  [
+    nome,
+    funcao || null,
+    telefone,
+    igreja || null,
+  ]
+);
 
     return res.status(201).json({
       msg: "Visitante criado com sucesso",
