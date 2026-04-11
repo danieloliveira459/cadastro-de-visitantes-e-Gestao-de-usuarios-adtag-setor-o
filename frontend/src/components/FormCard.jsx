@@ -131,7 +131,7 @@ export default function FormCard() {
               checked={aceitouJesus === true}
               onChange={() => setAceitouJesus(true)}
             />
-            Sim → vai para Aceitaram a Jesus
+            Sim 
           </label>
 
           <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
@@ -141,7 +141,7 @@ export default function FormCard() {
               checked={aceitouJesus === false}
               onChange={() => setAceitouJesus(false)}
             />
-            Não → vai para Visitantes
+            Não 
           </label>
         </div>
 
