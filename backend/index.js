@@ -30,23 +30,6 @@ const corsOptions = {
 app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
-// SOBRESCREVE O CSP DO RENDER — deve vir antes do static
-app.use((req, res, next) => {
-  res.removeHeader("Content-Security-Policy");
-  res.removeHeader("X-Content-Security-Policy");
-  res.removeHeader("X-WebKit-CSP");
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.typekit.net; " +
-    "font-src 'self' data: https://fonts.gstatic.com https://use.typekit.net; " +
-    "img-src 'self' data: https:; " +
-    "connect-src 'self' https://cadatro-de-visitantes-e-gest-o-de.onrender.com;"
-  );
-  next();
-});
-
 app.use(express.json());
 
 // ROTAS API
@@ -66,8 +49,9 @@ const frontendPath = path.join(__dirname, "../frontend/dist");
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
 
-  app.get("*", (req, res, next) => {
-    if (req.path.startsWith("/api")) return next();
+  // ← CORRIGIDO: sem next, qualquer rota não-API serve o index.html
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api")) return;
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 } else {
