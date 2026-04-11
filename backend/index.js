@@ -33,22 +33,6 @@ const corsOptions = {
 app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
-// CSP — libera fontes, scripts e conexões necessárias para o React funcionar
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    [
-      "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://use.typekit.net",
-      "font-src 'self' data: https://fonts.gstatic.com https://use.typekit.net",
-      "img-src 'self' data: https:",
-      "connect-src 'self' https://cadatro-de-visitantes-e-gest-o-de.onrender.com",
-    ].join("; ")
-  );
-  next();
-});
-
 // MIDDLEWARE
 app.use(express.json());
 
