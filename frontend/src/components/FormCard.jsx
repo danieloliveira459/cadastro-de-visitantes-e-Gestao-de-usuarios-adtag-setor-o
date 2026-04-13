@@ -14,16 +14,26 @@ export default function FormCard() {
   const [aceitouJesus, setAceitouJesus] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // ✅ Máscara de telefone
+  const formatTelefone = (value) => {
+    value = value.replace(/\D/g, "");
+
+    value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
+    value = value.replace(/(\d{5})(\d)/, "$1-$2");
+
+    return value;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ SOMENTE NOME OBRIGATÓRIO
+    // ✅ Apenas nome obrigatório
     if (!nome.trim()) {
       alert("O nome é obrigatório!");
       return;
     }
 
-    // ✅ (Opcional) manter obrigatório
+    // ✅ Mantendo obrigatório (se quiser pode remover)
     if (aceitouJesus === null) {
       alert("Selecione se o visitante já aceitou Jesus!");
       return;
@@ -39,13 +49,15 @@ export default function FormCard() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             nome,
-            telefone: telefone || "",
+            telefone: telefone.replace(/\D/g, ""), // salva só números
             endereco: igreja || "",
             observacoes: funcao ? `Função: ${funcao}` : "",
           }),
         });
 
-        if (!responseJesus.ok) throw new Error("Erro ao salvar em aceitaram Jesus");
+        if (!responseJesus.ok) {
+          throw new Error("Erro ao salvar em aceitaram Jesus");
+        }
 
       } else {
         // Salva APENAS em visitantes
@@ -55,12 +67,14 @@ export default function FormCard() {
           body: JSON.stringify({
             nome,
             cargo: funcao || "",
-            telefone: telefone || "",
+            telefone: telefone.replace(/\D/g, ""),
             igreja: igreja || "",
           }),
         });
 
-        if (!response.ok) throw new Error("Erro ao salvar visitante");
+        if (!response.ok) {
+          throw new Error("Erro ao salvar visitante");
+        }
       }
 
       // Limpa os campos
@@ -108,9 +122,10 @@ export default function FormCard() {
 
         <label>Telefone</label>
         <input
-          placeholder="(00)00000-0000"
+          placeholder="(00) 00000-0000"
           value={telefone}
-          onChange={(e) => setTelefone(e.target.value)}
+          onChange={(e) => setTelefone(formatTelefone(e.target.value))}
+          maxLength={15}
         />
 
         <label>Igreja / Visitando</label>

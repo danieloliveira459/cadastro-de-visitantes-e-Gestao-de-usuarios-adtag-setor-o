@@ -15,6 +15,16 @@ export default function AceitaramJesus() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
+  // ✅ MÁSCARA DE TELEFONE
+  const formatTelefone = (value) => {
+    value = value.replace(/\D/g, "");
+
+    value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
+    value = value.replace(/(\d{5})(\d)/, "$1-$2");
+
+    return value;
+  };
+
   // BUSCAR TOTAL NO BANCO
   const fetchDados = async () => {
     try {
@@ -50,7 +60,7 @@ export default function AceitaramJesus() {
 
     const novo = {
       nome,
-      telefone,
+      telefone: telefone.replace(/\D/g, ""), // ✅ salva só números
       endereco,
       observacoes,
       data: new Date().toISOString().split("T")[0],
@@ -107,8 +117,10 @@ export default function AceitaramJesus() {
             <label>Telefone</label>
             <input
               type="text"
+              placeholder="(00) 00000-0000"
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) => setTelefone(formatTelefone(e.target.value))}
+              maxLength={15}
             />
 
             <label>Endereço</label>
