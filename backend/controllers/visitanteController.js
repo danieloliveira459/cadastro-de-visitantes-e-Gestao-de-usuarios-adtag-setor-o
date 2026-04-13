@@ -3,58 +3,68 @@ import { db } from "../config/db.js";
 // LISTAR
 export const listarVisitantes = async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM visitantes");
-    return res.json(rows);
+    const [rows] = await db.query(
+      "SELECT * FROM visitantes ORDER BY id DESC"
+    );
+
+    return res.status(200).json(rows);
   } catch (err) {
     console.error("ERRO LISTAR VISITANTES:", err);
-    return res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: "Erro ao listar visitantes",
+    });
   }
 };
 
 // CRIAR
 export const criarVisitante = async (req, res) => {
   try {
-    const { nome, funcao, telefone, igreja, data } = req.body;
+    let { nome, funcao, telefone, igreja } = req.body;
 
-    // VALIDACAO
-    if (!nome || !telefone) {
+    // ✅ SOMENTE NOME OBRIGATÓRIO
+    if (!nome || nome.trim() === "") {
       return res.status(400).json({
-        error: "Nome e telefone são obrigatórios",
+        error: "Nome é obrigatório",
       });
     }
 
-    console.log("BODY RECEBIDO:", req.body);
+    // 🔥 LIMPEZA DE DADOS
+    nome = nome.trim();
+    funcao = funcao?.trim() || null;
+    igreja = igreja?.trim() || null;
 
-    // 🔥 CORREÇÃO DA DATA (ISO -> MySQL)
-    let dataFormatada = null;
+    // remove máscara do telefone (fica só número)
+    telefone = telefone ? telefone.replace(/\D/g, "") : null;
 
-    if (data) {
-      dataFormatada = new Date(data)
-        .toISOString()
-        .slice(0, 19)
-        .replace("T", " ");
-    }
+    console.log("BODY TRATADO:", {
+      nome,
+      funcao,
+      telefone,
+      igreja,
+    });
 
     await db.query(
-  `INSERT INTO visitantes 
-  (nome, funcao, telefone, igreja, data) 
-  VALUES (?, ?, ?, ?, NOW())`,
-  [
-    nome,
-    funcao || null,
-    telefone,
-    igreja || null,
-  ]
-);
+      `INSERT INTO visitantes 
+      (nome, funcao, telefone, igreja, data) 
+      VALUES (?, ?, ?, ?, NOW())`,
+      [
+        nome,
+        funcao,
+        telefone,
+        igreja,
+      ]
+    );
 
     return res.status(201).json({
       msg: "Visitante criado com sucesso",
     });
+
   } catch (err) {
     console.error("ERRO CRIAR VISITANTE:", err);
 
     return res.status(500).json({
-      error: err.message,
+      error: "Erro ao criar visitante",
     });
   }
 };
@@ -65,7 +75,9 @@ export const deletarVisitante = async (req, res) => {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(400).json({ error: "ID é obrigatório" });
+      return res.status(400).json({
+        error: "ID é obrigatório",
+      });
     }
 
     const [result] = await db.query(
@@ -80,13 +92,14 @@ export const deletarVisitante = async (req, res) => {
     }
 
     return res.status(200).json({
-      msg: "Excluído com sucesso",
+      msg: "Visitante excluído com sucesso",
     });
+
   } catch (err) {
     console.error("ERRO DELETAR:", err);
 
     return res.status(500).json({
-      error: err.message,
+      error: "Erro ao deletar visitante",
     });
   }
 };
