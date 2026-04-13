@@ -623,22 +623,6 @@ export default function Pastor() {
                 <span>Total</span>
                 <h1>{aceitaramJesus.length}</h1>
               </div>
-
-              <label>Nome</label>
-              <input value={nome} onChange={(e) => setNome(e.target.value)} />
-
-              <label>Telefone</label>
-              <input value={telefone} onChange={(e) => setTelefone(e.target.value)} />
-
-              <label>Endereço</label>
-              <input value={endereco} onChange={(e) => setEndereco(e.target.value)} />
-
-              <label>Observações</label>
-              <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
-
-              <button className="btn-red" onClick={adicionarAceitouJesus}>
-                Adicionar
-              </button>
             </div>
 
             <div className="card">
