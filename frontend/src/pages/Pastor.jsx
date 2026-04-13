@@ -384,7 +384,7 @@ export default function Pastor() {
     <th>Função/ND</th>
     <th>Telefone</th>
     <th>Igreja</th>
-    <th>Aceitou jesus?</th>  {/* ← movido para antes de Data */}
+    <th>Aceitou jesus?</th>  
     <th>Data</th>
     <th>Ações</th>
   </tr>
@@ -397,7 +397,7 @@ export default function Pastor() {
       <td>{v.telefone}</td>
       <td>{v.igreja}</td>
 
-      {/* ✅ Aceitou jesus? — antes da data */}
+      {/* Aceitou jesus? — antes da data */}
       <td>
         <div style={{ display: "flex", gap: "10px" }}>
           <label>
@@ -420,8 +420,6 @@ export default function Pastor() {
           </label>
         </div>
       </td>
-
-      {/* Data — depois */}
       <td>
         {v.data
           ? new Date(v.data).toLocaleString("pt-BR", {
