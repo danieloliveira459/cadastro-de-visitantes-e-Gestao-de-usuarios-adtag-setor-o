@@ -378,72 +378,72 @@ export default function Pastor() {
                 </div>
               ) : (
                 <table className="tabela">
-                  <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>Função/ND</th>
-                      <th>Telefone</th>
-                      <th>Igreja</th>
-                      <th>Data</th>
-                      <th>Aceitou jesus?</th>
-                      <th>Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visitantes.map((v) => (
-                      <tr key={v.id}>
-                        <td>{v.nome}</td>
-                        <td>{v.funcao}</td>
-                        <td>{v.telefone}</td>
-                        <td>{v.igreja}</td>
+                 <thead>
+  <tr>
+    <th>Nome</th>
+    <th>Função/ND</th>
+    <th>Telefone</th>
+    <th>Igreja</th>
+    <th>Aceitou jesus?</th>  {/* ← movido para antes de Data */}
+    <th>Data</th>
+    <th>Ações</th>
+  </tr>
+</thead>
+<tbody>
+  {visitantes.map((v) => (
+    <tr key={v.id}>
+      <td>{v.nome}</td>
+      <td>{v.funcao}</td>
+      <td>{v.telefone}</td>
+      <td>{v.igreja}</td>
 
-                        <td>
-                          {v.data
-                            ? new Date(v.data).toLocaleString("pt-BR", {
-                                timeZone: "America/Sao_Paulo",
-                                day: "2-digit",
-                                month: "2-digit",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })
-                            : "-"}
-                        </td>
+      {/* ✅ Aceitou jesus? — antes da data */}
+      <td>
+        <div style={{ display: "flex", gap: "10px" }}>
+          <label>
+            <input
+              type="radio"
+              name={`aceitou-${v.id}`}
+              checked={v.aceitou_jesus == 1}
+              onChange={() => atualizarAceitou(v.id, true)}
+            />
+            Sim
+          </label>
+          <label>
+            <input
+              type="radio"
+              name={`aceitou-${v.id}`}
+              checked={v.aceitou_jesus == 0 || v.aceitou_jesus === null}
+              onChange={() => atualizarAceitou(v.id, false)}
+            />
+            Não
+          </label>
+        </div>
+      </td>
 
-                        {/* ✅ checked corrigido para aceitar 0, 1, true, false */}
-                        <td>
-                          <div style={{ display: "flex", gap: "10px" }}>
-                            <label>
-                              <input
-                                type="radio"
-                                name={`aceitou-${v.id}`}
-                                checked={v.aceitou_jesus == 1}
-                                onChange={() => atualizarAceitou(v.id, true)}
-                              />
-                              Sim
-                            </label>
+      {/* Data — depois */}
+      <td>
+        {v.data
+          ? new Date(v.data).toLocaleString("pt-BR", {
+              timeZone: "America/Sao_Paulo",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "-"}
+      </td>
 
-                            <label>
-                              <input
-                                type="radio"
-                                name={`aceitou-${v.id}`}
-                                checked={v.aceitou_jesus == 0 || v.aceitou_jesus === null}
-                                onChange={() => atualizarAceitou(v.id, false)}
-                              />
-                              Não
-                            </label>
-                          </div>
-                        </td>
-
-                        <td style={{ textAlign: "center" }}>
-                          <FaTrash
-                            className="delete"
-                            onClick={() => handleDeleteVisitante(v.id)}
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
+      <td style={{ textAlign: "center" }}>
+        <FaTrash
+          className="delete"
+          onClick={() => handleDeleteVisitante(v.id)}
+        />
+      </td>
+    </tr>
+  ))}
+</tbody>
                 </table>
               )}
             </div>
