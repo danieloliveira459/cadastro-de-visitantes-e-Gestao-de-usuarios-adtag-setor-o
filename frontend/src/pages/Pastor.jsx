@@ -253,10 +253,26 @@ export default function Pastor() {
     let tabela = [];
     let head = [];
 
-    if (tipo === "visitantes") {
-      head = [["Nome", "Cargo", "Telefone", "Igreja", "Aceitou Jesus", "Data"]];
-      tabela = visitantes.map((v) => [v.nome, v.cargo, v.telefone, v.igreja, v.aceitou_jesus ? "sim" : "não", v.data]);
-    }
+   if (tipo === "visitantes") {
+  head = [["Nome", "Cargo", "Telefone", "Igreja", "Aceitou Jesus", "Data"]];
+  tabela = visitantes.map((v) => [
+    v.nome,
+    v.cargo,
+    v.telefone,
+    v.igreja,
+    v.aceitou_jesus == 1 ? "Sim" : "Não",  
+    v.data
+      ? new Date(v.data).toLocaleString("pt-BR", {
+          timeZone: "America/Sao_Paulo",
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "-",  // ← Data depois
+  ]);
+}
 
     if (tipo === "avisos") {
       head = [["Título", "Descrição", "Data"]];
