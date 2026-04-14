@@ -1,0 +1,74 @@
+.membros-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* TABS */
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 18px;
+  border-radius: 20px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+}
+
+.tab.ativa {
+  background: #e02020;
+  color: white;
+}
+
+/* CARD */
+.card-padrao {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.titulo-card {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+/* FORM */
+.form-padrao {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-padrao input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+/* BOTÕES */
+.btn-padrao {
+  background: #e02020;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.btn-secundario {
+  margin-top: 10px;
+  padding: 10px;
+}
+
+/* QR */
+.qr-box {
+  margin-top: 20px;
+  text-align: center;
+}
