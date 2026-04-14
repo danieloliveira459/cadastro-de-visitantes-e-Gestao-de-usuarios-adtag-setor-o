@@ -17,7 +17,7 @@ const API = `${BASE_URL}/api/auth`;
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirected = useRef(false); // 👈 substitui checkedAuth (não causa re-render)
+  const redirected = useRef(false); 
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -44,7 +44,7 @@ export default function Login() {
     }
   };
 
-  // 🔎 BUSCAR NÍVEL
+  //  BUSCAR NÍVEL
   useEffect(() => {
     if (!email || email.length < 5) {
       setNivelUsuario("");
@@ -76,18 +76,18 @@ export default function Login() {
     return () => clearTimeout(delay);
   }, [email]);
 
-  // 🔁 REDIRECIONAMENTO — CORRIGIDO
+  //  REDIRECIONAMENTO — CORRIGIDO
   useEffect(() => {
     const token = localStorage.getItem("token");
 
     // useRef não causa re-render, sem loop
     if (token && !redirected.current) {
-      redirected.current = true; // 👈 marca antes de navegar
+      redirected.current = true; //  marca antes de navegar
       navigate("/home", { replace: true });
     }
-  }, []); // 👈 array vazio: roda só uma vez na montagem
+  }, []); // array vazio: roda só uma vez na montagem
 
-  // 🔐 LOGIN
+  //  LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
@@ -119,7 +119,7 @@ export default function Login() {
     }
   };
 
-  // 🔁 RECUPERAR SENHA
+  // RECUPERAR SENHA
   const recuperarSenha = async () => {
     setErro("");
     setMensagem("");
