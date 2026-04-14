@@ -1,15 +1,18 @@
-import { FaUserPlus, FaRightFromBracket } from "react-icons/fa6";
+import { FaUserPlus, FaRightFromBracket, FaBookOpen } from "react-icons/fa6";
 import { PiUserSwitchLight } from "react-icons/pi";
 import { RiAdminFill } from "react-icons/ri";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./Header.css";
 import adtagLogo from "../assets/adtag.png";
+import manualPDF from "../assets/manual_sistema_Recepção_ (1).pdf";
 
 export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
-  const isLoggingOut = useRef(false); // 👈 flag para evitar conflito
+  const isLoggingOut = useRef(false);
+  const menuRef = useRef(null);
+  const [menuAberto, setMenuAberto] = useState(false);
 
   const isPastor = location.pathname === "/pastor";
   const isAceitaramJesus = location.pathname === "/aceitaram-jesus";
@@ -21,18 +24,37 @@ export default function Header() {
     usuario = null;
   }
 
-  // Proteção de rota: só redireciona se NÃO estiver em processo de logout
   useEffect(() => {
     if (!usuario && !isLoggingOut.current) {
       navigate("/login", { replace: true });
     }
   }, [usuario, navigate]);
 
+  useEffect(() => {
+    const handleClickFora = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuAberto(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickFora);
+    return () => document.removeEventListener("mousedown", handleClickFora);
+  }, []);
+
   const handleLogout = () => {
-    isLoggingOut.current = true; // 👈 sinaliza que o logout é intencional
+    isLoggingOut.current = true;
     localStorage.removeItem("usuarioLogado");
     navigate("/login", { replace: true });
   };
+
+  // ✅ Agora abre o PDF de verdade
+  const handleManual = () => {
+    window.open(manualPDF, "_blank");
+    setMenuAberto(false);
+  };
+
+  const iniciais = usuario?.nome
+    ? usuario.nome.split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
 
   return (
     <header className="header">
@@ -71,14 +93,47 @@ export default function Header() {
           Painel do Pastor
         </button>
 
-        <span className="usuario-logado">
-          <RiAdminFill />
-          {usuario?.nome || "Usuário"}
-        </span>
+        {/* MENU HAMBÚRGUER */}
+        <div className="menu-wrapper" ref={menuRef}>
+          <button
+            className={`btn-hamburguer ${menuAberto ? "aberto" : ""}`}
+            onClick={() => setMenuAberto(!menuAberto)}
+            aria-label="Menu do usuário"
+          >
+            <span className="bar" />
+            <span className="bar" />
+            <span className="bar" />
+          </button>
 
-        <button className="btn-logout" onClick={handleLogout}>
-          <FaRightFromBracket /> Logout
-        </button>
+          {menuAberto && (
+            <div className="dropdown-menu">
+              <div className="menu-usuario">
+                <div className="avatar">{iniciais}</div>
+                <div>
+                  <span className="menu-nome">{usuario?.nome || "Usuário"}</span>
+                  <span className="menu-nivel">
+                    <RiAdminFill /> {usuario?.nivel || ""}
+                  </span>
+                </div>
+              </div>
+
+              <div className="menu-divider" />
+
+              <button className="menu-item" onClick={handleManual}>
+                <FaBookOpen />
+                Manual do usuário
+                <span className="badge-pdf">PDF</span>
+              </button>
+
+              <div className="menu-divider" />
+
+              <button className="menu-item danger" onClick={handleLogout}>
+                <FaRightFromBracket />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

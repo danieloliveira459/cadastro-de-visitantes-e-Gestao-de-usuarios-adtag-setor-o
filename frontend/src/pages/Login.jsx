@@ -221,11 +221,15 @@ export default function Login() {
             <input type="password" placeholder="Senha" value={senhaCad} onChange={(e) => setSenhaCad(e.target.value)} />
 
             <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
-              <option value="USER">Usuário</option>
+              <option value="Diácono(@)">Diácono(@)</option>
               <option value="PASTOR">Pastor</option>
-              <option value="VICE">Vice</option>
-              <option value="DIRIGENTE">Dirigente</option>
+              <option value="VICE PASTOR">Vice Pastor</option>
+              <option value="PASTOR DIRIGENTE">Pastor Dirigente</option>
               <option value="ADM">Administrador</option>
+              <option value="RECEPCIONISTA">Recepcionista</option>
+               <option value="SECRETÁRIO">Secretário</option>
+                <option value="TESOUREIRO">Tesoureiro</option>
+
             </select>
 
             <button onClick={handleCadastrarUsuario} className="btn-login">Salvar Usuário</button>

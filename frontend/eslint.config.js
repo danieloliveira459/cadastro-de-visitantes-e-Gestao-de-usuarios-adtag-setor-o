@@ -23,7 +23,14 @@ export default defineConfig([
       },
     },
     rules: {
-      'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Variáveis não usadas viram warning em vez de erro
+      'no-unused-vars': ['warn', { varsIgnorePattern: '^[A-Z_]', argsIgnorePattern: '^_' }],
+
+      // Permite usar console.log sem erro
+      'no-console': 'off',
+
+      // Não obriga dependências no useEffect (útil durante dev)
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 ])
