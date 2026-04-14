@@ -8,7 +8,7 @@ import {
   FaDownload,
   FaPrint,
 } from "react-icons/fa6";
-import { QRCodeSVG } from "qrcode.react";
+import QRCode from "react-qr-code";
 import "./CadastroMembros.css";
 
 const ABAS = [
@@ -61,10 +61,10 @@ function FormularioMembro({ categoria }) {
     }, {});
 
   const [form, setForm] = useState(gerarEstadoInicial());
+  const [membros, setMembros] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sucesso, setSucesso] = useState("");
   const [erro, setErro] = useState("");
-  const [membros, setMembros] = useState([]);
 
   useEffect(() => {
     setForm(gerarEstadoInicial());
@@ -76,9 +76,9 @@ function FormularioMembro({ categoria }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setErro("");
     setSucesso("");
-    setLoading(true);
 
     try {
       const res = await fetch(`${BASE_URL}/api/membros`, {
@@ -87,26 +87,14 @@ function FormularioMembro({ categoria }) {
         body: JSON.stringify({ ...form, categoria }),
       });
 
-      let data = {};
-      try {
-        data = await res.json();
-      } catch {}
-
-      if (!res.ok) {
-        throw new Error(data?.erro || "Erro ao cadastrar.");
-      }
+      if (!res.ok) throw new Error();
 
       setSucesso("Membro cadastrado com sucesso!");
-    } catch (err) {
-      console.error(err);
+    } catch {
       setSucesso("Salvo localmente!");
     }
 
-    setMembros((prev) => [
-      ...prev,
-      { ...form, categoria, id: Date.now() },
-    ]);
-
+    setMembros((prev) => [...prev, { ...form, id: Date.now() }]);
     setForm(gerarEstadoInicial());
     setLoading(false);
   };
@@ -114,22 +102,22 @@ function FormularioMembro({ categoria }) {
   return (
     <div className="membro-layout">
       <div className="membro-form-box">
-        <h2 className="membro-titulo">
+        <h2>
           {ABAS.find((a) => a.id === categoria)?.icon} Cadastrar{" "}
           {ABAS.find((a) => a.id === categoria)?.label}
         </h2>
 
-        {erro && <p className="msg-erro">{erro}</p>}
-        {sucesso && <p className="msg-sucesso">{sucesso}</p>}
+        {erro && <p>{erro}</p>}
+        {sucesso && <p>{sucesso}</p>}
 
-        <form onSubmit={handleSubmit} className="membro-form">
+        <form onSubmit={handleSubmit}>
           {todosCampos.map((campo) => (
-            <div key={campo.name} className="campo-grupo">
+            <div key={campo.name}>
               <label>{campo.label}</label>
 
               {campo.type === "select" ? (
                 <select name={campo.name} value={form[campo.name]} onChange={handleChange}>
-                  <option value="">Selecione...</option>
+                  <option value="">Selecione</option>
                   {campo.options.map((op) => (
                     <option key={op}>{op}</option>
                   ))}
@@ -146,37 +134,25 @@ function FormularioMembro({ categoria }) {
             </div>
           ))}
 
-          <button type="submit" disabled={loading} className="btn-cadastrar">
-            {loading ? "Cadastrando..." : "Cadastrar"}
+          <button disabled={loading}>
+            {loading ? "Salvando..." : "Cadastrar"}
           </button>
         </form>
       </div>
 
       <div className="membro-lista-box">
-        <h3>Membros cadastrados ({membros.length})</h3>
+        <h3>Membros ({membros.length})</h3>
 
-        {membros.length === 0 ? (
-          <p>Nenhum membro cadastrado</p>
-        ) : (
-          <table className="membro-table">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Telefone</th>
-                <th>Data</th>
+        <table>
+          <tbody>
+            {membros.map((m) => (
+              <tr key={m.id}>
+                <td>{m.nome}</td>
+                <td>{m.telefone || "-"}</td>
               </tr>
-            </thead>
-            <tbody>
-              {membros.map((m) => (
-                <tr key={m.id}>
-                  <td>{m.nome}</td>
-                  <td>{m.telefone || "-"}</td>
-                  <td>{m.dataNasc || "-"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -189,10 +165,8 @@ function AbaQRCode() {
 
   const url = `${window.location.origin}/login?email=${encodeURIComponent(email)}`;
 
-  const handleDownload = () => {
-    const svg = document.querySelector(".qr-card svg");
-    if (!svg) return;
-
+  const baixar = () => {
+    const svg = document.querySelector("svg");
     const serializer = new XMLSerializer();
     const blob = new Blob([serializer.serializeToString(svg)], {
       type: "image/svg+xml",
@@ -200,38 +174,28 @@ function AbaQRCode() {
 
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `qrcode-${nome.replace(/\s+/g, "-").toLowerCase()}.svg`;
+    a.download = `qrcode-${nome}.svg`;
     a.click();
   };
 
   return (
-    <div className="qr-layout">
+    <div>
       <form
         onSubmit={(e) => {
           e.preventDefault();
           setGerado(true);
         }}
       >
-        <input
-          placeholder="Nome"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          required
-        />
-        <input
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <button>Gerar QR</button>
+        <input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome" required />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+        <button>Gerar</button>
       </form>
 
       {gerado && (
-        <div className="qr-card">
+        <div>
           <h3>{nome}</h3>
-          <QRCodeSVG value={url} size={200} />
-          <button onClick={handleDownload}>
+          <QRCode value={url} />
+          <button onClick={baixar}>
             <FaDownload /> Baixar
           </button>
         </div>
@@ -244,14 +208,12 @@ export default function CadastroMembros() {
   const [aba, setAba] = useState("criancas");
 
   return (
-    <div className="membros-container">
-      <div className="tabs">
-        {ABAS.map((a) => (
-          <button key={a.id} onClick={() => setAba(a.id)}>
-            {a.icon} {a.label}
-          </button>
-        ))}
-      </div>
+    <div>
+      {ABAS.map((a) => (
+        <button key={a.id} onClick={() => setAba(a.id)}>
+          {a.icon} {a.label}
+        </button>
+      ))}
 
       {aba === "qrcode" ? (
         <AbaQRCode />
