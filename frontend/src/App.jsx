@@ -66,7 +66,7 @@ export default function App() {
           }
         />
 
-        {/* HOME */}
+        {/*HOME */}
         <Route
           path="/home"
           element={
@@ -76,7 +76,7 @@ export default function App() {
           }
         />
 
-        {/* PASTOR */}
+        {/*PASTOR */}
         <Route
           path="/pastor"
           element={
@@ -86,7 +86,7 @@ export default function App() {
           }
         />
 
-        {/* ACEITARAM JESUS */}
+        {/*ACEITARAM JESUS */}
         <Route
           path="/aceitaram-jesus"
           element={
@@ -96,7 +96,7 @@ export default function App() {
           }
         />
 
-        {/* 🔥 NOVA ROTA MEMBROS */}
+        {/*NOVA ROTA MEMBROS */}
         <Route
           path="/membros"
           element={

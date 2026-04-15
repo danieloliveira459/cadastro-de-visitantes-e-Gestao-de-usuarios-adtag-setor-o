@@ -16,7 +16,7 @@ const ABAS = [
   { id: "criancas", label: "Crianças",       singular: "Criança", icon: <FaChildren /> },
   { id: "jovens",   label: "Jovens",          singular: "Jovem",   icon: <FaPerson />   },
   { id: "irmas",    label: "Irmãs",           singular: "Irmã",    icon: <FaPersonDress /> },
-  { id: "varoes",   label: "Varões",          singular: "Varão",   icon: <FaPerson />   },
+  { id: "Homens",   label: "Homens",          singular: "Homens",   icon: <FaPerson />   },
   { id: "geral",    label: "Cadastro Geral",  singular: null,      icon: <FaUsers />    },
   { id: "qrcode",   label: "QR Code",         singular: null,      icon: <FaQrcode />   },
 ];
@@ -327,7 +327,7 @@ export default function CadastroMembros() {
     criancas: [],
     jovens: [],
     irmas: [],
-    varoes: [],
+    Homens: [],
   });
 
   const handleCadastrar = (tipo, novoMembro) => {

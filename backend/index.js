@@ -9,6 +9,12 @@ import aceitaramJesusRoutes from "./routes/aceitaramJesusRoutes.js";
 import avisoRoutes from "./routes/avisoRoutes.js";
 import programacaoRoutes from "./routes/programacaoRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import cadastroGeral from "./routes/cadastroGeralRoutes.js";
+import criancas from "./routes/criancaRoutes.js";
+import jovens from "./routes/jovemRoutes.js";
+import irmas from "./routes/irmaRoutes.js";
+import homens from "./routes/homemRoutes.js";
+
 
 const app = express();
 
@@ -38,6 +44,12 @@ app.use("/api/aceitaram-jesus", aceitaramJesusRoutes);
 app.use("/api/avisos", avisoRoutes);
 app.use("/api/programacoes", programacaoRoutes);
 app.use("/api/auth", authRoutes);
+app.use ("/api/cadastro-geral", cadastroGeral);
+app.use ("/api/criancas", criancas)
+app.use ("/api/jovens", jovens);
+app.use ("/api/irmas", irmas);
+app.use ("/api/homens", homens);
+
 
 app.get("/api", (req, res) => {
   res.json({ message: "API rodando com sucesso!" });
