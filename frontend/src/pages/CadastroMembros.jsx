@@ -80,7 +80,7 @@ function QRCodeMembros({ tipo, membros }) {
 }
 
 /* ================= FORMULÁRIO + LISTA ================= */
-function FormularioComLista({ tipo, membros = [], onCadastrar, onDeletar }) {
+function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
   const [form, setForm] = useState(formInicial());
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState("");
@@ -100,23 +100,19 @@ function FormularioComLista({ tipo, membros = [], onCadastrar, onDeletar }) {
     setLoading(true);
     setMsg("");
 
-    const data = new Date().toLocaleString("pt-BR");
-
     try {
       const res = await fetch(`${BASE_URL}/api/membros`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, tipo, data }),
+        body: JSON.stringify({ ...form, tipo }),
       });
-
       if (!res.ok) throw new Error();
-
       setMsg(` ${abaAtual.singular} cadastrado(a) com sucesso!`);
     } catch {
-      setMsg(` ${abaAtual.singular} salvo(a) localmente.`);
+      setMsg(` ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
     }
 
-    onCadastrar({ ...form, id: Date.now(), data });
+    onCadastrar({ ...form, id: Date.now() });
     setForm(formInicial());
     setLoading(false);
     setTimeout(() => setMsg(""), 4000);
@@ -124,7 +120,7 @@ function FormularioComLista({ tipo, membros = [], onCadastrar, onDeletar }) {
 
   return (
     <div className="two-col">
-      {/* --- FORMULÁRIO --- */}
+      {/* --- CARD FORMULÁRIO --- */}
       <div className="card-padrao">
         <h2 className="titulo-card">
           {abaAtual?.icon} Cadastro de {abaAtual?.label}
@@ -138,11 +134,22 @@ function FormularioComLista({ tipo, membros = [], onCadastrar, onDeletar }) {
         {msg && <p className="msg">{msg}</p>}
 
         <form onSubmit={handleSubmit} className="form-padrao">
-          <input name="nome" placeholder="Nome" value={form.nome} onChange={handleChange} required />
-          <input name="idade" placeholder="Idade" value={form.idade} onChange={handleChange} />
-          <input name="telefone" placeholder="Telefone" value={form.telefone} onChange={handleChange} />
-          <input name="endereco" placeholder="Endereço" value={form.endereco} onChange={handleChange} />
-
+          <div className="form-group">
+            <label className="form-label">Nome Completo</label>
+            <input name="nome" placeholder="Digite o nome completo" value={form.nome} onChange={handleChange} required />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Idade</label>
+            <input name="idade" placeholder="Digite a idade" value={form.idade} onChange={handleChange} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Telefone</label>
+            <input name="telefone" placeholder="(00) 00000-0000" value={form.telefone} onChange={handleChange} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Endereço</label>
+            <input name="endereco" placeholder="Digite o endereço completo" value={form.endereco} onChange={handleChange} />
+          </div>
           <button className="btn-padrao" disabled={loading}>
             {loading ? "Salvando..." : `Cadastrar ${abaAtual?.singular}`}
           </button>
@@ -151,7 +158,7 @@ function FormularioComLista({ tipo, membros = [], onCadastrar, onDeletar }) {
         <QRCodeMembros tipo={tipo} membros={membros} />
       </div>
 
-      {/* --- LISTA EM TABELA --- */}
+      {/* --- CARD LISTA --- */}
       <div className="card-padrao">
         <div className="list-header">
           <h2 className="titulo-card">
@@ -166,49 +173,97 @@ function FormularioComLista({ tipo, membros = [], onCadastrar, onDeletar }) {
             <p>Nenhum membro cadastrado ainda.</p>
           </div>
         ) : (
-          <div className="table-wrapper">
-            <table className="geral-table">
-              <thead>
-                <tr>
-                  <th>Nome</th>
-                  <th>Idade</th>
-                  <th>Telefone</th>
-                  <th>Endereço</th>
-                  <th>Data</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {membros.map((m) => (
-                  <tr key={m.id}>
-                    <td><strong>{m.nome}</strong></td>
-                    <td>{m.idade || "—"}</td>
-                    <td>{m.telefone || "—"}</td>
-                    <td>{m.endereco || "—"}</td>
-                    <td>{m.data || "—"}</td>
-                    <td>
-                      <button
-                        className="btn-delete"
-                        onClick={() => onDeletar(tipo, m.id)}
-                      >
-                        <FaTrash />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          membros.map((m) => (
+            <div className="member-item" key={m.id}>
+              <div className="member-avatar">{abaAtual?.icon}</div>
+              <div className="member-info">
+                <p className="member-name">{m.nome}</p>
+                <p className="member-details">
+                  {m.idade && `🎂 ${m.idade} anos`}
+                  {m.telefone && `  📞 ${m.telefone}`}
+                  {m.endereco && <><br />📍 {m.endereco}</>}
+                </p>
+              </div>
+              <button className="member-delete" onClick={() => onDeletar(tipo, m.id)} title="Remover">
+                <FaTrash />
+              </button>
+            </div>
+          ))
         )}
       </div>
     </div>
   );
 }
+
+/* ================= CADASTRO GERAL ================= */
+function CadastroGeral({ todos }) {
+  const abas = ABAS.filter((a) => a.id !== "geral");
+  const total = Object.values(todos).flat().length;
+
+  return (
+    <>
+      <div className="card-padrao" style={{ marginBottom: 24 }}>
+        <h2 className="titulo-card"><FaUsers /> Resumo Geral</h2>
+        <div className="resumo-grid">
+          {abas.map((a) => (
+            <div className="resumo-item" key={a.id}>
+              <span className="resumo-icon">{a.icon}</span>
+              <p className="resumo-label">{a.label}</p>
+              <p className="resumo-numero">{todos[a.id]?.length ?? 0}</p>
+            </div>
+          ))}
+        </div>
+        <div className="total-geral-row">
+          <span>Total Geral:</span>
+          <strong>{total}</strong>
+        </div>
+      </div>
+
+      <div className="card-padrao">
+        <h2 className="titulo-card"><FaUsers /> Todos os Membros</h2>
+        {total === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon"><FaUsers /></div>
+            <p>Nenhum membro cadastrado ainda.</p>
+          </div>
+        ) : (
+          <div className="table-wrapper">
+            <table className="geral-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Categoria</th>
+                  <th>Idade</th>
+                  <th>Telefone</th>
+                  <th>Endereço</th>
+                </tr>
+              </thead>
+              <tbody>
+                {abas.flatMap((a) =>
+                  (todos[a.id] ?? []).map((m) => (
+                    <tr key={m.id}>
+                      <td><strong>{m.nome}</strong></td>
+                      <td><span className="badge-tipo">{a.icon} {a.singular}</span></td>
+                      <td>{m.idade || "—"}</td>
+                      <td>{m.telefone || "—"}</td>
+                      <td>{m.endereco || "—"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 /* ================= MAIN ================= */
 export default function CadastroMembros() {
   const [aba, setAba] = useState("criancas");
 
-  //  Chaves espelham EXATAMENTE os ids de ABAS 
+  //  Chaves espelham EXATAMENTE os ids de ABAS (sem "irmas", com "mulheres")
   const [todos, setTodos] = useState({
     criancas: [],
     jovens:   [],
@@ -264,4 +319,3 @@ export default function CadastroMembros() {
     </>
   );
 }
-//
