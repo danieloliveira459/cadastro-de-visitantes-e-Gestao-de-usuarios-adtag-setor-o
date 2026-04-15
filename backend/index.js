@@ -11,7 +11,7 @@ import programacaoRoutes from "./routes/programacaoRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import cadastroGeral from "./routes/cadastroGeralRoutes.js";
 import criancas from "./routes/criancaRoutes.js";
-import jovens from "./routes/jovemRoutes.js";
+import jovens from "./routes/jovensRoutes.js";
 import irmas from "./routes/irmaRoutes.js";
 import homens from "./routes/homemRoutes.js";
 

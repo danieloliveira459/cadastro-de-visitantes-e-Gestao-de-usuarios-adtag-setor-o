@@ -18,7 +18,7 @@ export const listarJovens = async (req, res) => {
 };
 
 // CRIAR
-export const criarJovem = async (req, res) => {
+export const criarJovens = async (req, res) => {
   try {
     let { nome, idade, telefone, endereco } = req.body;
 
@@ -72,7 +72,7 @@ export const criarJovem = async (req, res) => {
 };
 
 // DELETAR
-export const deletarJovem = async (req, res) => {
+export const deletarJovens = async (req, res) => {
   try {
     const { id } = req.params;
 
