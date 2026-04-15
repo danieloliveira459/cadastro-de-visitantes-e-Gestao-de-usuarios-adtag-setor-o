@@ -10,11 +10,11 @@ import avisoRoutes from "./routes/avisoRoutes.js";
 import programacaoRoutes from "./routes/programacaoRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 
-//  PADRONIZADO
+// ✅ ROTAS MEMBROS (PADRONIZADO)
 import cadastroGeralRoutes from "./routes/cadastroGeralRoutes.js";
-import criancas from "./routes/criancasRoutes.js";
+import criancasRoutes from "./routes/criancasRoutes.js";
 import jovensRoutes from "./routes/jovensRoutes.js";
-import irmas from "./routes/irmasRoutes.js";
+import irmasRoutes from "./routes/irmasRoutes.js";
 import homensRoutes from "./routes/homensRoutes.js";
 
 const app = express();
@@ -38,26 +38,30 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// ROTAS API
+/* ================= ROTAS API ================= */
+
 app.use("/api/visitantes", visitanteRoutes);
 app.use("/api/aceitaram-jesus", aceitaramJesusRoutes);
 app.use("/api/avisos", avisoRoutes);
 app.use("/api/programacoes", programacaoRoutes);
 app.use("/api/auth", authRoutes);
 
-//  ROTAS MEMBROS
+/* ================= ROTAS MEMBROS ================= */
+
 app.use("/api/cadastro-geral", cadastroGeralRoutes);
-app.use("/api/criancas", criancas);
+app.use("/api/criancas", criancasRoutes);
 app.use("/api/jovens", jovensRoutes);
 app.use("/api/irmas", irmasRoutes);
 app.use("/api/homens", homensRoutes);
 
-// TESTE API
+/* ================= TESTE API ================= */
+
 app.get("/api", (req, res) => {
   res.json({ message: "API rodando com sucesso!" });
 });
 
-// FRONTEND
+/* ================= FRONTEND ================= */
+
 const frontendPath = path.join(__dirname, "../frontend/dist");
 
 if (fs.existsSync(frontendPath)) {
@@ -69,10 +73,13 @@ if (fs.existsSync(frontendPath)) {
   });
 }
 
-// 404 API
+/* ================= 404 API ================= */
+
 app.use("/api", (req, res) => {
   res.status(404).json({ message: "Rota da API não encontrada" });
 });
+
+/* ================= SERVER ================= */
 
 const PORT = process.env.PORT || 3000;
 
