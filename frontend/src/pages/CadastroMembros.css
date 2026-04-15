@@ -1,74 +1,460 @@
+/* ===== LAYOUT GERAL ===== */
 .membros-container {
-  padding: 24px;
-  max-width: 900px;
-  margin: auto;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
 }
 
-/* TABS */
+.membros-content {
+  margin-top: 24px;
+}
+
+/* ===== TABS ===== */
 .tabs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 4px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.06);
+  overflow-x: auto;
 }
 
 .tab {
-  padding: 10px 18px;
-  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 14px 20px;
   border: none;
-  background: #eee;
+  background: none;
   cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: #757575;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.tab:hover {
+  color: #d32f2f;
 }
 
 .tab.ativa {
-  background: #e02020;
-  color: white;
+  color: #d32f2f;
+  border-bottom-color: #d32f2f;
+  background: #ffebee;
+  border-radius: 8px 8px 0 0;
 }
 
-/* CARD */
+/* ===== DOIS CARDS LADO A LADO ===== */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* ===== CARD PADRÃO ===== */
 .card-padrao {
-  background: white;
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  padding: 28px;
 }
 
 .titulo-card {
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #212121;
   margin-bottom: 20px;
 }
 
-/* FORM */
+.titulo-card svg {
+  color: #d32f2f;
+}
+
+/* ===== TOTAL BOX ===== */
+.total-box {
+  background: #ffebee;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 22px;
+}
+
+.total-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d32f2f;
+  margin-bottom: 4px;
+}
+
+.total-number {
+  font-size: 38px;
+  font-weight: 800;
+  color: #d32f2f;
+  line-height: 1;
+}
+
+/* ===== FORMULÁRIO ===== */
 .form-padrao {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 0;
 }
 
-.form-padrao input {
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
+.form-group {
+  margin-bottom: 16px;
 }
 
-/* BOTÕES */
-.btn-padrao {
-  background: #e02020;
-  color: white;
-  border: none;
-  padding: 14px;
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #444;
+  margin-bottom: 6px;
+}
+
+.form-padrao input,
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1.5px solid #e0e0e0;
   border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #212121;
+  background: #fafafa;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+
+.form-padrao input:focus,
+.form-group input:focus {
+  border-color: #ef5350;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+  background: #fff;
+}
+
+.form-padrao input::placeholder,
+.form-group input::placeholder {
+  color: #bdbdbd;
+}
+
+/* ===== BOTÃO PRIMÁRIO ===== */
+.btn-padrao {
+  width: 100%;
+  padding: 14px;
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
   cursor: pointer;
+  margin-top: 4px;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-padrao:hover {
+  background: #b71c1c;
+}
+
+.btn-padrao:active {
+  transform: scale(0.98);
+}
+
+.btn-padrao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== MENSAGEM ===== */
+.msg {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  border: 1px solid #a5d6a7;
+}
+
+/* ===== LISTA DE MEMBROS ===== */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.list-header .titulo-card {
+  margin-bottom: 0;
+}
+
+.list-total-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: #757575;
+  background: #f4f5f7;
+  padding: 4px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.member-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+  animation: fadeInMember 0.25s ease;
+}
+
+.member-item:last-child {
+  border-bottom: none;
+}
+
+@keyframes fadeInMember {
+  from { opacity: 0; transform: translateY(-5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ffebee;
+  color: #d32f2f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.member-info {
+  flex: 1;
+}
+
+.member-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: #212121;
+}
+
+.member-details {
+  font-size: 12px;
+  color: #757575;
+  margin-top: 3px;
+  line-height: 1.6;
+}
+
+.member-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #bdbdbd;
+  font-size: 14px;
+  padding: 6px;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.member-delete:hover {
+  color: #d32f2f;
+  background: #ffebee;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: #bdbdbd;
+}
+
+.empty-icon {
+  font-size: 44px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  color: #e0e0e0;
+}
+
+.empty-state p {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ===== CADASTRO GERAL ===== */
+.resumo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.resumo-item {
+  background: #ffebee;
+  border-radius: 10px;
+  padding: 18px 12px;
+  text-align: center;
+}
+
+.resumo-icon {
+  font-size: 26px;
+  color: #d32f2f;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.resumo-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d32f2f;
+  margin-bottom: 4px;
+}
+
+.resumo-numero {
+  font-size: 30px;
+  font-weight: 800;
+  color: #d32f2f;
+  line-height: 1;
+}
+
+.total-geral-row {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #757575;
+}
+
+.total-geral-row strong {
+  font-size: 24px;
+  font-weight: 800;
+  color: #d32f2f;
+}
+
+/* ===== TABELA GERAL ===== */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.geral-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.geral-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 800;
+  color: #757575;
+  padding: 10px 14px;
+  background: #f4f5f7;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.geral-table td {
+  padding: 13px 14px;
+  font-size: 13px;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: middle;
+}
+
+.geral-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.badge-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+/* ===== QR CODE ===== */
+.qr-wrapper {
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.qr-box {
+  text-align: center;
+  margin-top: 28px;
+  padding: 24px;
+  background: #f4f5f7;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.qr-box h3 {
+  font-size: 17px;
+  font-weight: 800;
+  color: #212121;
 }
 
 .btn-secundario {
-  margin-top: 10px;
-  padding: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: #fff;
+  color: #d32f2f;
+  border: 2px solid #d32f2f;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-/* QR */
-.qr-box {
-  margin-top: 20px;
-  text-align: center;
+.btn-secundario:hover {
+  background: #ffebee;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 768px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .resumo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tabs {
+    justify-content: flex-start;
+  }
+
+  .tab {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
 }
