@@ -12,12 +12,11 @@ import QRCode from "react-qr-code";
 import "./CadastroMembros.css";
 import Header from "../components/Header";
 
-// ✅ FIX: "Homens" → "homens" (minúsculo), singular correto "Varão"
 const ABAS = [
   { id: "criancas", label: "Crianças",      singular: "Criança", icon: <FaChildren />    },
   { id: "jovens",   label: "Jovens",         singular: "Jovem",   icon: <FaPerson />      },
-  { id: "mulheres",    label: "Mulheres",    singular: "Mulheres",    icon: <FaPersonDress /> },
-  { id: "homens",   label: "Varões",         singular: "homens",   icon: <FaPerson />      },
+  { id: "mulheres", label: "Mulheres",       singular: "Mulher",  icon: <FaPersonDress /> },
+  { id: "homens",   label: "Varões",         singular: "Varão",   icon: <FaPerson />      },
   { id: "geral",    label: "Cadastro Geral", singular: null,      icon: <FaUsers />       },
 ];
 
@@ -25,7 +24,6 @@ const BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
 
-//  FIX: factory function evita mutação de estado compartilhado
 const formInicial = () => ({ nome: "", idade: "", telefone: "", endereco: "" });
 
 /* ================= QR CODE DOS MEMBROS DA ABA ================= */
@@ -109,10 +107,9 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
         body: JSON.stringify({ ...form, tipo }),
       });
       if (!res.ok) throw new Error();
-      setMsg(` ${abaAtual.singular} cadastrado(a) com sucesso!`);
+      setMsg(`✅ ${abaAtual.singular} cadastrado(a) com sucesso!`);
     } catch {
-      //  FIX: mensagem de aviso, não de sucesso, no fallback
-      setMsg(` ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
+      setMsg(`⚠️ ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
     }
 
     onCadastrar({ ...form, id: Date.now() });
@@ -158,7 +155,6 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
           </button>
         </form>
 
-        {/*  QR Code integrado em cada aba de categoria */}
         <QRCodeMembros tipo={tipo} membros={membros} />
       </div>
 
@@ -267,20 +263,26 @@ function CadastroGeral({ todos }) {
 export default function CadastroMembros() {
   const [aba, setAba] = useState("criancas");
 
-  // FIX: chave "homens" minúscula, consistente com ABAS
+  // ✅ Chaves espelham EXATAMENTE os ids de ABAS (sem "irmas", com "mulheres")
   const [todos, setTodos] = useState({
     criancas: [],
-    jovens: [],
-    irmas: [],
-    homens: [],
+    jovens:   [],
+    mulheres: [],
+    homens:   [],
   });
 
   const handleCadastrar = (tipo, novoMembro) => {
-    setTodos((prev) => ({ ...prev, [tipo]: [...prev[tipo], novoMembro] }));
+    setTodos((prev) => ({
+      ...prev,
+      [tipo]: [...(prev[tipo] ?? []), novoMembro],
+    }));
   };
 
   const handleDeletar = (tipo, id) => {
-    setTodos((prev) => ({ ...prev, [tipo]: prev[tipo].filter((m) => m.id !== id) }));
+    setTodos((prev) => ({
+      ...prev,
+      [tipo]: (prev[tipo] ?? []).filter((m) => m.id !== id),
+    }));
   };
 
   const renderConteudo = () => {
@@ -288,7 +290,7 @@ export default function CadastroMembros() {
     return (
       <FormularioComLista
         tipo={aba}
-        membros={todos[aba]}
+        membros={todos[aba] ?? []}
         onCadastrar={(m) => handleCadastrar(aba, m)}
         onDeletar={handleDeletar}
       />
