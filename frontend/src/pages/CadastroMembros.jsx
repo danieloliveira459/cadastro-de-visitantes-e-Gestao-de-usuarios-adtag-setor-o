@@ -240,7 +240,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
               style={{ display: "flex", alignItems: "center", gap: 6 }}
             >
               <FaFilePdf />
-              {loadingPdf ? "Gerando..." : "Exportar PDF"}
+              {loadingPdf ? "Gerando..." : "GERAR PDF"}
             </button>
           </div>
         </div>
@@ -349,7 +349,7 @@ function CadastroGeral({ todos }) {
             style={{ display: "flex", alignItems: "center", gap: 6 }}
           >
             <FaFilePdf />
-            {loadingPdf ? "Gerando..." : "Exportar PDF"}
+            {loadingPdf ? "Gerando..." : "GERAR PDF"}
           </button>
         </div>
 
