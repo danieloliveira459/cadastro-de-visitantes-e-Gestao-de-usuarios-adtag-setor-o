@@ -33,7 +33,7 @@ export default function Pastor() {
   const [endereco, setEndereco] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
-  // ✅ recarrega sempre que trocar de aba
+  //  recarrega sempre que trocar de aba
   useEffect(() => {
     carregarTudo();
   }, [aba]);

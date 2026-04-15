@@ -7,6 +7,7 @@ import {
   FaQrcode,
   FaDownload,
   FaTrash,
+  FaFilePdf,
 } from "react-icons/fa6";
 import QRCode from "react-qr-code";
 import "./CadastroMembros.css";
@@ -16,7 +17,7 @@ const ABAS = [
   { id: "criancas", label: "Crianças",      singular: "Criança", icon: <FaChildren />    },
   { id: "jovens",   label: "Jovens",         singular: "Jovem",   icon: <FaPerson />      },
   { id: "mulheres", label: "Mulheres",       singular: "Mulher",  icon: <FaPersonDress /> },
-  { id: "homens",   label: "Homens",         singular: "Homens",   icon: <FaPerson />      },
+  { id: "homens",   label: "Varões",         singular: "Varão",   icon: <FaPerson />      },
   { id: "geral",    label: "Cadastro Geral", singular: null,      icon: <FaUsers />       },
 ];
 
@@ -25,6 +26,50 @@ const BASE_URL =
   "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
 
 const formInicial = () => ({ nome: "", idade: "", telefone: "", endereco: "" });
+
+/* ================= EXPORTAR PDF ================= */
+async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
+  const { default: jsPDF } = await import("jspdf");
+  const { default: autoTable } = await import("jspdf-autotable");
+
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+
+  // Cabeçalho
+  doc.setFontSize(16);
+  doc.setTextColor(40, 40, 40);
+  doc.text(titulo, 14, 16);
+
+  doc.setFontSize(10);
+  doc.setTextColor(120, 120, 120);
+  const agora = new Date();
+  doc.text(
+    `Gerado em: ${agora.toLocaleDateString("pt-BR")} às ${agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`,
+    14,
+    23
+  );
+
+  doc.setDrawColor(200, 200, 200);
+  doc.line(14, 26, 283, 26);
+
+  // Tabela
+  autoTable(doc, {
+    startY: 30,
+    head: [colunas],
+    body: linhas,
+    styles: { fontSize: 9, cellPadding: 3 },
+    headStyles: { fillColor: [30, 90, 160], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
+    columnStyles: { 0: { cellWidth: 55 } },
+  });
+
+  // Rodapé com total
+  const finalY = doc.lastAutoTable.finalY + 6;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  doc.text(`Total de registros: ${linhas.length}`, 14, finalY);
+
+  doc.save(nomeArquivo);
+}
 
 /* ================= QR CODE DOS MEMBROS DA ABA ================= */
 function QRCodeMembros({ tipo, membros }) {
@@ -40,10 +85,7 @@ function QRCodeMembros({ tipo, membros }) {
   const baixar = () => {
     const svg = document.querySelector(`#qr-${tipo} svg`);
     if (!svg) return;
-    const blob = new Blob(
-      [new XMLSerializer().serializeToString(svg)],
-      { type: "image/svg+xml" }
-    );
+    const blob = new Blob([new XMLSerializer().serializeToString(svg)], { type: "image/svg+xml" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = `qrcode-${tipo}.svg`;
@@ -83,6 +125,7 @@ function QRCodeMembros({ tipo, membros }) {
 function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
   const [form, setForm] = useState(formInicial());
   const [loading, setLoading] = useState(false);
+  const [loadingPdf, setLoadingPdf] = useState(false);
   const [msg, setMsg] = useState("");
 
   const abaAtual = ABAS.find((a) => a.id === tipo);
@@ -92,8 +135,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
     setMsg("");
   }, [tipo]);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -107,19 +149,39 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
         body: JSON.stringify({ ...form, tipo }),
       });
       if (!res.ok) throw new Error();
-      setMsg(` ${abaAtual.singular} cadastrado(a) com sucesso!`);
+      setMsg(`✅ ${abaAtual.singular} cadastrado(a) com sucesso!`);
     } catch {
-      setMsg(` ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
+      setMsg(`💾 ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
     }
 
-    // Guarda data/hora atual junto ao membro
     const agora = new Date();
-    const dataFormatada = agora.toLocaleDateString("pt-BR") + " " + agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+    const dataFormatada =
+      agora.toLocaleDateString("pt-BR") +
+      " " +
+      agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
     onCadastrar({ ...form, id: Date.now(), data: dataFormatada });
     setForm(formInicial());
     setLoading(false);
     setTimeout(() => setMsg(""), 4000);
+  };
+
+  const handleExportarPDF = async () => {
+    if (membros.length === 0) return;
+    setLoadingPdf(true);
+    await exportarPDF({
+      titulo: `Lista de ${abaAtual?.label}`,
+      colunas: ["Nome", "Idade", "Telefone", "Endereço", "Data de Cadastro"],
+      linhas: membros.map((m) => [
+        m.nome,
+        m.idade || "—",
+        m.telefone || "—",
+        m.endereco || "—",
+        m.data || "—",
+      ]),
+      nomeArquivo: `${abaAtual?.id}-${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`,
+    });
+    setLoadingPdf(false);
   };
 
   return (
@@ -168,7 +230,19 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
           <h2 className="titulo-card">
             {abaAtual?.icon} {abaAtual?.label} Cadastrados
           </h2>
-          <span className="list-total-badge">Total: {membros.length}</span>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <span className="list-total-badge">Total: {membros.length}</span>
+            <button
+              className="btn-secundario"
+              onClick={handleExportarPDF}
+              disabled={membros.length === 0 || loadingPdf}
+              title={membros.length === 0 ? "Cadastre membros para exportar" : "Exportar lista em PDF"}
+              style={{ display: "flex", alignItems: "center", gap: 6 }}
+            >
+              <FaFilePdf />
+              {loadingPdf ? "Gerando..." : "Exportar PDF"}
+            </button>
+          </div>
         </div>
 
         {membros.length === 0 ? (
@@ -221,6 +295,29 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
 function CadastroGeral({ todos }) {
   const abas = ABAS.filter((a) => a.id !== "geral");
   const total = Object.values(todos).flat().length;
+  const [loadingPdf, setLoadingPdf] = useState(false);
+
+  const handleExportarGeralPDF = async () => {
+    if (total === 0) return;
+    setLoadingPdf(true);
+    const linhas = abas.flatMap((a) =>
+      (todos[a.id] ?? []).map((m) => [
+        m.nome,
+        a.label,
+        m.idade || "—",
+        m.telefone || "—",
+        m.endereco || "—",
+        m.data || "—",
+      ])
+    );
+    await exportarPDF({
+      titulo: "Cadastro Geral de Membros",
+      colunas: ["Nome", "Categoria", "Idade", "Telefone", "Endereço", "Data de Cadastro"],
+      linhas,
+      nomeArquivo: `cadastro-geral-${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`,
+    });
+    setLoadingPdf(false);
+  };
 
   return (
     <>
@@ -242,7 +339,20 @@ function CadastroGeral({ todos }) {
       </div>
 
       <div className="card-padrao">
-        <h2 className="titulo-card"><FaUsers /> Todos os Membros</h2>
+        <div className="list-header">
+          <h2 className="titulo-card"><FaUsers /> Todos os Membros</h2>
+          <button
+            className="btn-secundario"
+            onClick={handleExportarGeralPDF}
+            disabled={total === 0 || loadingPdf}
+            title="Exportar todos os membros em PDF"
+            style={{ display: "flex", alignItems: "center", gap: 6 }}
+          >
+            <FaFilePdf />
+            {loadingPdf ? "Gerando..." : "Exportar PDF"}
+          </button>
+        </div>
+
         {total === 0 ? (
           <div className="empty-state">
             <div className="empty-icon"><FaUsers /></div>
