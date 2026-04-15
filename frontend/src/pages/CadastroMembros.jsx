@@ -22,7 +22,7 @@ const ABAS = [
 
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
+  "https://cadastro-de-visitantes-e-gestao-de.onrender.com";
 
 const formInicial = () => ({ nome: "", idade: "", telefone: "", endereco: "" });
 
@@ -204,6 +204,30 @@ function FormularioComLista({ tipo, membros = [], onCadastrar, onDeletar }) {
     </div>
   );
 }
+
+/* ================= COMPONENTE GERAL ================= */
+function CadastroGeral({ todos }) {
+  const todasCategorias = Object.entries(todos);
+
+  return (
+    <div className="card-padrao">
+      <h2 className="titulo-card">Cadastro Geral</h2>
+      {todasCategorias.map(([tipo, membros]) => (
+        <div key={tipo} style={{ marginBottom: "1rem" }}>
+          <h3>{tipo} ({membros.length})</h3>
+          <ul>
+            {membros.map((m) => (
+              <li key={m.id}>
+                <strong>{m.nome}</strong> - {m.idade || "—"} anos
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /* ================= MAIN ================= */
 export default function CadastroMembros() {
   const [aba, setAba] = useState("criancas");
