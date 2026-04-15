@@ -3,7 +3,7 @@ import {
   listarIrmas,
   criarIrma,
   deletarIrma
-} from "../controllers/irmaController.js";
+} from "../controllers/irmasController.js";
 
 const router = express.Router();
 
