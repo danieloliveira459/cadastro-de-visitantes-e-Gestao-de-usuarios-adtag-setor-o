@@ -17,7 +17,7 @@ const ABAS = [
   { id: "criancas", label: "Crianças",      singular: "Criança", icon: <FaChildren />    },
   { id: "jovens",   label: "Jovens",         singular: "Jovem",   icon: <FaPerson />      },
   { id: "mulheres", label: "Mulheres",       singular: "Mulher",  icon: <FaPersonDress /> },
-  { id: "homens",   label: "Varões",         singular: "Varão",   icon: <FaPerson />      },
+  { id: "homens",   label: "homens",         singular: "homens",   icon: <FaPerson />      },
   { id: "geral",    label: "Cadastro Geral", singular: null,      icon: <FaUsers />       },
 ];
 
