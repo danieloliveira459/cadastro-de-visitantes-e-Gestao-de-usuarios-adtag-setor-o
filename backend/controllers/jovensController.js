@@ -8,10 +8,17 @@ function normalizarMembro(m) {
     dataNascimento = dataNascimento.split("T")[0];
   }
 
+  let createdAt = m.created_at ?? m.createdAt ?? null;
+  if (createdAt instanceof Date) {
+    createdAt = createdAt.toISOString();
+  }
+
+  const { data_nascimento, created_at, ...resto } = m;
+
   return {
-    ...m,
+    ...resto,
     dataNascimento,
-    createdAt: m.created_at ?? m.createdAt ?? null,
+    createdAt,
   };
 }
 
