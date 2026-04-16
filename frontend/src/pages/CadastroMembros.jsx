@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   FaChildren,
   FaPerson,
@@ -31,12 +31,11 @@ const formInicial = () => ({
   cpf: "",
   naturalidade: "",
   dataNascimento: "",
-  foto: "",        // base64 string
+  foto: "",
   cargo: "",
 });
 
 /* ================= MÁSCARA DE CPF ================= */
-// Formata digitação: 000.000.000-00
 function formatarCPF(valor) {
   return valor
     .replace(/\D/g, "")
@@ -46,7 +45,6 @@ function formatarCPF(valor) {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
-// Oculta os números para exibição: ***.***.***-**
 function ocultarCPF(cpf) {
   if (!cpf) return "—";
   const apenasDigitos = cpf.replace(/\D/g, "");
@@ -84,19 +82,9 @@ async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
     startY: 30,
     head: [colunas],
     body: linhas,
-    styles: {
-      fontSize: 9,
-      cellPadding: 3,
-      textColor: [30, 30, 30],
-    },
-    headStyles: {
-      fillColor: [220, 38, 38],
-      textColor: [255, 255, 255],
-      fontStyle: "bold",
-    },
-    alternateRowStyles: {
-      fillColor: [254, 242, 242],
-    },
+    styles: { fontSize: 9, cellPadding: 3, textColor: [30, 30, 30] },
+    headStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [254, 242, 242] },
     columnStyles: { 0: { cellWidth: 50 } },
   });
 
@@ -160,26 +148,25 @@ function QRCodeMembros({ tipo, membros }) {
 }
 
 /* ================= FORMULÁRIO + TABELA ================= */
-function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
+function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingLista }) {
   const [form, setForm] = useState(formInicial());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]     = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
-  const [msg, setMsg] = useState("");
+  const [msg, setMsg] = useState({ texto: "", erro: false });
   const fotoInputRef = useRef(null);
 
   const abaAtual = ABAS.find((a) => a.id === tipo);
 
   useEffect(() => {
     setForm(formInicial());
-    setMsg("");
+    setMsg({ texto: "", erro: false });
   }, [tipo]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: name === "cpf" ? formatarCPF(value) : value });
+    setForm((prev) => ({ ...prev, [name]: name === "cpf" ? formatarCPF(value) : value }));
   };
 
-  /* Lê a foto e converte para base64 */
   const handleFoto = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -191,7 +178,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMsg("");
+    setMsg({ texto: "", erro: false });
 
     try {
       const res = await fetch(`${BASE_URL}/api/membros`, {
@@ -199,23 +186,29 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, tipo }),
       });
-      if (!res.ok) throw new Error();
-      setMsg(` ${abaAtual.singular} cadastrado(a) com sucesso!`);
-    } catch {
-      setMsg(` ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
+
+      if (!res.ok) {
+        const erro = await res.json().catch(() => ({}));
+        throw new Error(erro.message || "Erro ao salvar no servidor.");
+      }
+
+      const salvo = await res.json();
+
+      // Normaliza data de cadastro para exibição
+      const dataFormatada = salvo.createdAt
+        ? new Date(salvo.createdAt).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })
+        : new Date().toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+      onCadastrar({ ...salvo, data: dataFormatada });
+      setMsg({ texto: ` ${abaAtual.singular} cadastrado(a) com sucesso!`, erro: false });
+    } catch (err) {
+      setMsg({ texto: ` ${err.message}`, erro: true });
     }
 
-    const agora = new Date();
-    const dataFormatada =
-      agora.toLocaleDateString("pt-BR") +
-      " " +
-      agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
-
-    onCadastrar({ ...form, id: Date.now(), data: dataFormatada });
     setForm(formInicial());
     if (fotoInputRef.current) fotoInputRef.current.value = "";
     setLoading(false);
-    setTimeout(() => setMsg(""), 4000);
+    setTimeout(() => setMsg({ texto: "", erro: false }), 5000);
   };
 
   const handleExportarPDF = async () => {
@@ -250,11 +243,15 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
           <span className="total-number">{membros.length}</span>
         </div>
 
-        {msg && <p className="msg">{msg}</p>}
+        {msg.texto && (
+          <p className="msg" style={{ color: msg.erro ? "#dc2626" : undefined }}>
+            {msg.texto}
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="form-padrao">
 
-          {/* FOTO — preview + botão */}
+          {/* FOTO */}
           <div className="form-group" style={{ alignItems: "center" }}>
             <label className="form-label">Foto</label>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
@@ -262,45 +259,18 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
                 <img
                   src={form.foto}
                   alt="Preview"
-                  style={{
-                    width: 90,
-                    height: 90,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "2px solid var(--color-primary, #dc2626)",
-                  }}
+                  style={{ width: 90, height: 90, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary, #dc2626)" }}
                 />
               ) : (
                 <div
-                  style={{
-                    width: 90,
-                    height: 90,
-                    borderRadius: "50%",
-                    background: "var(--color-bg-secondary, #f3f4f6)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "2px dashed #ccc",
-                    cursor: "pointer",
-                  }}
+                  style={{ width: 90, height: 90, borderRadius: "50%", background: "var(--color-bg-secondary, #f3f4f6)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px dashed #ccc", cursor: "pointer" }}
                   onClick={() => fotoInputRef.current?.click()}
                 >
                   <FaCamera size={28} color="#aaa" />
                 </div>
               )}
-              <input
-                ref={fotoInputRef}
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={handleFoto}
-              />
-              <button
-                type="button"
-                className="btn-secundario"
-                style={{ fontSize: 12, padding: "4px 12px" }}
-                onClick={() => fotoInputRef.current?.click()}
-              >
+              <input ref={fotoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFoto} />
+              <button type="button" className="btn-secundario" style={{ fontSize: 12, padding: "4px 12px" }} onClick={() => fotoInputRef.current?.click()}>
                 {form.foto ? "Trocar foto" : "Selecionar foto"}
               </button>
               {form.foto && (
@@ -308,10 +278,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
                   type="button"
                   className="btn-secundario"
                   style={{ fontSize: 12, padding: "4px 12px", color: "#dc2626" }}
-                  onClick={() => {
-                    setForm((prev) => ({ ...prev, foto: "" }));
-                    if (fotoInputRef.current) fotoInputRef.current.value = "";
-                  }}
+                  onClick={() => { setForm((prev) => ({ ...prev, foto: "" })); if (fotoInputRef.current) fotoInputRef.current.value = ""; }}
                 >
                   Remover foto
                 </button>
@@ -321,54 +288,27 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
 
           <div className="form-group">
             <label className="form-label">Nome Completo *</label>
-            <input
-              name="nome"
-              placeholder="Digite o nome completo"
-              value={form.nome}
-              onChange={handleChange}
-              required
-            />
+            <input name="nome" placeholder="Digite o nome completo" value={form.nome} onChange={handleChange} required />
           </div>
 
           <div className="form-group">
             <label className="form-label">CPF</label>
-            <input
-              name="cpf"
-              placeholder="000.000.000-00"
-              value={form.cpf}
-              onChange={handleChange}
-              maxLength={14}
-            />
+            <input name="cpf" placeholder="000.000.000-00" value={form.cpf} onChange={handleChange} maxLength={14} />
           </div>
 
           <div className="form-group">
             <label className="form-label">Naturalidade</label>
-            <input
-              name="naturalidade"
-              placeholder="Cidade / Estado de origem"
-              value={form.naturalidade}
-              onChange={handleChange}
-            />
+            <input name="naturalidade" placeholder="Cidade / Estado de origem" value={form.naturalidade} onChange={handleChange} />
           </div>
 
           <div className="form-group">
             <label className="form-label">Data de Nascimento</label>
-            <input
-              name="dataNascimento"
-              type="date"
-              value={form.dataNascimento}
-              onChange={handleChange}
-            />
+            <input name="dataNascimento" type="date" value={form.dataNascimento} onChange={handleChange} />
           </div>
 
           <div className="form-group">
             <label className="form-label">Cargo</label>
-            <input
-              name="cargo"
-              placeholder="Ex: Diácono, Líder, Pastor..."
-              value={form.cargo}
-              onChange={handleChange}
-            />
+            <input name="cargo" placeholder="Ex: Diácono, Líder, Pastor..." value={form.cargo} onChange={handleChange} />
           </div>
 
           <button className="btn-padrao" disabled={loading}>
@@ -400,7 +340,11 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
           </div>
         </div>
 
-        {membros.length === 0 ? (
+        {loadingLista ? (
+          <div className="empty-state">
+            <p style={{ color: "var(--color-text-secondary)" }}>Carregando...</p>
+          </div>
+        ) : membros.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">{abaAtual?.icon}</div>
             <p>Nenhum membro cadastrado ainda.</p>
@@ -422,32 +366,12 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
               </thead>
               <tbody>
                 {membros.map((m) => (
-                  <tr key={m.id}>
+                  <tr key={m._id ?? m.id}>
                     <td>
                       {m.foto ? (
-                        <img
-                          src={m.foto}
-                          alt={m.nome}
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                            border: "1px solid #ddd",
-                          }}
-                        />
+                        <img src={m.foto} alt={m.nome} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "1px solid #ddd" }} />
                       ) : (
-                        <div
-                          style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: "50%",
-                            background: "#f3f4f6",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
+                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                           <FaCamera size={14} color="#aaa" />
                         </div>
                       )}
@@ -465,7 +389,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
                     <td>
                       <button
                         className="member-delete"
-                        onClick={() => onDeletar(tipo, m.id)}
+                        onClick={() => onDeletar(tipo, m._id ?? m.id)}
                         title="Remover"
                       >
                         <FaTrash />
@@ -483,7 +407,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
 }
 
 /* ================= CADASTRO GERAL ================= */
-function CadastroGeral({ todos }) {
+function CadastroGeral({ todos, loadingGeral }) {
   const abas = ABAS.filter((a) => a.id !== "geral");
   const total = Object.values(todos).flat().length;
   const [loadingPdf, setLoadingPdf] = useState(false);
@@ -547,7 +471,11 @@ function CadastroGeral({ todos }) {
           </button>
         </div>
 
-        {total === 0 ? (
+        {loadingGeral ? (
+          <div className="empty-state">
+            <p style={{ color: "var(--color-text-secondary)" }}>Carregando membros...</p>
+          </div>
+        ) : total === 0 ? (
           <div className="empty-state">
             <div className="empty-icon"><FaUsers /></div>
             <p>Nenhum membro cadastrado ainda.</p>
@@ -570,32 +498,12 @@ function CadastroGeral({ todos }) {
               <tbody>
                 {abas.flatMap((a) =>
                   (todos[a.id] ?? []).map((m) => (
-                    <tr key={m.id}>
+                    <tr key={m._id ?? m.id}>
                       <td>
                         {m.foto ? (
-                          <img
-                            src={m.foto}
-                            alt={m.nome}
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: "50%",
-                              objectFit: "cover",
-                              border: "1px solid #ddd",
-                            }}
-                          />
+                          <img src={m.foto} alt={m.nome} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "1px solid #ddd" }} />
                         ) : (
-                          <div
-                            style={{
-                              width: 36,
-                              height: 36,
-                              borderRadius: "50%",
-                              background: "#f3f4f6",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
+                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <FaCamera size={14} color="#aaa" />
                           </div>
                         )}
@@ -626,6 +534,8 @@ function CadastroGeral({ todos }) {
 /* ================= MAIN ================= */
 export default function CadastroMembros() {
   const [aba, setAba] = useState("criancas");
+  const [loadingLista, setLoadingLista] = useState(false);
+  const [loadingGeral, setLoadingGeral] = useState(false);
 
   const [todos, setTodos] = useState({
     criancas: [],
@@ -634,28 +544,104 @@ export default function CadastroMembros() {
     homens:   [],
   });
 
-  const handleCadastrar = (tipo, novoMembro) => {
+  // Carrega membros de uma aba específica da API
+  const carregarMembros = useCallback(async (tipo) => {
+    setLoadingLista(true);
+    try {
+      const res = await fetch(`${BASE_URL}/api/membros?tipo=${tipo}`);
+      if (!res.ok) throw new Error("Erro ao buscar membros.");
+      const data = await res.json();
+
+      // Normaliza campo "data" de exibição a partir de createdAt
+      const normalizado = data.map((m) => ({
+        ...m,
+        data: m.createdAt
+          ? new Date(m.createdAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+          : m.data || "—",
+      }));
+
+      setTodos((prev) => ({ ...prev, [tipo]: normalizado }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingLista(false);
+    }
+  }, []);
+
+  // Carrega todos ao entrar na aba geral
+  const carregarTodos = useCallback(async () => {
+    setLoadingGeral(true);
+    try {
+      const tipos = ["criancas", "jovens", "mulheres", "homens"];
+      const resultados = await Promise.all(
+        tipos.map((t) =>
+          fetch(`${BASE_URL}/api/membros?tipo=${t}`)
+            .then((r) => r.ok ? r.json() : [])
+            .then((data) =>
+              data.map((m) => ({
+                ...m,
+                data: m.createdAt
+                  ? new Date(m.createdAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                  : m.data || "—",
+              }))
+            )
+        )
+      );
+      setTodos({
+        criancas: resultados[0],
+        jovens:   resultados[1],
+        mulheres: resultados[2],
+        homens:   resultados[3],
+      });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingGeral(false);
+    }
+  }, []);
+
+  // Recarrega ao trocar de aba
+  useEffect(() => {
+    if (aba === "geral") {
+      carregarTodos();
+    } else {
+      carregarMembros(aba);
+    }
+  }, [aba, carregarMembros, carregarTodos]);
+
+  // Após cadastro bem-sucedido, adiciona o retorno da API ao estado local
+  const handleCadastrar = (tipo, membroSalvo) => {
     setTodos((prev) => ({
       ...prev,
-      [tipo]: [...(prev[tipo] ?? []), novoMembro],
+      [tipo]: [...(prev[tipo] ?? []), membroSalvo],
     }));
   };
 
-  const handleDeletar = (tipo, id) => {
-    setTodos((prev) => ({
-      ...prev,
-      [tipo]: (prev[tipo] ?? []).filter((m) => m.id !== id),
-    }));
+  // Deleta via API e remove do estado local
+  const handleDeletar = async (tipo, id) => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/membros/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Erro ao deletar.");
+      setTodos((prev) => ({
+        ...prev,
+        [tipo]: (prev[tipo] ?? []).filter((m) => (m._id ?? m.id) !== id),
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível remover o membro. Tente novamente.");
+    }
   };
 
   const renderConteudo = () => {
-    if (aba === "geral") return <CadastroGeral todos={todos} />;
+    if (aba === "geral")
+      return <CadastroGeral todos={todos} loadingGeral={loadingGeral} />;
     return (
       <FormularioComLista
         tipo={aba}
         membros={todos[aba] ?? []}
         onCadastrar={(m) => handleCadastrar(aba, m)}
         onDeletar={handleDeletar}
+        loadingLista={loadingLista}
       />
     );
   };

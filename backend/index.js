@@ -13,7 +13,7 @@ import authRoutes from "./routes/authRoutes.js";
 // ROTAS MEMBROS (PADRONIZADO)
 import cadastroGeralRoutes from "./routes/cadastroGeralRoutes.js";
 import criancasRoutes from "./routes/criancasRoutes.js";
-import jovensRoutes from "./routes/jovensRoutes.js"; // corrigido para plural
+import jovensRoutes from "./routes/jovensRoutes.js"; 
 import mulheresRoutes from "./routes/mulheresRoutes.js"
 import homensRoutes from "./routes/homensRoutes.js";
 
