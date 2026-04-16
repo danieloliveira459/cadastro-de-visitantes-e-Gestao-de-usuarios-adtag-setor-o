@@ -17,7 +17,7 @@ const ABAS = [
   { id: "criancas", label: "Crianças",      singular: "Criança", icon: <FaChildren />    },
   { id: "jovens",   label: "Jovens",         singular: "Jovem",   icon: <FaPerson />      },
   { id: "mulheres", label: "Mulheres",       singular: "Mulher",  icon: <FaPersonDress /> },
-  { id: "homens",   label: "Varões",         singular: "Varão",   icon: <FaPerson />      }, // ✅ corrigido
+  { id: "homens",   label: "Homens",         singular: "Homem",   icon: <FaPerson />      }, 
   { id: "geral",    label: "Cadastro Geral", singular: null,      icon: <FaUsers />       },
 ];
 
@@ -25,7 +25,7 @@ const BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
 
-const formInicial = () => ({ nome: "", idade: "", telefone: "", endereco: "" });
+const formInicial = () => ({ nome: "", naturalidade: "", telefone: "", endereco: "", cpf: "", dataNascimento: "", cargo: "" });
 
 /* ================= EXPORTAR PDF ================= */
 async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
@@ -67,12 +67,12 @@ async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
       textColor: [30, 30, 30],
     },
     headStyles: {
-      fillColor: [220, 38, 38],   // ✅ vermelho
+      fillColor: [220, 38, 38],   
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: {
-      fillColor: [254, 242, 242], // ✅ vermelho muito claro nas linhas alternadas
+      fillColor: [254, 242, 242], // 
     },
     columnStyles: { 0: { cellWidth: 55 } },
   });
@@ -93,8 +93,8 @@ function QRCodeMembros({ tipo, membros }) {
   const abaAtual = ABAS.find((a) => a.id === tipo);
 
   const payload = JSON.stringify(
-    membros.map(({ nome, idade, telefone, endereco }) => ({
-      nome, idade, telefone, endereco, categoria: abaAtual?.label,
+    membros.map(({ nome, naturalidade, telefone, endereco, cpf, dataNascimento, cargo }) => ({
+      nome, naturalidade, telefone, endereco, cpf, dataNascimento, cargo, categoria: abaAtual?.label,
     }))
   );
 
@@ -165,9 +165,9 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
         body: JSON.stringify({ ...form, tipo }),
       });
       if (!res.ok) throw new Error();
-      setMsg(`✅ ${abaAtual.singular} cadastrado(a) com sucesso!`);
+      setMsg(` ${abaAtual.singular} cadastrado(a) com sucesso!`);
     } catch {
-      setMsg(`⚠️ ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
+      setMsg(` ${abaAtual.singular} salvo(a) localmente (sem conexão com servidor).`);
     }
 
     const agora = new Date();
@@ -187,10 +187,10 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
     setLoadingPdf(true);
     await exportarPDF({
       titulo: `Lista de ${abaAtual?.label}`,
-      colunas: ["Nome", "Idade", "Telefone", "Endereço", "Data de Cadastro"],
+      colunas: ["Nome", "Naturalidade", "Telefone", "Endereço", "Data de Cadastro"],
       linhas: membros.map((m) => [
         m.nome,
-        m.idade || "—",
+        m.naturalidade || "—",
         m.telefone || "—",
         m.endereco || "—",
         m.data || "—",
@@ -221,8 +221,8 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
             <input name="nome" placeholder="Digite o nome completo" value={form.nome} onChange={handleChange} required />
           </div>
           <div className="form-group">
-            <label className="form-label">Idade</label>
-            <input name="idade" placeholder="Digite a idade" value={form.idade} onChange={handleChange} />
+            <label className="form-label">Naturalidade</label>
+            <input name="naturalidade" placeholder="Digite a naturalidade" value={form.naturalidade} onChange={handleChange} />
           </div>
           <div className="form-group">
             <label className="form-label">Telefone</label>
@@ -272,7 +272,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
               <thead>
                 <tr>
                   <th>Nome</th>
-                  <th>Idade</th>
+                  <th>Naturalidade</th>
                   <th>Telefone</th>
                   <th>Endereço</th>
                   <th>Data</th>
@@ -283,9 +283,12 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
                 {membros.map((m) => (
                   <tr key={m.id}>
                     <td><strong>{m.nome}</strong></td>
-                    <td>{m.idade || "—"}</td>
+                    <td>{m.naturalidade || "—"}</td>
                     <td>{m.telefone || "—"}</td>
                     <td>{m.endereco || "—"}</td>
+                     <td>{m.cpf || "—"}</td>
+                      <td>{m.dataNascimento || "—"}</td>
+                      <td>{m.cargo || "—"}</td>
                     <td style={{ whiteSpace: "nowrap", fontSize: 13 }}>{m.data || "—"}</td>
                     <td>
                       <button
@@ -320,15 +323,19 @@ function CadastroGeral({ todos }) {
       (todos[a.id] ?? []).map((m) => [
         m.nome,
         a.label,
-        m.idade || "—",
+        m.naturalidade || "—",
         m.telefone || "—",
-        m.endereco || "—",
+        m.endereco 
+        || "—",
+        m.cpf || "—",
+        m.dataNascimento || "—",
+        m.cargo || "—",
         m.data || "—",
       ])
     );
     await exportarPDF({
       titulo: "Cadastro Geral de Membros",
-      colunas: ["Nome", "Categoria", "Idade", "Telefone", "Endereço", "Data de Cadastro"],
+      colunas: ["Nome", "Categoria", "Naturalidade", "Telefone", "Endereço", "CPF", "Data de Nascimento", "Cargo", "Data de Cadastro"],
       linhas,
       nomeArquivo: `cadastro-geral-${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`,
     });
@@ -381,10 +388,13 @@ function CadastroGeral({ todos }) {
                 <tr>
                   <th>Nome</th>
                   <th>Categoria</th>
-                  <th>Idade</th>
+                  <th>Naturalidade</th>
                   <th>Telefone</th>
                   <th>Endereço</th>
-                  <th>Data</th>
+                  <th>CPF</th>
+                  <th>Data de Nascimento</th>
+                  <th>Cargo</th>
+                  <th>Data de Cadastro</th>
                 </tr>
               </thead>
               <tbody>
@@ -393,9 +403,13 @@ function CadastroGeral({ todos }) {
                     <tr key={m.id}>
                       <td><strong>{m.nome}</strong></td>
                       <td><span className="badge-tipo">{a.icon} {a.singular}</span></td>
-                      <td>{m.idade || "—"}</td>
+                      <td>{m.naturalidade || "—"}</td>
                       <td>{m.telefone || "—"}</td>
                       <td>{m.endereco || "—"}</td>
+                      <td>{m.cpf || "—"}</td>
+                      <td>{m.dataNascimento || "—"}</td>
+                      <td>{m.cargo || "—"}</td>
+
                       <td style={{ whiteSpace: "nowrap", fontSize: 13 }}>{m.data || "—"}</td>
                     </tr>
                   ))
