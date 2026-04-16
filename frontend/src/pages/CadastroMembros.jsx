@@ -35,6 +35,25 @@ const formInicial = () => ({
   cargo: "",
 });
 
+/* ================= MÁSCARA DE CPF ================= */
+// Formata digitação: 000.000.000-00
+function formatarCPF(valor) {
+  return valor
+    .replace(/\D/g, "")
+    .slice(0, 11)
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
+// Oculta os números para exibição: ***.***.***-**
+function ocultarCPF(cpf) {
+  if (!cpf) return "—";
+  const apenasDigitos = cpf.replace(/\D/g, "");
+  if (apenasDigitos.length === 0) return "—";
+  return "***.***.***-**";
+}
+
 /* ================= EXPORTAR PDF ================= */
 async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
   const { default: jsPDF } = await import("jspdf");
@@ -155,8 +174,10 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
     setMsg("");
   }, [tipo]);
 
-  const handleChange = (e) =>
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: name === "cpf" ? formatarCPF(value) : value });
+  };
 
   /* Lê a foto e converte para base64 */
   const handleFoto = (e) => {
@@ -205,7 +226,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
       colunas: ["Nome", "CPF", "Naturalidade", "Data de Nascimento", "Cargo", "Data de Cadastro"],
       linhas: membros.map((m) => [
         m.nome,
-        m.cpf || "—",
+        ocultarCPF(m.cpf),
         m.naturalidade || "—",
         m.dataNascimento || "—",
         m.cargo || "—",
@@ -432,7 +453,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
                       )}
                     </td>
                     <td><strong>{m.nome}</strong></td>
-                    <td>{m.cpf || "—"}</td>
+                    <td>{ocultarCPF(m.cpf)}</td>
                     <td>{m.naturalidade || "—"}</td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       {m.dataNascimento
@@ -474,7 +495,7 @@ function CadastroGeral({ todos }) {
       (todos[a.id] ?? []).map((m) => [
         m.nome,
         a.label,
-        m.cpf || "—",
+        ocultarCPF(m.cpf),
         m.naturalidade || "—",
         m.dataNascimento
           ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
@@ -581,7 +602,7 @@ function CadastroGeral({ todos }) {
                       </td>
                       <td><strong>{m.nome}</strong></td>
                       <td><span className="badge-tipo">{a.icon} {a.singular}</span></td>
-                      <td>{m.cpf || "—"}</td>
+                      <td>{ocultarCPF(m.cpf)}</td>
                       <td>{m.naturalidade || "—"}</td>
                       <td style={{ whiteSpace: "nowrap" }}>
                         {m.dataNascimento
