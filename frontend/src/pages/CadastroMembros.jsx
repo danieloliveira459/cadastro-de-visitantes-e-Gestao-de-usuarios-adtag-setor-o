@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaChildren,
   FaPerson,
@@ -8,6 +8,7 @@ import {
   FaDownload,
   FaTrash,
   FaFilePdf,
+  FaCamera,
 } from "react-icons/fa6";
 import QRCode from "react-qr-code";
 import "./CadastroMembros.css";
@@ -17,7 +18,7 @@ const ABAS = [
   { id: "criancas", label: "Crianças",      singular: "Criança", icon: <FaChildren />    },
   { id: "jovens",   label: "Jovens",         singular: "Jovem",   icon: <FaPerson />      },
   { id: "mulheres", label: "Mulheres",       singular: "Mulher",  icon: <FaPersonDress /> },
-  { id: "homens",   label: "Homens",         singular: "Homem",   icon: <FaPerson />      }, 
+  { id: "homens",   label: "Homens",         singular: "Homem",   icon: <FaPerson />      },
   { id: "geral",    label: "Cadastro Geral", singular: null,      icon: <FaUsers />       },
 ];
 
@@ -25,7 +26,14 @@ const BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
 
-const formInicial = () => ({ nome: "", naturalidade: "", telefone: "", endereco: "", cpf: "", dataNascimento: "", cargo: "" });
+const formInicial = () => ({
+  nome: "",
+  cpf: "",
+  naturalidade: "",
+  dataNascimento: "",
+  foto: "",        // base64 string
+  cargo: "",
+});
 
 /* ================= EXPORTAR PDF ================= */
 async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
@@ -34,13 +42,11 @@ async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
 
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
-  // Título em vermelho
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(220, 38, 38);
   doc.text(titulo, 14, 16);
 
-  // Data/hora em cinza
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(120, 120, 120);
@@ -51,12 +57,10 @@ async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
     23
   );
 
-  // Linha separadora vermelha
   doc.setDrawColor(220, 38, 38);
   doc.setLineWidth(0.5);
   doc.line(14, 26, 283, 26);
 
-  // Tabela com cabeçalho vermelho
   autoTable(doc, {
     startY: 30,
     head: [colunas],
@@ -67,17 +71,16 @@ async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
       textColor: [30, 30, 30],
     },
     headStyles: {
-      fillColor: [220, 38, 38],   
+      fillColor: [220, 38, 38],
       textColor: [255, 255, 255],
       fontStyle: "bold",
     },
     alternateRowStyles: {
-      fillColor: [254, 242, 242], // 
+      fillColor: [254, 242, 242],
     },
-    columnStyles: { 0: { cellWidth: 55 } },
+    columnStyles: { 0: { cellWidth: 50 } },
   });
 
-  // Rodapé com total
   const finalY = doc.lastAutoTable.finalY + 6;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
@@ -93,8 +96,8 @@ function QRCodeMembros({ tipo, membros }) {
   const abaAtual = ABAS.find((a) => a.id === tipo);
 
   const payload = JSON.stringify(
-    membros.map(({ nome, naturalidade, telefone, endereco, cpf, dataNascimento, cargo }) => ({
-      nome, naturalidade, telefone, endereco, cpf, dataNascimento, cargo, categoria: abaAtual?.label,
+    membros.map(({ nome, cpf, naturalidade, dataNascimento, cargo }) => ({
+      nome, cpf, naturalidade, dataNascimento, cargo, categoria: abaAtual?.label,
     }))
   );
 
@@ -143,6 +146,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
   const [loading, setLoading] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
   const [msg, setMsg] = useState("");
+  const fotoInputRef = useRef(null);
 
   const abaAtual = ABAS.find((a) => a.id === tipo);
 
@@ -151,7 +155,17 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
     setMsg("");
   }, [tipo]);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
+  /* Lê a foto e converte para base64 */
+  const handleFoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setForm((prev) => ({ ...prev, foto: reader.result }));
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -178,6 +192,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
 
     onCadastrar({ ...form, id: Date.now(), data: dataFormatada });
     setForm(formInicial());
+    if (fotoInputRef.current) fotoInputRef.current.value = "";
     setLoading(false);
     setTimeout(() => setMsg(""), 4000);
   };
@@ -187,12 +202,13 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
     setLoadingPdf(true);
     await exportarPDF({
       titulo: `Lista de ${abaAtual?.label}`,
-      colunas: ["Nome", "Naturalidade", "Telefone", "Endereço", "Data de Cadastro"],
+      colunas: ["Nome", "CPF", "Naturalidade", "Data de Nascimento", "Cargo", "Data de Cadastro"],
       linhas: membros.map((m) => [
         m.nome,
+        m.cpf || "—",
         m.naturalidade || "—",
-        m.telefone || "—",
-        m.endereco || "—",
+        m.dataNascimento || "—",
+        m.cargo || "—",
         m.data || "—",
       ]),
       nomeArquivo: `${abaAtual?.id}-${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`,
@@ -216,22 +232,124 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
         {msg && <p className="msg">{msg}</p>}
 
         <form onSubmit={handleSubmit} className="form-padrao">
-          <div className="form-group">
-            <label className="form-label">Nome Completo</label>
-            <input name="nome" placeholder="Digite o nome completo" value={form.nome} onChange={handleChange} required />
+
+          {/* FOTO — preview + botão */}
+          <div className="form-group" style={{ alignItems: "center" }}>
+            <label className="form-label">Foto</label>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              {form.foto ? (
+                <img
+                  src={form.foto}
+                  alt="Preview"
+                  style={{
+                    width: 90,
+                    height: 90,
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "2px solid var(--color-primary, #dc2626)",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 90,
+                    height: 90,
+                    borderRadius: "50%",
+                    background: "var(--color-bg-secondary, #f3f4f6)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    border: "2px dashed #ccc",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => fotoInputRef.current?.click()}
+                >
+                  <FaCamera size={28} color="#aaa" />
+                </div>
+              )}
+              <input
+                ref={fotoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleFoto}
+              />
+              <button
+                type="button"
+                className="btn-secundario"
+                style={{ fontSize: 12, padding: "4px 12px" }}
+                onClick={() => fotoInputRef.current?.click()}
+              >
+                {form.foto ? "Trocar foto" : "Selecionar foto"}
+              </button>
+              {form.foto && (
+                <button
+                  type="button"
+                  className="btn-secundario"
+                  style={{ fontSize: 12, padding: "4px 12px", color: "#dc2626" }}
+                  onClick={() => {
+                    setForm((prev) => ({ ...prev, foto: "" }));
+                    if (fotoInputRef.current) fotoInputRef.current.value = "";
+                  }}
+                >
+                  Remover foto
+                </button>
+              )}
+            </div>
           </div>
+
+          <div className="form-group">
+            <label className="form-label">Nome Completo *</label>
+            <input
+              name="nome"
+              placeholder="Digite o nome completo"
+              value={form.nome}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">CPF</label>
+            <input
+              name="cpf"
+              placeholder="000.000.000-00"
+              value={form.cpf}
+              onChange={handleChange}
+              maxLength={14}
+            />
+          </div>
+
           <div className="form-group">
             <label className="form-label">Naturalidade</label>
-            <input name="naturalidade" placeholder="Digite a naturalidade" value={form.naturalidade} onChange={handleChange} />
+            <input
+              name="naturalidade"
+              placeholder="Cidade / Estado de origem"
+              value={form.naturalidade}
+              onChange={handleChange}
+            />
           </div>
+
           <div className="form-group">
-            <label className="form-label">Telefone</label>
-            <input name="telefone" placeholder="(00) 00000-0000" value={form.telefone} onChange={handleChange} />
+            <label className="form-label">Data de Nascimento</label>
+            <input
+              name="dataNascimento"
+              type="date"
+              value={form.dataNascimento}
+              onChange={handleChange}
+            />
           </div>
+
           <div className="form-group">
-            <label className="form-label">Endereço</label>
-            <input name="endereco" placeholder="Digite o endereço completo" value={form.endereco} onChange={handleChange} />
+            <label className="form-label">Cargo</label>
+            <input
+              name="cargo"
+              placeholder="Ex: Diácono, Líder, Pastor..."
+              value={form.cargo}
+              onChange={handleChange}
+            />
           </div>
+
           <button className="btn-padrao" disabled={loading}>
             {loading ? "Salvando..." : `Cadastrar ${abaAtual?.singular}`}
           </button>
@@ -271,25 +389,58 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar }) {
             <table className="geral-table">
               <thead>
                 <tr>
+                  <th>Foto</th>
                   <th>Nome</th>
+                  <th>CPF</th>
                   <th>Naturalidade</th>
-                  <th>Telefone</th>
-                  <th>Endereço</th>
-                  <th>Data</th>
+                  <th>Nascimento</th>
+                  <th>Cargo</th>
+                  <th>Cadastro</th>
                   <th>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {membros.map((m) => (
                   <tr key={m.id}>
+                    <td>
+                      {m.foto ? (
+                        <img
+                          src={m.foto}
+                          alt={m.nome}
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: "1px solid #ddd",
+                          }}
+                        />
+                      ) : (
+                        <div
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: "50%",
+                            background: "#f3f4f6",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <FaCamera size={14} color="#aaa" />
+                        </div>
+                      )}
+                    </td>
                     <td><strong>{m.nome}</strong></td>
+                    <td>{m.cpf || "—"}</td>
                     <td>{m.naturalidade || "—"}</td>
-                    <td>{m.telefone || "—"}</td>
-                    <td>{m.endereco || "—"}</td>
-                     <td>{m.cpf || "—"}</td>
-                      <td>{m.dataNascimento || "—"}</td>
-                      <td>{m.cargo || "—"}</td>
-                    <td style={{ whiteSpace: "nowrap", fontSize: 13 }}>{m.data || "—"}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {m.dataNascimento
+                        ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
+                        : "—"}
+                    </td>
+                    <td>{m.cargo || "—"}</td>
+                    <td style={{ whiteSpace: "nowrap", fontSize: 12 }}>{m.data || "—"}</td>
                     <td>
                       <button
                         className="member-delete"
@@ -323,19 +474,18 @@ function CadastroGeral({ todos }) {
       (todos[a.id] ?? []).map((m) => [
         m.nome,
         a.label,
-        m.naturalidade || "—",
-        m.telefone || "—",
-        m.endereco 
-        || "—",
         m.cpf || "—",
-        m.dataNascimento || "—",
+        m.naturalidade || "—",
+        m.dataNascimento
+          ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
+          : "—",
         m.cargo || "—",
         m.data || "—",
       ])
     );
     await exportarPDF({
       titulo: "Cadastro Geral de Membros",
-      colunas: ["Nome", "Categoria", "Naturalidade", "Telefone", "Endereço", "CPF", "Data de Nascimento", "Cargo", "Data de Cadastro"],
+      colunas: ["Nome", "Categoria", "CPF", "Naturalidade", "Data de Nascimento", "Cargo", "Data de Cadastro"],
       linhas,
       nomeArquivo: `cadastro-geral-${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`,
     });
@@ -386,12 +536,11 @@ function CadastroGeral({ todos }) {
             <table className="geral-table">
               <thead>
                 <tr>
+                  <th>Foto</th>
                   <th>Nome</th>
                   <th>Categoria</th>
-                  <th>Naturalidade</th>
-                  <th>Telefone</th>
-                  <th>Endereço</th>
                   <th>CPF</th>
+                  <th>Naturalidade</th>
                   <th>Data de Nascimento</th>
                   <th>Cargo</th>
                   <th>Data de Cadastro</th>
@@ -401,16 +550,46 @@ function CadastroGeral({ todos }) {
                 {abas.flatMap((a) =>
                   (todos[a.id] ?? []).map((m) => (
                     <tr key={m.id}>
+                      <td>
+                        {m.foto ? (
+                          <img
+                            src={m.foto}
+                            alt={m.nome}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              border: "1px solid #ddd",
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              background: "#f3f4f6",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <FaCamera size={14} color="#aaa" />
+                          </div>
+                        )}
+                      </td>
                       <td><strong>{m.nome}</strong></td>
                       <td><span className="badge-tipo">{a.icon} {a.singular}</span></td>
-                      <td>{m.naturalidade || "—"}</td>
-                      <td>{m.telefone || "—"}</td>
-                      <td>{m.endereco || "—"}</td>
                       <td>{m.cpf || "—"}</td>
-                      <td>{m.dataNascimento || "—"}</td>
+                      <td>{m.naturalidade || "—"}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>
+                        {m.dataNascimento
+                          ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
+                          : "—"}
+                      </td>
                       <td>{m.cargo || "—"}</td>
-
-                      <td style={{ whiteSpace: "nowrap", fontSize: 13 }}>{m.data || "—"}</td>
+                      <td style={{ whiteSpace: "nowrap", fontSize: 12 }}>{m.data || "—"}</td>
                     </tr>
                   ))
                 )}
