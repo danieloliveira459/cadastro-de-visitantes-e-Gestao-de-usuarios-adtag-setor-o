@@ -22,7 +22,8 @@ export default function Pastor() {
   const [descricao, setDescricao] = useState("");
 
   const [dia, setDia] = useState("");
-  const [horario, setHorario] = useState("");
+ const [horarioInicio, setHorarioInicio] = useState("");
+ const [horarioFim, setHorarioFim]       = useState("");
   const [atividade, setAtividade] = useState("");
   const [responsavel, setResponsavel] = useState("");
 
@@ -132,38 +133,40 @@ export default function Pastor() {
   };
 
   // PROGRAMAÇÃO
-  const adicionarProgramacao = async () => {
-    if (!dia || !horario || !atividade) return;
+ const adicionarProgramacao = async () => {
+  if (!dia || !horarioInicio || !horarioFim || !atividade) return;
 
-    try {
-      await fetch(`${API}/programacoes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dia, horario, atividade, responsavel }),
-      });
+  const horarioCombinado = `${horarioInicio} às ${horarioFim}`;
 
-      setDia("");
-      setHorario("");
-      setAtividade("");
-      setResponsavel("");
-      await carregarTudo();
-    } catch (err) {
-      console.log("Erro programação:", err);
-    }
-  };
+  try {
+    await fetch(`${API}/programacoes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dia, horario: horarioCombinado, atividade, responsavel }),
+    });
 
-  const handleDeleteProgramacao = async (id) => {
-    const confirmar = window.confirm("Deseja excluir esta programação?");
-    if (!confirmar) return;
+    setDia("");
+    setHorarioInicio("");
+    setHorarioFim("");
+    setAtividade("");
+    setResponsavel("");
+    await carregarTudo();
+  } catch (err) {
+    console.log("Erro programação:", err);
+  }
+};
 
-    try {
-      await fetch(`${API}/programacoes/${id}`, { method: "DELETE" });
-      await carregarTudo();
-    } catch (err) {
-      console.log("Erro ao deletar programação:", err);
-    }
-  };
+const handleDeleteProgramacao = async (id) => {
+  const confirmar = window.confirm("Deseja excluir esta programação?");
+  if (!confirmar) return;
 
+  try {
+    await fetch(`${API}/programacoes/${id}`, { method: "DELETE" });
+    await carregarTudo();
+  } catch (err) {
+    console.log("Erro ao deletar programação:", err);
+  }
+};
   // ACEITARAM JESUS
   const adicionarAceitouJesus = async () => {
     if (!nome) return alert("Nome obrigatório!");
@@ -535,85 +538,100 @@ export default function Pastor() {
           </div>
         )}
 
-        {/* PROGRAMAÇÃO */}
-        {aba === "programacao" && (
-          <div className="avisos-grid">
-            <div className="card">
-              <h3><FaCalendarAlt color="#e02020" /> Novo Evento</h3>
+       {/* PROGRAMAÇÃO */}
+{aba === "programacao" && (
+  <div className="avisos-grid">
+    <div className="card">
+      <h3><FaCalendarAlt color="#e02020" /> Novo Evento</h3>
 
-              <label>Dia</label>
-              <select value={dia} onChange={(e) => setDia(e.target.value)}>
-                <option value="">Selecione</option>
-                <option>Domingo</option>
-                <option>Segunda-feira</option>
-                <option>Terça-feira</option>
-                <option>Quarta-feira</option>
-                <option>Quinta-feira</option>
-                <option>Sexta-feira</option>
-                <option>Sábado</option>
-              </select>
+      <label>Dia</label>
+      <select value={dia} onChange={(e) => setDia(e.target.value)}>
+        <option value="">Selecione</option>
+        <option>Domingo</option>
+        <option>Segunda-feira</option>
+        <option>Terça-feira</option>
+        <option>Quarta-feira</option>
+        <option>Quinta-feira</option>
+        <option>Sexta-feira</option>
+        <option>Sábado</option>
+      </select>
 
-              <label>Horário</label>
-              <input type="time" value={horario} onChange={(e) => setHorario(e.target.value)} />
+      <label>Horário</label>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <input
+          type="time"
+          value={horarioInicio}
+          onChange={(e) => setHorarioInicio(e.target.value)}
+          style={{ flex: 1 }}
+        />
+        <span style={{ color: "var(--color-text-secondary)", fontSize: 13, whiteSpace: "nowrap" }}>
+          às
+        </span>
+        <input
+          type="time"
+          value={horarioFim}
+          onChange={(e) => setHorarioFim(e.target.value)}
+          style={{ flex: 1 }}
+        />
+      </div>
 
-              <label>Atividade</label>
-              <input value={atividade} onChange={(e) => setAtividade(e.target.value)} />
+      <label>Atividade</label>
+      <input value={atividade} onChange={(e) => setAtividade(e.target.value)} />
 
-              <button className="btn-red" onClick={adicionarProgramacao}>
-                Adicionar
-              </button>
-            </div>
+      <button className="btn-red" onClick={adicionarProgramacao}>
+        Adicionar
+      </button>
+    </div>
 
-            <div className="card">
-              <h3>
-                <FaCalendarAlt color="#e02020" /> Programação
-                <button onClick={() => gerarPDF("programacao")} className="btn-pdf">
-                  <FaFilePdf /> Gerar PDF
-                </button>
-              </h3>
+    <div className="card">
+      <h3>
+        <FaCalendarAlt color="#e02020" /> Programação
+        <button onClick={() => gerarPDF("programacao")} className="btn-pdf">
+          <FaFilePdf /> Gerar PDF
+        </button>
+      </h3>
 
-              <table className="tabela">
-                <thead>
-                  <tr>
-                    <th>Dia</th>
-                    <th>Horário</th>
-                    <th>Atividade</th>
-                    <th>Data</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {programacoes.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.dia}</td>
-                      <td>{p.horario}</td>
-                      <td>{p.atividade}</td>
-                      <td>
-                        {p.data
-                          ? new Date(p.data).toLocaleString("pt-BR", {
-                              timeZone: "America/Sao_Paulo",
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
-                      </td>
-                      <td style={{ textAlign: "center" }}>
-                        <FaTrash
-                          className="delete"
-                          onClick={() => handleDeleteProgramacao(p.id)}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
+      <table className="tabela">
+        <thead>
+          <tr>
+            <th>Dia</th>
+            <th>Horário</th>
+            <th>Atividade</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {programacoes.map((p) => (
+            <tr key={p.id}>
+              <td>{p.dia}</td>
+              <td style={{ whiteSpace: "nowrap" }}>{p.horario}</td>
+              <td>{p.atividade}</td>
+              <td>
+                {p.data
+                  ? new Date(p.data).toLocaleString("pt-BR", {
+                      timeZone: "America/Sao_Paulo",
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : "-"}
+              </td>
+              <td style={{ textAlign: "center" }}>
+                <FaTrash
+                  className="delete"
+                  onClick={() => handleDeleteProgramacao(p.id)}
+                />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
         {/* ACEITARAM JESUS */}
         {aba === "aceitaramJesus" && (
           <div className="avisos-grid">
