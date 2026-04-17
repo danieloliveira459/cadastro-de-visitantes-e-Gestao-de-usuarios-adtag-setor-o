@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"; // 👈 useRef adicionado
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
 import "./Login.css";
@@ -17,7 +17,6 @@ const API = `${BASE_URL}/api/auth`;
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const redirected = useRef(false); 
 
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -60,12 +59,17 @@ export default function Login() {
           body: JSON.stringify({ email }),
         });
 
-        if (!res.ok) { setNivelUsuario(""); return; }
+        if (!res.ok) {
+          setNivelUsuario("");
+          return;
+        }
 
         const data = await res.json().catch(() => ({}));
         setNivelUsuario(data?.nivel || "");
       } catch (err) {
-        if (err.name === "AbortError") setErro("Servidor demorou para responder.");
+        if (err.name === "AbortError") {
+          setErro("Servidor demorou para responder.");
+        }
         setNivelUsuario("");
       } finally {
         setLoadingNivel(false);
@@ -76,16 +80,20 @@ export default function Login() {
     return () => clearTimeout(delay);
   }, [email]);
 
-  //  REDIRECIONAMENTO — CORRIGIDO
+  //  REDIRECIONAMENTO CORRIGIDO (SEM LOOP)
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    // useRef não causa re-render, sem loop
-    if (token && !redirected.current) {
-      redirected.current = true; //  marca antes de navegar
+    //  Se veio de logout, NÃO redireciona
+    if (location.state?.logout) {
+      return;
+    }
+
+    //  Se já está logado, vai pra home
+    if (token) {
       navigate("/home", { replace: true });
     }
-  }, []); // array vazio: roda só uma vez na montagem
+  }, [navigate, location.state]);
 
   //  LOGIN
   const handleLogin = async (e) => {
@@ -109,6 +117,7 @@ export default function Login() {
 
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
+
       navigate("/home", { replace: true });
     } catch (err) {
       if (err.name === "AbortError") {
@@ -124,7 +133,10 @@ export default function Login() {
     setErro("");
     setMensagem("");
 
-    if (!email) { setErro("Digite seu email"); return; }
+    if (!email) {
+      setErro("Digite seu email");
+      return;
+    }
 
     try {
       const res = await fetchComTimeout(`${API}/forgot`, {
@@ -135,7 +147,10 @@ export default function Login() {
 
       const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) { setErro(data?.erro || "Erro ao recuperar senha"); return; }
+      if (!res.ok) {
+        setErro(data?.erro || "Erro ao recuperar senha");
+        return;
+      }
 
       setMensagem("Email de recuperação enviado!");
     } catch (err) {
@@ -145,8 +160,11 @@ export default function Login() {
 
   const formatarNivel = (nivel) => {
     const mapa = {
-      USER: "Usuário", PASTOR: "Pastor", VICE: "Vice",
-      DIRIGENTE: "Dirigente", ADM: "Administrador",
+      USER: "Usuário",
+      PASTOR: "Pastor",
+      VICE: "Vice",
+      DIRIGENTE: "Dirigente",
+      ADM: "Administrador",
     };
     return mapa[nivel] || nivel;
   };
@@ -156,21 +174,35 @@ export default function Login() {
     setErro("");
     setMensagem("");
 
-    if (!nome || !emailCad || !senhaCad) { setErro("Preencha todos os campos"); return; }
+    if (!nome || !emailCad || !senhaCad) {
+      setErro("Preencha todos os campos");
+      return;
+    }
 
     try {
       const res = await fetchComTimeout(`${API}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email: emailCad, senha: senhaCad, nivel }),
+        body: JSON.stringify({
+          nome,
+          email: emailCad,
+          senha: senhaCad,
+          nivel,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) { setErro(data?.erro || "Erro ao cadastrar"); return; }
+      if (!res.ok) {
+        setErro(data?.erro || "Erro ao cadastrar");
+        return;
+      }
 
       setMensagem("Usuário cadastrado com sucesso!");
-      setNome(""); setEmailCad(""); setSenhaCad(""); setNivel("USER");
+      setNome("");
+      setEmailCad("");
+      setSenhaCad("");
+      setNivel("USER");
       setMostrarCadastro(false);
     } catch (err) {
       setErro("Erro ao cadastrar");
@@ -181,7 +213,12 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <h1 className="logo-title">
-          <img src={logo} alt="ADTAG Logo" className="logo" onError={(e) => (e.target.style.display = "none")} />
+          <img
+            src={logo}
+            alt="ADTAG Logo"
+            className="logo"
+            onError={(e) => (e.target.style.display = "none")}
+          />
           ADTAG
         </h1>
 
@@ -191,34 +228,69 @@ export default function Login() {
         {mensagem && <p className="sucesso">{mensagem}</p>}
 
         <form onSubmit={handleLogin}>
-          <input type="email" placeholder="Email" value={email}
-            onChange={(e) => setEmail(e.target.value)} required />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
 
-          {loadingNivel && <p style={{ fontSize: "12px" }}>Verificando nível...</p>}
+          {loadingNivel && (
+            <p style={{ fontSize: "12px" }}>Verificando nível...</p>
+          )}
 
           {nivelUsuario && !loadingNivel && (
             <p style={{ color: "#e02020" }}>
-              <TbUserShare /> <strong>{formatarNivel(nivelUsuario)}</strong>
+              <TbUserShare />{" "}
+              <strong>{formatarNivel(nivelUsuario)}</strong>
             </p>
           )}
 
-          <input type="password" placeholder="Senha" value={senha}
-            onChange={(e) => setSenha(e.target.value)} required />
+          <input
+            type="password"
+            placeholder="Senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            required
+          />
 
-          <button type="submit" className="btn-login">Entrar</button>
+          <button type="submit" className="btn-login">
+            Entrar
+          </button>
         </form>
 
-        <button className="btn-login" onClick={recuperarSenha}>Esqueci minha senha</button>
+        <button className="btn-login" onClick={recuperarSenha}>
+          Esqueci minha senha
+        </button>
 
-        <button className="btn-register" onClick={() => setMostrarCadastro(!mostrarCadastro)}>
+        <button
+          className="btn-register"
+          onClick={() => setMostrarCadastro(!mostrarCadastro)}
+        >
           Cadastrar Usuário
         </button>
 
         {mostrarCadastro && (
           <div className="cadastro-box">
-            <input type="text" placeholder="Nome" value={nome} onChange={(e) => setNome(e.target.value)} />
-            <input type="email" placeholder="Email" value={emailCad} onChange={(e) => setEmailCad(e.target.value)} />
-            <input type="password" placeholder="Senha" value={senhaCad} onChange={(e) => setSenhaCad(e.target.value)} />
+            <input
+              type="text"
+              placeholder="Nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+            />
+            <input
+              type="email"
+              placeholder="Email"
+              value={emailCad}
+              onChange={(e) => setEmailCad(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="Senha"
+              value={senhaCad}
+              onChange={(e) => setSenhaCad(e.target.value)}
+            />
 
             <select value={nivel} onChange={(e) => setNivel(e.target.value)}>
               <option value="Diácono">Diácono</option>
@@ -228,12 +300,13 @@ export default function Login() {
               <option value="PASTOR DIRIGENTE">Pastor Dirigente</option>
               <option value="ADM">Administrador</option>
               <option value="RECEPCIONISTA">Recepcionista</option>
-               <option value="SECRETÁRIO">Secretário</option>
-                <option value="TESOUREIRO">Tesoureiro</option>
-
+              <option value="SECRETÁRIO">Secretário</option>
+              <option value="TESOUREIRO">Tesoureiro</option>
             </select>
 
-            <button onClick={handleCadastrarUsuario} className="btn-login">Salvar Usuário</button>
+            <button onClick={handleCadastrarUsuario} className="btn-login">
+              Salvar Usuário
+            </button>
           </div>
         )}
       </div>
