@@ -68,11 +68,12 @@ if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
 
   app.get("*", (req, res) => {
-    if (req.path.startsWith("/api")) return;
+    if (req.path.startsWith("/api")) {
+      return res.status(404).json({ message: "Rota não encontrada" });
+    }
     res.sendFile(path.join(frontendPath, "index.html"));
   });
 }
-
 /* ================= 404 API ================= */
 
 app.use("/api", (req, res) => {
