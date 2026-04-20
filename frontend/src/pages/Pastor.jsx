@@ -22,8 +22,8 @@ export default function Pastor() {
   const [descricao, setDescricao] = useState("");
 
   const [dia, setDia] = useState("");
- const [horarioInicio, setHorarioInicio] = useState("");
- const [horarioFim, setHorarioFim]       = useState("");
+  const [horarioInicio, setHorarioInicio] = useState("");
+  const [horarioFim, setHorarioFim] = useState("");
   const [atividade, setAtividade] = useState("");
   const [responsavel, setResponsavel] = useState("");
 
@@ -34,7 +34,6 @@ export default function Pastor() {
   const [endereco, setEndereco] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
-  //  recarrega sempre que trocar de aba
   useEffect(() => {
     carregarTudo();
   }, [aba]);
@@ -133,40 +132,41 @@ export default function Pastor() {
   };
 
   // PROGRAMAÇÃO
- const adicionarProgramacao = async () => {
-  if (!dia || !horarioInicio || !horarioFim || !atividade) return;
+  const adicionarProgramacao = async () => {
+    if (!dia || !horarioInicio || !horarioFim || !atividade) return;
 
-  const horarioCombinado = `${horarioInicio} às ${horarioFim}`;
+    const horarioCombinado = `${horarioInicio} às ${horarioFim}`;
 
-  try {
-    await fetch(`${API}/programacoes`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dia, horario: horarioCombinado, atividade, responsavel }),
-    });
+    try {
+      await fetch(`${API}/programacoes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dia, horario: horarioCombinado, atividade, responsavel }),
+      });
 
-    setDia("");
-    setHorarioInicio("");
-    setHorarioFim("");
-    setAtividade("");
-    setResponsavel("");
-    await carregarTudo();
-  } catch (err) {
-    console.log("Erro programação:", err);
-  }
-};
+      setDia("");
+      setHorarioInicio("");
+      setHorarioFim("");
+      setAtividade("");
+      setResponsavel("");
+      await carregarTudo();
+    } catch (err) {
+      console.log("Erro programação:", err);
+    }
+  };
 
-const handleDeleteProgramacao = async (id) => {
-  const confirmar = window.confirm("Deseja excluir esta programação?");
-  if (!confirmar) return;
+  const handleDeleteProgramacao = async (id) => {
+    const confirmar = window.confirm("Deseja excluir esta programação?");
+    if (!confirmar) return;
 
-  try {
-    await fetch(`${API}/programacoes/${id}`, { method: "DELETE" });
-    await carregarTudo();
-  } catch (err) {
-    console.log("Erro ao deletar programação:", err);
-  }
-};
+    try {
+      await fetch(`${API}/programacoes/${id}`, { method: "DELETE" });
+      await carregarTudo();
+    } catch (err) {
+      console.log("Erro ao deletar programação:", err);
+    }
+  };
+
   // ACEITARAM JESUS
   const adicionarAceitouJesus = async () => {
     if (!nome) return alert("Nome obrigatório!");
@@ -203,7 +203,6 @@ const handleDeleteProgramacao = async (id) => {
     }
   };
 
-  // URL corrigida — removido /api duplicado
   const atualizarAceitou = async (id, valor) => {
     try {
       const booleanValue = valor === true;
@@ -231,7 +230,18 @@ const handleDeleteProgramacao = async (id) => {
     }
   };
 
-  // PDF
+  // Helper para formatar apenas a data (dd/mm/aaaa)
+  const formatarData = (data) => {
+    if (!data) return "-";
+    return new Date(data).toLocaleDateString("pt-BR", {
+      timeZone: "America/Sao_Paulo",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+ // PDF
   const gerarPDF = (tipo) => {
     const doc = new jsPDF();
 
@@ -256,40 +266,45 @@ const handleDeleteProgramacao = async (id) => {
     let tabela = [];
     let head = [];
 
-   if (tipo === "visitantes") {
-  head = [["Nome", "Cargo", "Telefone", "Igreja", "Aceitou Jesus", "Data"]];
-  tabela = visitantes.map((v) => [
-    v.nome,
-    v.cargo,
-    v.telefone,
-    v.igreja,
-    v.aceitou_jesus == 1 ? "Sim" : "Não",  
-    v.data
-      ? new Date(v.data).toLocaleString("pt-BR", {
-          timeZone: "America/Sao_Paulo",
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "-",  // ← Data depois
-  ]);
-}
+    if (tipo === "visitantes") {
+      head = [["Nome", "Cargo", "Telefone", "Igreja", "Aceitou Jesus", "Data"]];
+      tabela = visitantes.map((v) => [
+        v.nome,
+        v.cargo,
+        v.telefone,
+        v.igreja,
+        v.aceitou_jesus == 1 ? "Sim" : "Não",
+        formatarData(v.data),
+      ]);
+    }
 
     if (tipo === "avisos") {
       head = [["Título", "Descrição", "Data"]];
-      tabela = avisos.map((a) => [a.titulo, a.descricao, a.data]);
+      tabela = avisos.map((a) => [a.titulo, a.descricao, formatarData(a.data)]);
     }
 
     if (tipo === "programacao") {
+      const ordemDias = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado","Domingo"];
       head = [["Dia", "Horário", "Atividade", "Data"]];
-      tabela = programacoes.map((p) => [p.dia, p.horario, p.atividade, p.data]);
+      tabela = [...programacoes]
+        .sort((a, b) => {
+          const diaA = ordemDias.indexOf(a.dia);
+          const diaB = ordemDias.indexOf(b.dia);
+          if (diaA !== diaB) return diaA - diaB;
+          return a.horario.localeCompare(b.horario);
+        })
+        .map((p) => [p.dia, p.horario, p.atividade, formatarData(p.data)]);
     }
 
     if (tipo === "aceitaram-jesus") {
       head = [["Nome", "Telefone", "Endereço", "Observações", "Data"]];
-      tabela = aceitaramJesus.map((v) => [v.nome, v.telefone, v.endereco, v.observacoes, v.data]);
+      tabela = aceitaramJesus.map((v) => [
+        v.nome,
+        v.telefone,
+        v.endereco,
+        v.observacoes,
+        formatarData(v.data),
+      ]);
     }
 
     if (tabela.length === 0) {
@@ -323,7 +338,6 @@ const handleDeleteProgramacao = async (id) => {
 
     doc.save(`${nomes[tipo] || tipo}.pdf`);
   };
-
   return (
     <>
       <Header />
@@ -397,70 +411,56 @@ const handleDeleteProgramacao = async (id) => {
                 </div>
               ) : (
                 <table className="tabela">
-                 <thead>
-  <tr>
-    <th>Nome</th>
-    <th>Função/ND</th>
-    <th>Telefone</th>
-    <th>Igreja</th>
-    <th>Aceitou jesus?</th>  
-    <th>Data</th>
-    <th>Ações</th>
-  </tr>
-</thead>
-<tbody>
-  {visitantes.map((v) => (
-    <tr key={v.id}>
-      <td>{v.nome}</td>
-      <td>{v.funcao}</td>
-      <td>{v.telefone}</td>
-      <td>{v.igreja}</td>
-
-      {/* Aceitou jesus? — antes da data */}
-      <td>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <label>
-            <input
-              type="radio"
-              name={`aceitou-${v.id}`}
-              checked={v.aceitou_jesus == 1}
-              onChange={() => atualizarAceitou(v.id, true)}
-            />
-            Sim
-          </label>
-          <label>
-            <input
-              type="radio"
-              name={`aceitou-${v.id}`}
-              checked={v.aceitou_jesus == 0 || v.aceitou_jesus === null}
-              onChange={() => atualizarAceitou(v.id, false)}
-            />
-            Não
-          </label>
-        </div>
-      </td>
-      <td>
-        {v.data
-          ? new Date(v.data).toLocaleString("pt-BR", {
-              timeZone: "America/Sao_Paulo",
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "-"}
-      </td>
-
-      <td style={{ textAlign: "center" }}>
-        <FaTrash
-          className="delete"
-          onClick={() => handleDeleteVisitante(v.id)}
-        />
-      </td>
-    </tr>
-  ))}
-</tbody>
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Função/ND</th>
+                      <th>Telefone</th>
+                      <th>Igreja</th>
+                      <th>Aceitou jesus?</th>
+                      <th>Data</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visitantes.map((v) => (
+                      <tr key={v.id}>
+                        <td>{v.nome}</td>
+                        <td>{v.funcao}</td>
+                        <td>{v.telefone}</td>
+                        <td>{v.igreja}</td>
+                        <td>
+                          <div style={{ display: "flex", gap: "10px" }}>
+                            <label>
+                              <input
+                                type="radio"
+                                name={`aceitou-${v.id}`}
+                                checked={v.aceitou_jesus == 1}
+                                onChange={() => atualizarAceitou(v.id, true)}
+                              />
+                              Sim
+                            </label>
+                            <label>
+                              <input
+                                type="radio"
+                                name={`aceitou-${v.id}`}
+                                checked={v.aceitou_jesus == 0 || v.aceitou_jesus === null}
+                                onChange={() => atualizarAceitou(v.id, false)}
+                              />
+                              Não
+                            </label>
+                          </div>
+                        </td>
+                        <td>{formatarData(v.data)}</td>
+                        <td style={{ textAlign: "center" }}>
+                          <FaTrash
+                            className="delete"
+                            onClick={() => handleDeleteVisitante(v.id)}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               )}
             </div>
@@ -512,18 +512,7 @@ const handleDeleteProgramacao = async (id) => {
                     <tr key={a.id}>
                       <td>{a.titulo}</td>
                       <td>{a.descricao}</td>
-                      <td>
-                        {a.data
-                          ? new Date(a.data).toLocaleString("pt-BR", {
-                              timeZone: "America/Sao_Paulo",
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })
-                          : "-"}
-                      </td>
+                      <td>{formatarData(a.data)}</td>
                       <td style={{ textAlign: "center" }}>
                         <FaTrash
                           className="delete"
@@ -538,100 +527,96 @@ const handleDeleteProgramacao = async (id) => {
           </div>
         )}
 
-       {/* PROGRAMAÇÃO */}
-{aba === "programacao" && (
-  <div className="avisos-grid">
-    <div className="card">
-      <h3><FaCalendarAlt color="#e02020" /> Novo Evento</h3>
+        {/* PROGRAMAÇÃO */}
+        {aba === "programacao" && (
+          <div className="avisos-grid">
+            <div className="card">
+              <h3><FaCalendarAlt color="#e02020" /> Novo Evento</h3>
 
-      <label>Dia</label>
-      <select value={dia} onChange={(e) => setDia(e.target.value)}>
-        <option value="">Selecione</option>
-        <option>Domingo</option>
-        <option>Segunda-feira</option>
-        <option>Terça-feira</option>
-        <option>Quarta-feira</option>
-        <option>Quinta-feira</option>
-        <option>Sexta-feira</option>
-        <option>Sábado</option>
-      </select>
+              <label>Dia</label>
+              <select value={dia} onChange={(e) => setDia(e.target.value)}>
+                <option value="">Selecione</option>
+                <option>Domingo</option>
+                <option>Segunda-feira</option>
+                <option>Terça-feira</option>
+                <option>Quarta-feira</option>
+                <option>Quinta-feira</option>
+                <option>Sexta-feira</option>
+                <option>Sábado</option>
+              </select>
 
-      <label>Horário</label>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <input
-          type="time"
-          value={horarioInicio}
-          onChange={(e) => setHorarioInicio(e.target.value)}
-          style={{ flex: 1 }}
-        />
-        <span style={{ color: "var(--color-text-secondary)", fontSize: 13, whiteSpace: "nowrap" }}>
-          às
-        </span>
-        <input
-          type="time"
-          value={horarioFim}
-          onChange={(e) => setHorarioFim(e.target.value)}
-          style={{ flex: 1 }}
-        />
-      </div>
-
-      <label>Atividade</label>
-      <input value={atividade} onChange={(e) => setAtividade(e.target.value)} />
-
-      <button className="btn-red" onClick={adicionarProgramacao}>
-        Adicionar
-      </button>
-    </div>
-
-    <div className="card">
-      <h3>
-        <FaCalendarAlt color="#e02020" /> Programação
-        <button onClick={() => gerarPDF("programacao")} className="btn-pdf">
-          <FaFilePdf /> Gerar PDF
-        </button>
-      </h3>
-
-      <table className="tabela">
-        <thead>
-          <tr>
-            <th>Dia</th>
-            <th>Horário</th>
-            <th>Atividade</th>
-            <th>Data</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>
-          {programacoes.map((p) => (
-            <tr key={p.id}>
-              <td>{p.dia}</td>
-              <td style={{ whiteSpace: "nowrap" }}>{p.horario}</td>
-              <td>{p.atividade}</td>
-              <td>
-                {p.data
-                  ? new Date(p.data).toLocaleString("pt-BR", {
-                      timeZone: "America/Sao_Paulo",
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "-"}
-              </td>
-              <td style={{ textAlign: "center" }}>
-                <FaTrash
-                  className="delete"
-                  onClick={() => handleDeleteProgramacao(p.id)}
+              <label>Horário</label>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input
+                  type="time"
+                  value={horarioInicio}
+                  onChange={(e) => setHorarioInicio(e.target.value)}
+                  style={{ flex: 1 }}
                 />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
+                <span style={{ color: "var(--color-text-secondary)", fontSize: 13, whiteSpace: "nowrap" }}>
+                  às
+                </span>
+                <input
+                  type="time"
+                  value={horarioFim}
+                  onChange={(e) => setHorarioFim(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+              </div>
+
+              <label>Atividade</label>
+              <input value={atividade} onChange={(e) => setAtividade(e.target.value)} />
+
+              <button className="btn-red" onClick={adicionarProgramacao}>
+                Adicionar
+              </button>
+            </div>
+
+            <div className="card">
+              <h3>
+                <FaCalendarAlt color="#e02020" /> Programação
+                <button onClick={() => gerarPDF("programacao")} className="btn-pdf">
+                  <FaFilePdf /> Gerar PDF
+                </button>
+              </h3>
+
+              <table className="tabela">
+                <thead>
+                  <tr>
+                    <th>Dia</th>
+                    <th>Horário</th>
+                    <th>Atividade</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                 {[...programacoes].sort((a, b) => {
+                const ordem = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado","Domingo"];
+                 const diaA = ordem.indexOf(a.dia);
+                   const diaB = ordem.indexOf(b.dia);
+                  if (diaA !== diaB) return diaA - diaB;
+                   return a.horario.localeCompare(b.horario);
+                  }).map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.dia}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{p.horario}</td>
+                      <td>{p.atividade}</td>
+                      <td>{formatarData(p.data)}</td>
+                      <td style={{ textAlign: "center" }}>
+                        <FaTrash
+                          className="delete"
+                          onClick={() => handleDeleteProgramacao(p.id)}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* ACEITARAM JESUS */}
         {aba === "aceitaramJesus" && (
           <div className="avisos-grid">
@@ -670,13 +655,7 @@ const handleDeleteProgramacao = async (id) => {
                       <td>{p.telefone}</td>
                       <td>{p.endereco}</td>
                       <td>{p.observacoes}</td>
-                      <td>
-                        {p.data
-                          ? new Date(p.data).toLocaleString("pt-BR", {
-                              timeZone: "America/Sao_Paulo",
-                            })
-                          : "-"}
-                      </td>
+                      <td>{formatarData(p.data)}</td>
                       <td style={{ textAlign: "center" }}>
                         <FaTrash
                           className="delete"
