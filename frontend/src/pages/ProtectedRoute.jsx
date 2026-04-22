@@ -6,8 +6,10 @@ export default function ProtectedRoute({ children, allowedRoles }) {
   const token = localStorage.getItem("token");
   let usuario = null;
 
+  //  Proteção contra JSON inválido
   try {
     const data = localStorage.getItem("usuarioLogado");
+
     if (data && data !== "undefined" && data !== "null") {
       usuario = JSON.parse(data);
     }
@@ -16,26 +18,27 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     usuario = null;
   }
 
-  // ✅ NÃO LOGADO → LOGIN
-  // Passa { from: location } para o Login poder redirecionar de volta
-  // NÃO passa logout:true aqui, pois isso bloqueava o redirect automático
+  //  NÃO LOGADO → LOGIN (COM CONTROLE DE LOGOUT)
   if (!token || !usuario) {
     return (
       <Navigate
         to="/login"
         replace
-        state={{ from: location }}
+        state={{
+          from: location,
+          logout: true, // 🔥 ESSENCIAL PRA NÃO DAR LOOP
+        }}
       />
     );
   }
 
-  // VERIFICA PERMISSÃO
+  //  VERIFICA PERMISSÃO
   const nivel = usuario?.nivel?.toUpperCase();
 
   if (allowedRoles && (!nivel || !allowedRoles.includes(nivel))) {
     return <Navigate to="/home" replace />;
   }
 
-  // LIBERADO
+  //  LIBERADO
   return children;
 }

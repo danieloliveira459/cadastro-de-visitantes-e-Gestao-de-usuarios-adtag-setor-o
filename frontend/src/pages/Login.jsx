@@ -6,7 +6,7 @@ import logo from "../assets/adtag.png";
 
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com";
+  "https://cadatro-de-visitantes-e-gest-o-de.onrender.com";
 
 if (!import.meta.env.VITE_API_URL) {
   console.warn("VITE_API_URL não definida. Usando fallback.");
@@ -43,7 +43,7 @@ export default function Login() {
     }
   };
 
-  // BUSCAR NÍVEL
+  //  BUSCAR NÍVEL
   useEffect(() => {
     if (!email || email.length < 5) {
       setNivelUsuario("");
@@ -80,18 +80,22 @@ export default function Login() {
     return () => clearTimeout(delay);
   }, [email]);
 
-  // ✅ REDIRECIONAMENTO: se já está logado e NÃO veio de logout, vai pra home
+  //  REDIRECIONAMENTO CORRIGIDO (SEM LOOP)
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    if (location.state?.logout) return;
+    //  Se veio de logout, NÃO redireciona
+    if (location.state?.logout) {
+      return;
+    }
 
+    //  Se já está logado, vai pra home
     if (token) {
       navigate("/home", { replace: true });
     }
   }, [navigate, location.state]);
 
-  // ✅ LOGIN com redirect de volta para rota de origem (ex: /membros após QR code)
+  //  LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
@@ -114,12 +118,7 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
 
-      // ✅ Se veio de uma rota protegida (ex: /membros via QR code),
-      // redireciona de volta para ela. Caso contrário, vai para /home.
-      const destino = location.state?.from?.pathname || "/home";
-      const search  = location.state?.from?.search  || "";
-      navigate(destino + search, { replace: true });
-
+      navigate("/home", { replace: true });
     } catch (err) {
       if (err.name === "AbortError") {
         setErro("Servidor demorou para responder.");
@@ -170,7 +169,7 @@ export default function Login() {
     return mapa[nivel] || nivel;
   };
 
-  // CADASTRO
+  // 👤 CADASTRO
   const handleCadastrarUsuario = async () => {
     setErro("");
     setMensagem("");
@@ -224,13 +223,6 @@ export default function Login() {
         </h1>
 
         <h2>LOGIN</h2>
-
-        {/* ✅ Mostra mensagem quando veio de QR code */}
-        {location.state?.from?.pathname === "/membros" && (
-          <p style={{ fontSize: 13, color: "#e02020", marginBottom: 8, textAlign: "center" }}>
-            🔐 Faça login para acessar os membros
-          </p>
-        )}
 
         {erro && <p className="erro">{erro}</p>}
         {mensagem && <p className="sucesso">{mensagem}</p>}
