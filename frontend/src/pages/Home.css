@@ -9,9 +9,8 @@
 
 /* LOGO */
 .logo {
-  background: var(--primary);
   color: #fff;
-  padding: 6px 14px; 
+  padding:  0px; 
   border-radius: 8px;
   font-weight: 700;
   font-size: 14px;
