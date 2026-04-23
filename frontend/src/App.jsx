@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"; 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -8,14 +8,16 @@ import Pastor from "./pages/Pastor";
 import Admin from "./pages/Admin";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import AceitaramJesus from "./pages/AceitaramJesus";
-import ResetPassword from "./pages/ResetPassword";
+import ResetPassword from "./pages/ResetPassword"; 
 import Membros from "./pages/CadastroMembros";
 import Qrcode from "./pages/QrExport";
-import SemAcesso from "./pages/SemAcesso";
 
+// FUNÇÃO SEGURA
 function getUsuario() {
   const data = localStorage.getItem("usuarioLogado");
-  if (!data || data === "undefined" || data === "null") return null;
+
+  if (!data || data === "undefined") return null;
+
   try {
     return JSON.parse(data);
   } catch {
@@ -23,52 +25,17 @@ function getUsuario() {
   }
 }
 
-// ✅ Roles centralizados — tudo em lowercase para bater com a normalização do ProtectedRoute
-const ROLES = {
-  todos: [
-    "adm",
-    "pastor",
-    "vice pastor",
-    "pastor dirigente",
-    "secretário",
-    "tesoureiro",
-    "recepcionista",
-    "diácono",
-    "diaconisa",
-  ],
-  lideranca: [
-    "adm",
-    "pastor",
-    "vice pastor",
-    "pastor dirigente",
-    "secretário",
-    "tesoureiro",
-  ],
-  recepcao: [
-    "adm",
-    "pastor",
-    "vice pastor",
-    "pastor dirigente",
-    "secretário",
-    "tesoureiro",
-    "recepcionista",
-  ],
-};
-
 export default function App() {
-  const [usuario, setUsuario] = useState(getUsuario);
+  const [usuario, setUsuario] = useState(getUsuario());
 
+  // Atualiza se localStorage mudar (login/logout)
   useEffect(() => {
-    // ✅ CORRIGIDO: escuta evento customizado para atualizar na MESMA aba após login
-    const handleAuth = () => setUsuario(getUsuario());
-
-    window.addEventListener("storage", handleAuth);       // outras abas
-    window.addEventListener("auth-change", handleAuth);   // mesma aba (dispare no Login)
-
-    return () => {
-      window.removeEventListener("storage", handleAuth);
-      window.removeEventListener("auth-change", handleAuth);
+    const handleStorage = () => {
+      setUsuario(getUsuario());
     };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   return (
@@ -78,70 +45,73 @@ export default function App() {
         {/* ROTA INICIAL */}
         <Route
           path="/"
-          element={usuario ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />}
+          element={
+            usuario
+              ? <Navigate to="/home" replace />
+              : <Navigate to="/login" replace />
+          }
         />
 
         {/* ROTAS PÚBLICAS */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset" element={<ResetPassword />} />
-        <Route path="/sem-acesso" element={<SemAcesso />} />
 
         {/* ADMIN */}
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={["adm"]}>
+            <ProtectedRoute allowedRoles={["ADM"]}>
               <Admin />
             </ProtectedRoute>
           }
         />
 
-        {/* HOME */}
+        {/*HOME */}
         <Route
           path="/home"
           element={
-            <ProtectedRoute allowedRoles={ROLES.todos}>
+            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE","USER"]}>
               <Home />
             </ProtectedRoute>
           }
         />
 
-        {/* PAINEL DO PASTOR */}
+        {/*PASTOR */}
         <Route
           path="/pastor"
           element={
-            <ProtectedRoute allowedRoles={ROLES.lideranca}>
+            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE"]}>
               <Pastor />
             </ProtectedRoute>
           }
         />
 
-        {/* ACEITARAM JESUS */}
+        {/*ACEITARAM JESUS */}
         <Route
           path="/aceitaram-jesus"
           element={
-            <ProtectedRoute allowedRoles={ROLES.todos}>
+            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE","USER"]}>
               <AceitaramJesus />
             </ProtectedRoute>
           }
         />
 
-        {/* MEMBROS */}
+        {/*NOVA ROTA MEMBROS */}
         <Route
           path="/membros"
           element={
-            <ProtectedRoute allowedRoles={ROLES.lideranca}>
+            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE"]}>
               <Membros />
             </ProtectedRoute>
           }
         />
 
-        {/* QR CODE */}
+        {/* Rota QR code */}
         <Route
           path="/qrcode"
           element={
-            <ProtectedRoute allowedRoles={ROLES.recepcao}>
+            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE"]}>
               <Qrcode />
             </ProtectedRoute>
           }
@@ -150,7 +120,11 @@ export default function App() {
         {/* FALLBACK */}
         <Route
           path="*"
-          element={usuario ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />}
+          element={
+            usuario
+              ? <Navigate to="/home" replace />
+              : <Navigate to="/login" replace />
+          }
         />
 
       </Routes>
