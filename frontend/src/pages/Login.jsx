@@ -1,5 +1,3 @@
-// pages/Login.jsx
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { TbUserShare } from "react-icons/tb";
@@ -45,7 +43,7 @@ export default function Login() {
     }
   };
 
-  // BUSCAR NÍVEL
+  //  BUSCAR NÍVEL
   useEffect(() => {
     if (!email || email.length < 5) {
       setNivelUsuario("");
@@ -82,20 +80,22 @@ export default function Login() {
     return () => clearTimeout(delay);
   }, [email]);
 
-  // REDIRECIONAMENTO (SEM LOOP)
+  //  REDIRECIONAMENTO CORRIGIDO (SEM LOOP)
   useEffect(() => {
     const token = localStorage.getItem("token");
 
+    //  Se veio de logout, NÃO redireciona
     if (location.state?.logout) {
       return;
     }
 
+    //  Se já está logado, vai pra home
     if (token) {
       navigate("/home", { replace: true });
     }
   }, [navigate, location.state]);
 
-  // LOGIN
+  //  LOGIN
   const handleLogin = async (e) => {
     e.preventDefault();
     setErro("");
@@ -118,13 +118,7 @@ export default function Login() {
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuarioLogado", JSON.stringify(data.usuario));
 
-      const abaSalva = localStorage.getItem("redirecionarAba");
-      if (abaSalva) {
-        localStorage.removeItem("redirecionarAba");
-        navigate(`/membros?aba=${abaSalva}`, { replace: true });
-      } else {
-        navigate("/home", { replace: true });
-      }
+      navigate("/home", { replace: true });
     } catch (err) {
       if (err.name === "AbortError") {
         setErro("Servidor demorou para responder.");
@@ -168,19 +162,14 @@ export default function Login() {
     const mapa = {
       USER: "Usuário",
       PASTOR: "Pastor",
-      "VICE PASTOR": "Vice Pastor",
-      "PASTOR DIRIGENTE": "Pastor Dirigente",
-      SECRETÁRIO: "Secretário",
-      TESOUREIRO: "Tesoureiro",
+      VICE: "Vice",
+      DIRIGENTE: "Dirigente",
       ADM: "Administrador",
-      RECEPCIONISTA: "Recepcionista",
-      "Diácono": "Diácono",
-      "Diaconisa": "Diaconisa",
     };
     return mapa[nivel] || nivel;
   };
 
-  // CADASTRO
+  // 👤 CADASTRO
   const handleCadastrarUsuario = async () => {
     setErro("");
     setMensagem("");
