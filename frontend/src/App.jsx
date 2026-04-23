@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"; 
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -8,16 +8,13 @@ import Pastor from "./pages/Pastor";
 import Admin from "./pages/Admin";
 import ProtectedRoute from "./pages/ProtectedRoute";
 import AceitaramJesus from "./pages/AceitaramJesus";
-import ResetPassword from "./pages/ResetPassword"; 
+import ResetPassword from "./pages/ResetPassword";
 import Membros from "./pages/CadastroMembros";
 import Qrcode from "./pages/QrExport";
 
-// FUNÇÃO SEGURA
 function getUsuario() {
   const data = localStorage.getItem("usuarioLogado");
-
-  if (!data || data === "undefined") return null;
-
+  if (!data || data === "undefined" || data === "null") return null;
   try {
     return JSON.parse(data);
   } catch {
@@ -25,17 +22,48 @@ function getUsuario() {
   }
 }
 
+const ROLES = {
+  todos: [
+    "adm",
+    "pastor",
+    "vice pastor",
+    "pastor dirigente",
+    "secretário",
+    "tesoureiro",
+    "recepcionista",
+    "diácono",
+    "diaconisa",
+  ],
+  lideranca: [
+    "adm",
+    "pastor",
+    "vice pastor",
+    "pastor dirigente",
+    "secretário",
+    "tesoureiro",
+  ],
+  recepcao: [
+    "adm",
+    "pastor",
+    "vice pastor",
+    "pastor dirigente",
+    "secretário",
+    "tesoureiro",
+    "recepcionista",
+  ],
+};
+
 export default function App() {
-  const [usuario, setUsuario] = useState(getUsuario());
+  const [usuario, setUsuario] = useState(getUsuario);
 
-  // Atualiza se localStorage mudar (login/logout)
   useEffect(() => {
-    const handleStorage = () => {
-      setUsuario(getUsuario());
+    const handleAuth = () => setUsuario(getUsuario());
+    window.addEventListener("storage", handleAuth);
+    window.addEventListener("auth-change", handleAuth);
+    return () => {
+      window.removeEventListener("storage", handleAuth);
+      window.removeEventListener("auth-change", handleAuth);
     };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
   return (
@@ -45,11 +73,7 @@ export default function App() {
         {/* ROTA INICIAL */}
         <Route
           path="/"
-          element={
-            usuario
-              ? <Navigate to="/home" replace />
-              : <Navigate to="/login" replace />
-          }
+          element={usuario ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />}
         />
 
         {/* ROTAS PÚBLICAS */}
@@ -61,57 +85,57 @@ export default function App() {
         <Route
           path="/admin"
           element={
-            <ProtectedRoute allowedRoles={["ADM"]}>
+            <ProtectedRoute allowedRoles={["adm"]}>
               <Admin />
             </ProtectedRoute>
           }
         />
 
-        {/*HOME */}
+        {/* HOME */}
         <Route
           path="/home"
           element={
-            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE","USER"]}>
+            <ProtectedRoute allowedRoles={ROLES.todos}>
               <Home />
             </ProtectedRoute>
           }
         />
 
-        {/*PASTOR */}
+        {/* PAINEL DO PASTOR */}
         <Route
           path="/pastor"
           element={
-            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE"]}>
+            <ProtectedRoute allowedRoles={ROLES.lideranca}>
               <Pastor />
             </ProtectedRoute>
           }
         />
 
-        {/*ACEITARAM JESUS */}
+        {/* ACEITARAM JESUS */}
         <Route
           path="/aceitaram-jesus"
           element={
-            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE","USER"]}>
+            <ProtectedRoute allowedRoles={ROLES.todos}>
               <AceitaramJesus />
             </ProtectedRoute>
           }
         />
 
-        {/*NOVA ROTA MEMBROS */}
+        {/* MEMBROS */}
         <Route
           path="/membros"
           element={
-            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE"]}>
+            <ProtectedRoute allowedRoles={ROLES.lideranca}>
               <Membros />
             </ProtectedRoute>
           }
         />
 
-        {/* Rota QR code */}
+        {/* QR CODE */}
         <Route
           path="/qrcode"
           element={
-            <ProtectedRoute allowedRoles={["ADM","PASTOR","VICE","DIRIGENTE","ATENDENTE"]}>
+            <ProtectedRoute allowedRoles={ROLES.recepcao}>
               <Qrcode />
             </ProtectedRoute>
           }
@@ -120,11 +144,7 @@ export default function App() {
         {/* FALLBACK */}
         <Route
           path="*"
-          element={
-            usuario
-              ? <Navigate to="/home" replace />
-              : <Navigate to="/login" replace />
-          }
+          element={usuario ? <Navigate to="/home" replace /> : <Navigate to="/login" replace />}
         />
 
       </Routes>

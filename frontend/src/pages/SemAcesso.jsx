@@ -1,5 +1,3 @@
-
-
 import { useNavigate } from "react-router-dom";
 import { usePermissao } from "../hooks/usePermissao";
 
@@ -7,20 +5,33 @@ export default function SemAcesso() {
   const navigate = useNavigate();
   const { nivel } = usePermissao();
 
-  const formatarNivel = (nivel) => {
+  const formatarNivel = (n) => {
     const mapa = {
-      USER: "Usuário",
-      PASTOR: "Pastor",
-      "VICE PASTOR": "Vice Pastor",
-      "PASTOR DIRIGENTE": "Pastor Dirigente",
-      SECRETÁRIO: "Secretário",
-      TESOUREIRO: "Tesoureiro",
-      ADM: "Administrador",
-      RECEPCIONISTA: "Recepcionista",
-      "Diácono": "Diácono",
-      "Diaconisa": "Diaconisa",
+      "user": "Usuário",
+      "pastor": "Pastor",
+      "vice pastor": "Vice Pastor",
+      "pastor dirigente": "Pastor Dirigente",
+      "secretário": "Secretário",
+      "tesoureiro": "Tesoureiro",
+      "adm": "Administrador",
+      "recepcionista": "Recepcionista",
+      "diácono": "Diácono",
+      "diaconisa": "Diaconisa",
     };
-    return mapa[nivel] || nivel || "Desconhecido";
+    return mapa[n?.toLowerCase()] || n || "Desconhecido";
+  };
+
+  // ✅ Se tem usuário logado → /home | Se não tem → /login (evita loop)
+  const handleVoltar = () => {
+    const token = localStorage.getItem("token");
+    const data = localStorage.getItem("usuarioLogado");
+    const logado = token && data && data !== "undefined" && data !== "null";
+
+    if (logado) {
+      navigate("/home", { replace: true });
+    } else {
+      navigate("/login", { replace: true });
+    }
   };
 
   return (
@@ -35,7 +46,7 @@ export default function SemAcesso() {
         <p style={styles.subtexto}>
           Caso acredite que isso é um erro, entre em contato com o administrador.
         </p>
-        <button style={styles.botao} onClick={() => navigate("/home")}>
+        <button style={styles.botao} onClick={handleVoltar}>
           ← Voltar ao Início
         </button>
       </div>

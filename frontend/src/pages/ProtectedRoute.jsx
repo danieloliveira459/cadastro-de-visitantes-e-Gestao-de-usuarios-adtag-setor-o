@@ -33,8 +33,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     allowedRoles &&
     (!nivel || !allowedRoles.some((role) => role.trim().toLowerCase() === nivel))
   ) {
-    // ✅ CORRIGIDO: usa a página /sem-acesso que já existe no App.jsx
-    return <Navigate to="/sem-acesso" replace />;
+      return <Navigate to="/login" replace />;
   }
 
   return children;
