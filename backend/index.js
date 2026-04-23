@@ -59,23 +59,41 @@ app.get("/api", (req, res) => {
 
 const frontendPath = path.join(__dirname, "../frontend/dist");
 
-// ✅ CORRIGIDO: antes o bloco inteiro ficava dentro do if(fs.existsSync),
-// então se o dist não existisse, NENHUM fallback era registrado e
-// qualquer rota como /membros retornava 404.
-// Agora servimos o static só se existir, mas o fallback SPA é SEMPRE registrado.
-
 if (fs.existsSync(frontendPath)) {
+  // Serve arquivos estáticos do React/Vite
   app.use(express.static(frontendPath));
+
   console.log("✅ Servindo frontend estático de:", frontendPath);
 } else {
-  console.warn("⚠️  frontend/dist não encontrado. Rode 'npm run build' no frontend.");
+  console.warn(
+    "⚠️ frontend/dist não encontrado. Rode 'npm run build' no frontend."
+  );
 }
 
-// ✅ Fallback SPA: qualquer rota que não seja /api devolve o index.html
-// Isso permite que o React Router gerencie /membros, /pastor, etc.
+/* ================= FALLBACK SPA ================= */
+
 app.get("*", (req, res) => {
+  // Ignora rotas da API
   if (req.path.startsWith("/api")) {
-    return res.status(404).json({ message: "Rota da API não encontrada" });
+    return res.status(404).json({
+      message: "Rota da API não encontrada",
+    });
+  }
+
+  // Evita devolver index.html para arquivos estáticos
+  if (
+    req.path.startsWith("/assets") ||
+    req.path.endsWith(".js") ||
+    req.path.endsWith(".css") ||
+    req.path.endsWith(".png") ||
+    req.path.endsWith(".jpg") ||
+    req.path.endsWith(".jpeg") ||
+    req.path.endsWith(".svg") ||
+    req.path.endsWith(".pdf") ||
+    req.path.endsWith(".ico") ||
+    req.path.endsWith(".webp")
+  ) {
+    return res.status(404).end();
   }
 
   const indexPath = path.join(frontendPath, "index.html");
@@ -84,10 +102,9 @@ app.get("*", (req, res) => {
     return res.sendFile(indexPath);
   }
 
-  // Se não tiver o build ainda, retorna mensagem clara
   return res.status(200).send(`
     <h2>Frontend não encontrado</h2>
-    <p>Execute <code>npm run build</code> na pasta frontend e faça o deploy novamente.</p>
+    <p>Execute <code>npm run build</code> no frontend e faça o deploy novamente.</p>
   `);
 });
 
