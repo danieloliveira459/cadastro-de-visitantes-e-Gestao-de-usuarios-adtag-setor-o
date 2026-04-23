@@ -25,7 +25,7 @@ export default function Pastor() {
   const [horarioInicio, setHorarioInicio] = useState("");
   const [horarioFim, setHorarioFim] = useState("");
   const [atividade, setAtividade] = useState("");
-  const [responsavel, setResponsavel] = useState("");
+  const [dataAtividade, setDataAtividade] = useState("");
 
   const [aba, setAba] = useState("visitantes");
 
@@ -34,7 +34,6 @@ export default function Pastor() {
   const [endereco, setEndereco] = useState("");
   const [observacoes, setObservacoes] = useState("");
 
-  // Estado para modal de WhatsApp personalizado
   const [modalWpp, setModalWpp] = useState({ aberto: false, telefone: "", nome: "", mensagem: "" });
 
   useEffect(() => {
@@ -71,34 +70,8 @@ export default function Pastor() {
       console.log("Erro ao carregar dados:", err);
     }
   };
+
   // WHATSAPP
-  /**
-   * Abre o WhatsApp diretamente com uma mensagem padrão.
-   * @param {string} telefone  - número salvo no banco
-   * @param {string} nome      - nome do visitante/pessoa
-   * @param {boolean} aceitouJesus - true/false (null tratado como false)
-   */
-  const enviarWhatsApp = (telefone, nome, aceitouJesus = false) => {
-    if (!telefone) {
-      alert("Este visitante não possui telefone cadastrado.");
-      return;
-    }
-
-    // Remove tudo que não for dígito e adiciona DDI 55 (Brasil)
-    const numero = telefone.replace(/\D/g, "");
-    const numeroFormatado = numero.startsWith("55") ? numero : `55${numero}`;
-
-    const mensagem = aceitouJesus
-      ? `Olá ${nome}!  Que alegria saber que você aceitou Jesus! Nossa igreja está de portas abertas para você. Deus abençoe!`
-      : `Olá ${nome}!  Foi um prazer ter você conosco em nosso culto. Esperamos te ver novamente em breve. Deus abençoe!`;
-
-    const url = `https://wa.me/${numeroFormatado}?text=${encodeURIComponent(mensagem)}`;
-    window.open(url, "_blank");
-  };
-
-  /**
-   * Abre modal para o pastor personalizar a mensagem antes de enviar.
-   */
   const abrirModalWhatsApp = (telefone, nome, aceitouJesus = false) => {
     if (!telefone) {
       alert("Este visitante não possui telefone cadastrado.");
@@ -106,8 +79,8 @@ export default function Pastor() {
     }
 
     const mensagemPadrao = aceitouJesus
-      ? `Olá ${nome}!  Que alegria saber que você aceitou Jesus! Nossa igreja está de portas abertas para você. Deus abençoe!`
-      : `Olá ${nome}!  Foi um prazer ter você conosco em nosso culto. Esperamos te ver novamente em breve. Deus abençoe!`;
+      ? `Olá ${nome}! 🎉 Que alegria saber que você aceitou Jesus! Nossa igreja está de portas abertas para você. Deus abençoe!`
+      : `Olá ${nome}! 😊 Foi um prazer ter você conosco em nosso culto. Esperamos te ver novamente em breve. Deus abençoe!`;
 
     setModalWpp({ aberto: true, telefone, nome, mensagem: mensagemPadrao });
   };
@@ -120,10 +93,6 @@ export default function Pastor() {
     setModalWpp({ aberto: false, telefone: "", nome: "", mensagem: "" });
   };
 
-  /**
-   * Envia mensagem para TODOS os visitantes que não aceitaram Jesus de uma vez.
-   * Abre uma aba do WhatsApp por pessoa (o navegador pode bloquear pop-ups).
-   */
   const enviarParaTodosNaoAceitaram = () => {
     const naoAceitaram = visitantes.filter(
       (v) => v.aceitou_jesus == 0 || v.aceitou_jesus === null
@@ -144,9 +113,9 @@ export default function Pastor() {
         if (!v.telefone) return;
         const numero = v.telefone.replace(/\D/g, "");
         const numeroFormatado = numero.startsWith("55") ? numero : `55${numero}`;
-        const mensagem = `Olá ${v.nome}!  Sentimos sua falta! Foi um prazer ter você conosco. Gostaríamos de te convidar de volta para nossos cultos. Deus abençoe!`;
+        const mensagem = `Olá ${v.nome}! 😊 Sentimos sua falta! Foi um prazer ter você conosco. Gostaríamos de te convidar de volta para nossos cultos. Deus abençoe!`;
         window.open(`https://wa.me/${numeroFormatado}?text=${encodeURIComponent(mensagem)}`, "_blank");
-      }, i * 800); // pequeno delay entre cada abertura
+      }, i * 800);
     });
   };
 
@@ -184,6 +153,7 @@ export default function Pastor() {
       console.log("Erro ao deletar visitante:", err);
     }
   };
+
   // AVISOS
   const adicionarAviso = async () => {
     if (!titulo || !descricao) return alert("Preencha os campos!");
@@ -210,6 +180,7 @@ export default function Pastor() {
       console.log("Erro ao deletar aviso:", err);
     }
   };
+
   // PROGRAMAÇÃO
   const adicionarProgramacao = async () => {
     if (!dia || !horarioInicio || !horarioFim || !atividade) return;
@@ -220,14 +191,14 @@ export default function Pastor() {
       await fetch(`${API}/programacoes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dia, horario: horarioCombinado, atividade, responsavel }),
+        body: JSON.stringify({ dia, horario: horarioCombinado, atividade, dataAtividade }),
       });
 
       setDia("");
       setHorarioInicio("");
       setHorarioFim("");
       setAtividade("");
-      setResponsavel("");
+      setDataAtividade("");
       await carregarTudo();
     } catch (err) {
       console.log("Erro programação:", err);
@@ -244,7 +215,9 @@ export default function Pastor() {
     } catch (err) {
       console.log("Erro ao deletar programação:", err);
     }
-  }; // ACEITARAM JESUS
+  };
+
+  // ACEITARAM JESUS
   const adicionarAceitouJesus = async () => {
     if (!nome) return alert("Nome obrigatório!");
 
@@ -306,7 +279,21 @@ export default function Pastor() {
       console.error("Erro ao atualizar:", error);
     }
   };
-  // HELPERS
+
+  // ✅ CORRIGIDO: evita o bug de timezone do new Date("yyyy-mm-dd")
+  // "2026-04-22" interpretado como UTC vira "21/04/2026" no Brasil — slice+split resolve isso
+  const formatarDataAtividade = (data) => {
+    if (!data) return "-";
+    try {
+      const str = data.toString().slice(0, 10); // garante "yyyy-mm-dd"
+      const [ano, mes, dia] = str.split("-");
+      if (!ano || !mes || !dia) return "-";
+      return `${dia}/${mes}/${ano}`;
+    } catch {
+      return "-";
+    }
+  };
+
   const formatarData = (data) => {
     if (!data) return "-";
     return new Date(data).toLocaleDateString("pt-BR", {
@@ -316,6 +303,10 @@ export default function Pastor() {
       year: "numeric",
     });
   };
+
+  // ✅ HELPER: lê dataAtividade com fallback para casing diferente do MySQL
+  const getDataAtividade = (p) => p.dataAtividade ?? p.dataatividade ?? null;
+
   // PDF
   const gerarPDF = (tipo) => {
     const doc = new jsPDF();
@@ -342,7 +333,7 @@ export default function Pastor() {
     let head = [];
 
     if (tipo === "visitantes") {
-      head = [["Nome", "Cargo", "Telefone", "Igreja", "Aceitou Jesus", "Data"]];
+      head = [["Nome", "Cargo", "Telefone", "Igreja", "Aceitou Jesus", "Data Cadastro Visitantes"]];
       tabela = visitantes.map((v) => [
         v.nome,
         v.cargo,
@@ -354,13 +345,13 @@ export default function Pastor() {
     }
 
     if (tipo === "avisos") {
-      head = [["Título", "Descrição", "Data"]];
+      head = [["Título", "Descrição", "Data Cadastro Avisos"]];
       tabela = avisos.map((a) => [a.titulo, a.descricao, formatarData(a.data)]);
     }
 
     if (tipo === "programacao") {
       const ordemDias = ["Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado","Domingo"];
-      head = [["Dia", "Horário", "Atividade", "Data"]];
+      head = [["Dia", "Horário", "Atividade", "Data da Atividade", "Data Cadastro Programação"]];
       tabela = [...programacoes]
         .sort((a, b) => {
           const diaA = ordemDias.indexOf(a.dia);
@@ -368,11 +359,17 @@ export default function Pastor() {
           if (diaA !== diaB) return diaA - diaB;
           return a.horario.localeCompare(b.horario);
         })
-        .map((p) => [p.dia, p.horario, p.atividade, formatarData(p.data)]);
+        .map((p) => [
+          p.dia,
+          p.horario,
+          p.atividade,
+          formatarDataAtividade(getDataAtividade(p)), // ✅ usa helper
+          formatarData(p.data),
+        ]);
     }
 
     if (tipo === "aceitaram-jesus") {
-      head = [["Nome", "Telefone", "Endereço", "Observações", "Data"]];
+      head = [["Nome", "Telefone", "Endereço", "Observações", "Data Cadastro Aceitaram Jesus"]];
       tabela = aceitaramJesus.map((v) => [
         v.nome,
         v.telefone,
@@ -413,6 +410,7 @@ export default function Pastor() {
 
     doc.save(`${nomes[tipo] || tipo}.pdf`);
   };
+
   // RENDER
   return (
     <>
@@ -549,7 +547,7 @@ export default function Pastor() {
                       <th>Telefone</th>
                       <th>Igreja</th>
                       <th>Aceitou Jesus?</th>
-                      <th>Data</th>
+                      <th>Data Cadastro Visitantes</th>
                       <th>Ações</th>
                     </tr>
                   </thead>
@@ -584,7 +582,6 @@ export default function Pastor() {
                         </td>
                         <td>{formatarData(v.data)}</td>
                         <td style={{ textAlign: "center" }}>
-                          {/* Botão WhatsApp individual com modal de edição */}
                           <FaWhatsapp
                             size={18}
                             color="#25D366"
@@ -644,7 +641,7 @@ export default function Pastor() {
                   <tr>
                     <th>Título</th>
                     <th>Descrição</th>
-                    <th>Data</th>
+                    <th>Data Cadastro Avisos</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -708,6 +705,13 @@ export default function Pastor() {
               <label>Atividade</label>
               <input value={atividade} onChange={(e) => setAtividade(e.target.value)} />
 
+              <label>Data da Atividade</label>
+              <input
+                type="date"
+                value={dataAtividade}
+                onChange={(e) => setDataAtividade(e.target.value)}
+              />
+
               <button className="btn-red" onClick={adicionarProgramacao}>
                 Adicionar
               </button>
@@ -727,7 +731,8 @@ export default function Pastor() {
                     <th>Dia</th>
                     <th>Horário</th>
                     <th>Atividade</th>
-                    <th>Data</th>
+                    <th>Data da Atividade</th>
+                    <th>Data Cadastro Programação</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -743,6 +748,8 @@ export default function Pastor() {
                       <td>{p.dia}</td>
                       <td style={{ whiteSpace: "nowrap" }}>{p.horario}</td>
                       <td>{p.atividade}</td>
+                      {/* ✅ CORRIGIDO: usa helper para lidar com casing do MySQL */}
+                      <td style={{ whiteSpace: "nowrap" }}>{formatarDataAtividade(getDataAtividade(p))}</td>
                       <td>{formatarData(p.data)}</td>
                       <td style={{ textAlign: "center" }}>
                         <FaTrash
@@ -785,7 +792,7 @@ export default function Pastor() {
                     <th>Telefone</th>
                     <th>Endereço</th>
                     <th>Observações</th>
-                    <th>Data</th>
+                    <th>Data Cadastro Aceitaram Jesus</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -798,7 +805,6 @@ export default function Pastor() {
                       <td>{p.observacoes}</td>
                       <td>{formatarData(p.data)}</td>
                       <td style={{ textAlign: "center" }}>
-                        {/* Botão WhatsApp para quem aceitou Jesus */}
                         <FaWhatsapp
                           size={18}
                           color="#25D366"

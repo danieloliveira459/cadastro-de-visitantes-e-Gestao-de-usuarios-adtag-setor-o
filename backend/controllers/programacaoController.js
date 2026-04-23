@@ -1,20 +1,37 @@
 import { db } from "../config/db.js";
 
 // LISTAR
-export const listarProgramacoes = async (req, res) => {
+export const listarProgramacao = async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM programacao");
-    return res.json(rows);
+    // ✅ CORRIGIDO: alias explícito garante que o campo chega como "dataAtividade"
+    // independentemente do casing padrão do MySQL
+    const [rows] = await db.query(`
+      SELECT
+        id,
+        dia,
+        horario,
+        atividade,
+        data,
+        dataAtividade AS dataAtividade
+      FROM programacao
+      ORDER BY id DESC
+    `);
+
+    return res.status(200).json(rows);
   } catch (err) {
     console.error("ERRO LISTAR PROGRAMAÇÕES:", err);
-    return res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
 // CRIAR
 export const criarProgramacao = async (req, res) => {
   try {
-    const { dia, horario, atividade, data } = req.body;
+    console.log("BODY RECEBIDO:", req.body);
+    const { dia, horario, atividade, dataAtividade } = req.body;
 
     // validação
     if (!dia || !horario || !atividade) {
@@ -23,25 +40,50 @@ export const criarProgramacao = async (req, res) => {
       });
     }
 
-    console.log("BODY RECEBIDO:", req.body);
+    // data automática cadastro
+    const dataCadastro = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
 
-    // ✔️ DATA SEGURA PARA MYSQL
-    const dataFormatada = data
-      ? new Date(data).toISOString().slice(0, 19).replace("T", " ")
-      : new Date().toISOString().slice(0, 19).replace("T", " ");
+    // ✅ evita salvar string vazia — salva null se não informado
+    const dataAtividadeFormatada =
+      dataAtividade && dataAtividade.trim() !== ""
+        ? dataAtividade.trim()
+        : null;
 
-    await db.query(
-      `INSERT INTO programacao (dia, horario, atividade, data)
-       VALUES (?, ?, ?, ?)`,
-      [dia, horario, atividade, dataFormatada]
-    );
+    console.log("dataAtividade recebida:", dataAtividade);
+    console.log("dataAtividade formatada para salvar:", dataAtividadeFormatada);
+
+    const sql = `
+      INSERT INTO programacao
+      (
+        dia,
+        horario,
+        atividade,
+        data,
+        dataAtividade
+      )
+      VALUES (?, ?, ?, ?, ?)
+    `;
+
+    await db.query(sql, [
+      dia,
+      horario,
+      atividade,
+      dataCadastro,
+      dataAtividadeFormatada,
+    ]);
 
     return res.status(201).json({
       msg: "Programação criada com sucesso",
     });
   } catch (err) {
     console.error("ERRO CRIAR PROGRAMAÇÃO:", err);
-    return res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
 
@@ -67,11 +109,14 @@ export const deletarProgramacao = async (req, res) => {
       });
     }
 
-    return res.json({
-      msg: "Excluído com sucesso",
+    return res.status(200).json({
+      msg: "Programação excluída com sucesso",
     });
   } catch (err) {
     console.error("ERRO DELETAR PROGRAMAÇÃO:", err);
-    return res.status(500).json({ error: err.message });
+
+    return res.status(500).json({
+      error: err.message,
+    });
   }
 };
