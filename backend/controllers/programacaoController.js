@@ -1,10 +1,8 @@
 import { db } from "../config/db.js";
 
-// LISTAR
+// ─── LISTAR ───────────────────────────────────────────────────────────────────
 export const listarProgramacao = async (req, res) => {
   try {
-    // ✅ CORRIGIDO: alias explícito garante que o campo chega como "dataAtividade"
-    // independentemente do casing padrão do MySQL
     const [rows] = await db.query(`
       SELECT
         id,
@@ -12,90 +10,84 @@ export const listarProgramacao = async (req, res) => {
         horario,
         atividade,
         data,
-        dataAtividade AS dataAtividade
+        dataAtividade
       FROM programacao
       ORDER BY id DESC
     `);
 
     return res.status(200).json(rows);
   } catch (err) {
-    console.error("ERRO LISTAR PROGRAMAÇÕES:", err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    console.error("[PROGRAMACAO] Erro ao listar:", err);
+    return res.status(500).json({ error: "Erro interno ao listar programações." });
   }
 };
 
-// CRIAR
+// ─── CRIAR ────────────────────────────────────────────────────────────────────
 export const criarProgramacao = async (req, res) => {
   try {
-    console.log("BODY RECEBIDO:", req.body);
-    const { dia, horario, atividade, dataAtividade } = req.body;
+    const { dia, horario, atividade, dataAtividade } = req.body ?? {};
 
-    // validação
-    if (!dia || !horario || !atividade) {
+    if (!dia?.trim() || !horario?.trim() || !atividade?.trim()) {
       return res.status(400).json({
-        error: "Dia, horário e atividade são obrigatórios",
+        error: "Dia, horário e atividade são obrigatórios.",
       });
     }
 
-    // data automática cadastro
-    const dataCadastro = new Date()
-      .toISOString()
-      .slice(0, 19)
-      .replace("T", " ");
+    const dataCadastro = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const dataAtividadeFormatada = dataAtividade?.trim() || null;
 
-    // ✅ evita salvar string vazia — salva null se não informado
-    const dataAtividadeFormatada =
-      dataAtividade && dataAtividade.trim() !== ""
-        ? dataAtividade.trim()
-        : null;
+    await db.query(
+      `INSERT INTO programacao (dia, horario, atividade, data, dataAtividade)
+       VALUES (?, ?, ?, ?, ?)`,
+      [dia.trim(), horario.trim(), atividade.trim(), dataCadastro, dataAtividadeFormatada]
+    );
 
-    console.log("dataAtividade recebida:", dataAtividade);
-    console.log("dataAtividade formatada para salvar:", dataAtividadeFormatada);
-
-    const sql = `
-      INSERT INTO programacao
-      (
-        dia,
-        horario,
-        atividade,
-        data,
-        dataAtividade
-      )
-      VALUES (?, ?, ?, ?, ?)
-    `;
-
-    await db.query(sql, [
-      dia,
-      horario,
-      atividade,
-      dataCadastro,
-      dataAtividadeFormatada,
-    ]);
-
-    return res.status(201).json({
-      msg: "Programação criada com sucesso",
-    });
+    return res.status(201).json({ msg: "Programação criada com sucesso." });
   } catch (err) {
-    console.error("ERRO CRIAR PROGRAMAÇÃO:", err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    console.error("[PROGRAMACAO] Erro ao criar:", err);
+    return res.status(500).json({ error: "Erro interno ao criar programação." });
   }
 };
 
-// DELETAR
+// ─── EDITAR ───────────────────────────────────────────────────────────────────
+export const editarProgramacao = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { dia, horario, atividade, dataAtividade } = req.body ?? {};
+
+    if (!dia?.trim() || !horario?.trim() || !atividade?.trim()) {
+      return res.status(400).json({
+        error: "Dia, horário e atividade são obrigatórios.",
+      });
+    }
+
+    const dataAtividadeFormatada = dataAtividade?.trim() || null;
+
+    const [result] = await db.query(
+      `UPDATE programacao
+       SET dia = ?, horario = ?, atividade = ?, dataAtividade = ?
+       WHERE id = ?`,
+      [dia.trim(), horario.trim(), atividade.trim(), dataAtividadeFormatada, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Programação não encontrada." });
+    }
+
+    return res.status(200).json({ msg: "Programação atualizada com sucesso." });
+  } catch (err) {
+    console.error("[PROGRAMACAO] Erro ao editar:", err);
+    return res.status(500).json({ error: "Erro interno ao editar programação." });
+  }
+};
+
+// ─── DELETAR ──────────────────────────────────────────────────────────────────
 export const deletarProgramacao = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id) {
-      return res.status(400).json({
-        error: "ID é obrigatório",
-      });
+      return res.status(400).json({ error: "ID é obrigatório." });
     }
 
     const [result] = await db.query(
@@ -104,19 +96,12 @@ export const deletarProgramacao = async (req, res) => {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
-        error: "Programação não encontrada",
-      });
+      return res.status(404).json({ error: "Programação não encontrada." });
     }
 
-    return res.status(200).json({
-      msg: "Programação excluída com sucesso",
-    });
+    return res.status(200).json({ msg: "Programação excluída com sucesso." });
   } catch (err) {
-    console.error("ERRO DELETAR PROGRAMAÇÃO:", err);
-
-    return res.status(500).json({
-      error: err.message,
-    });
+    console.error("[PROGRAMACAO] Erro ao deletar:", err);
+    return res.status(500).json({ error: "Erro interno ao deletar programação." });
   }
 };
