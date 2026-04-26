@@ -22,10 +22,9 @@ const ABAS = [
   { id: "geral",    label: "Cadastro Geral", singular: null,      Icon: FaUsers       },
 ];
 
-// ✅ CORRIGIDO: URL da API estava errada (faltava "-ukhv" no final)
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
-  "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com";;
+  "https://cadatro-de-visitantes-e-gest-o-de-ukhv.onrender.com";
 
 const ROTA_POR_TIPO = {
   criancas: "criancas",
@@ -36,13 +35,45 @@ const ROTA_POR_TIPO = {
 
 const apiUrl = (tipo) => `${BASE_URL}/api/${ROTA_POR_TIPO[tipo]}`;
 
+/* ================= OPÇÕES DOS SELECTS ================= */
+const OPCOES_SEXO = ["Masculino", "Feminino", "Outro"];
+
+const OPCOES_ESTADO_CIVIL = [
+  "Solteiro(a)",
+  "Casado(a)",
+  "Divorciado(a)",
+  "Viúvo(a)",
+  "Outro",
+];
+
+const OPCOES_GRAU_INSTRUCAO = [
+  "Sem instrução",
+  "Fundamental Incompleto",
+  "Fundamental Completo",
+  "Médio Incompleto",
+  "Médio Completo",
+  "Superior Incompleto",
+  "Superior Completo",
+  "Pós-Graduação",
+  "Mestrado",
+  "Doutorado",
+];
+
+/* ================= FORM INICIAL ================= */
 const formInicial = () => ({
-  nome: "",
-  cpf: "",
-  naturalidade: "",
-  dataNascimento: "",
-  foto: "",
-  cargo: "",
+  nome:                "",
+  cpf:                 "",
+  dataNascimento:      "",
+  sexo:                "",
+  tituloEclesiastico:  "",
+  estadoCivil:         "",
+  grauInstrucao:       "",
+  nacionalidade:       "",
+  naturalidade:        "",
+  telefone:            "",
+  foto:                "",
+  fotoMime:            "",
+  fotoNome:            "",
 });
 
 /* ================= MÁSCARA DE CPF ================= */
@@ -55,11 +86,25 @@ function formatarCPF(valor) {
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
+/* ================= MÁSCARA DE TELEFONE ================= */
+function formatarTelefone(valor) {
+  const digits = valor.replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 10) {
+    return digits
+      .replace(/(\d{2})(\d)/, "($1) $2")
+      .replace(/(\d{4})(\d)/, "$1-$2");
+  }
+  return digits
+    .replace(/(\d{2})(\d)/, "($1) $2")
+    .replace(/(\d{5})(\d)/, "$1-$2");
+}
+
 function ocultarCPF(cpf) {
   if (!cpf) return "—";
-  const apenasDigitos = cpf.replace(/\D/g, "");
-  if (apenasDigitos.length === 0) return "—";
-  return "***.***.***-**";
+  const d = cpf.replace(/\D/g, "");
+  if (d.length < 11) return "—";
+  // Exibe: 123.***.***-45  (oculta apenas o meio)
+  return `${d.slice(0, 3)}.***.***-${d.slice(9, 11)}`;
 }
 
 /* ================= HELPER DE DATA ================= */
@@ -73,34 +118,26 @@ function formatarData(data) {
   });
 }
 
-/* ================= COMPRESSOR DE IMAGEM ================= */
-function comprimirImagem(file, maxWidth = 800, qualidade = 0.7) {
+/* ================= LEITURA DE ARQUIVO COMO BASE64 ================= */
+function lerArquivoBase64(file) {
   return new Promise((resolve) => {
-    const canvas = document.createElement("canvas");
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
-      const base64 = canvas.toDataURL("image/jpeg", qualidade);
-      URL.revokeObjectURL(url);
-      resolve(base64);
-    };
-
-    img.src = url;
+    const reader = new FileReader();
+    reader.onload = (e) => resolve(e.target.result);
+    reader.readAsDataURL(file);
   });
+}
+
+/* ================= DOWNLOAD DA FOTO ================= */
+function baixarFoto(base64, nomeArquivo) {
+  const a = document.createElement("a");
+  a.href = base64;
+  a.download = nomeArquivo || "foto.jpg";
+  a.click();
 }
 
 /* ================= EXPORTAR PDF ================= */
 async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
-  const { default: jsPDF } = await import("jspdf");
+  const { default: jsPDF }    = await import("jspdf");
   const { default: autoTable } = await import("jspdf-autotable");
 
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
@@ -123,10 +160,10 @@ async function exportarPDF({ titulo, colunas, linhas, nomeArquivo }) {
     startY: 30,
     head: [colunas],
     body: linhas,
-    styles: { fontSize: 9, cellPadding: 3, textColor: [30, 30, 30] },
+    styles: { fontSize: 8, cellPadding: 2.5, textColor: [30, 30, 30] },
     headStyles: { fillColor: [220, 38, 38], textColor: [255, 255, 255], fontStyle: "bold" },
     alternateRowStyles: { fillColor: [254, 242, 242] },
-    columnStyles: { 0: { cellWidth: 50 } },
+    columnStyles: { 0: { cellWidth: 45 } },
   });
 
   const finalY = doc.lastAutoTable.finalY + 6;
@@ -143,10 +180,8 @@ function QRCodeMembros({ tipo, membros }) {
   const [aberto, setAberto] = useState(false);
   const abaAtual = ABAS.find((a) => a.id === tipo);
 
-  //  CORRIGIDO: garante que a URL do QR aponte para /membros?aba=tipo
-  // independentemente do pathname atual, evitando 404 ao escanear
-  const origin = window.location.origin;
-  const abaUrl = `${origin}/membros?aba=${tipo}`;
+  const origin  = window.location.origin;
+  const abaUrl  = `${origin}/membros?aba=${tipo}`;
 
   const baixarSVG = () => {
     const svg = document.querySelector(`#qr-${tipo} svg`);
@@ -190,13 +225,49 @@ function QRCodeMembros({ tipo, membros }) {
   );
 }
 
+/* =================
+   CAMPOS REUTILIZÁVEIS
+   ✅ Definidos FORA de FormularioComLista para evitar remontagem a cada render,
+      que causava perda de foco ao digitar letra por letra.
+================= */
+function SelectField({ label, name, opcoes, form, onChange }) {
+  return (
+    <div className="form-group">
+      <label className="form-label">{label}</label>
+      <select name={name} value={form[name]} onChange={onChange}>
+        <option value="">Selecione...</option>
+        {opcoes.map((op) => (
+          <option key={op} value={op}>{op}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function InputField({ label, name, placeholder, type = "text", maxLength, required, form, onChange }) {
+  return (
+    <div className="form-group">
+      <label className="form-label">{label}{required ? " *" : ""}</label>
+      <input
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        value={form[name]}
+        onChange={onChange}
+        maxLength={maxLength}
+        required={required}
+      />
+    </div>
+  );
+}
+
 /* ================= FORMULÁRIO + TABELA ================= */
 function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingLista }) {
-  const [form, setForm] = useState(formInicial());
+  const [form, setForm]             = useState(formInicial());
   const [loading, setLoading]       = useState(false);
   const [loadingPdf, setLoadingPdf] = useState(false);
-  const [msg, setMsg] = useState({ texto: "", erro: false });
-  const fotoInputRef = useRef(null);
+  const [msg, setMsg]               = useState({ texto: "", erro: false });
+  const fotoInputRef                = useRef(null);
 
   const abaAtual = ABAS.find((a) => a.id === tipo);
 
@@ -207,14 +278,22 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: name === "cpf" ? formatarCPF(value) : value }));
+    let formatted = value;
+    if (name === "cpf")      formatted = formatarCPF(value);
+    if (name === "telefone") formatted = formatarTelefone(value);
+    setForm((prev) => ({ ...prev, [name]: formatted }));
   };
 
   const handleFoto = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const fotoComprimida = await comprimirImagem(file, 800, 0.7);
-    setForm((prev) => ({ ...prev, foto: fotoComprimida }));
+    const base64 = await lerArquivoBase64(file);
+    setForm((prev) => ({
+      ...prev,
+      foto:     base64,
+      fotoMime: file.type,
+      fotoNome: file.name,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -235,7 +314,6 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
       }
 
       const salvo = await res.json();
-
       const dataFormatada = salvo.createdAt
         ? formatarData(salvo.createdAt)
         : formatarData(new Date());
@@ -243,7 +321,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
       onCadastrar({ ...salvo, data: dataFormatada });
       setMsg({ texto: `${abaAtual.singular} cadastrado(a) com sucesso!`, erro: false });
     } catch (err) {
-      setMsg({ texto: `${err.message}`, erro: true });
+      setMsg({ texto: err.message, erro: true });
     }
 
     setForm(formInicial());
@@ -257,14 +335,25 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
     setLoadingPdf(true);
     await exportarPDF({
       titulo: `Lista de ${abaAtual?.label}`,
-      colunas: ["Nome", "CPF", "Naturalidade", "Data de Nascimento", "Cargo", "Data de Cadastro"],
+      colunas: [
+        "Nome", "CPF", "Nascimento", "Sexo",
+        "Título Eclesiástico", "Estado Civil", "Grau de Instrução",
+        "Nacionalidade", "Naturalidade", "Telefone", "Cadastro",
+      ],
       linhas: membros.map((m) => [
         m.nome,
         ocultarCPF(m.cpf),
-        m.naturalidade || "—",
-        m.dataNascimento || "—",
-        m.cargo || "—",
-        m.data || "—",
+        m.dataNascimento
+          ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
+          : "—",
+        m.sexo               || "—",
+        m.tituloEclesiastico || "—",
+        m.estadoCivil        || "—",
+        m.grauInstrucao      || "—",
+        m.nacionalidade      || "—",
+        m.naturalidade       || "—",
+        m.telefone           || "—",
+        m.data               || "—",
       ]),
       nomeArquivo: `${abaAtual?.id}-${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`,
     });
@@ -293,6 +382,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
         )}
 
         <form onSubmit={handleSubmit} className="form-padrao">
+
           {/* FOTO */}
           <div className="form-group" style={{ alignItems: "center" }}>
             <label className="form-label">Foto</label>
@@ -301,57 +391,157 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
                 <img
                   src={form.foto}
                   alt="Preview"
-                  style={{ width: 90, height: 90, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--color-primary, #dc2626)" }}
+                  style={{
+                    width: 100, height: 100, borderRadius: "50%",
+                    objectFit: "cover", border: "2px solid var(--color-primary, #dc2626)"
+                  }}
                 />
               ) : (
                 <div
-                  style={{ width: 90, height: 90, borderRadius: "50%", background: "var(--color-bg-secondary, #f3f4f6)", display: "flex", alignItems: "center", justifyContent: "center", border: "2px dashed #ccc", cursor: "pointer" }}
+                  style={{
+                    width: 100, height: 100, borderRadius: "50%",
+                    background: "var(--color-bg-secondary, #f3f4f6)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "2px dashed #ccc", cursor: "pointer"
+                  }}
                   onClick={() => fotoInputRef.current?.click()}
                 >
-                  <FaCamera size={28} color="#aaa" />
+                  <FaCamera size={30} color="#aaa" />
                 </div>
               )}
-              <input ref={fotoInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFoto} />
-              <button type="button" className="btn-secundario" style={{ fontSize: 12, padding: "4px 12px" }} onClick={() => fotoInputRef.current?.click()}>
-                {form.foto ? "Trocar foto" : "Selecionar foto"}
-              </button>
-              {form.foto && (
+
+              <input
+                ref={fotoInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={handleFoto}
+              />
+
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
                 <button
                   type="button"
                   className="btn-secundario"
-                  style={{ fontSize: 12, padding: "4px 12px", color: "#dc2626" }}
-                  onClick={() => { setForm((prev) => ({ ...prev, foto: "" })); if (fotoInputRef.current) fotoInputRef.current.value = ""; }}
+                  style={{ fontSize: 12, padding: "4px 12px" }}
+                  onClick={() => fotoInputRef.current?.click()}
                 >
-                  Remover foto
+                  {form.foto ? "Trocar foto" : "Selecionar foto"}
                 </button>
+
+                {form.foto && (
+                  <>
+                    <button
+                      type="button"
+                      className="btn-secundario"
+                      style={{ fontSize: 12, padding: "4px 12px", color: "#2563eb" }}
+                      onClick={() => baixarFoto(form.foto, form.fotoNome || `foto-${form.nome || "membro"}.jpg`)}
+                    >
+                      <FaDownload style={{ marginRight: 4 }} />
+                      Baixar foto
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-secundario"
+                      style={{ fontSize: 12, padding: "4px 12px", color: "#dc2626" }}
+                      onClick={() => {
+                        setForm((prev) => ({ ...prev, foto: "", fotoMime: "", fotoNome: "" }));
+                        if (fotoInputRef.current) fotoInputRef.current.value = "";
+                      }}
+                    >
+                      Remover foto
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {form.fotoNome && (
+                <span style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>
+                  {form.fotoNome}
+                </span>
               )}
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label">Nome Completo *</label>
-            <input name="nome" placeholder="Digite o nome completo" value={form.nome} onChange={handleChange} required />
-          </div>
+          {/* CAMPOS DO FORMULÁRIO */}
+          <InputField
+            label="Nome Completo"
+            name="nome"
+            placeholder="Digite o nome completo"
+            required
+            form={form}
+            onChange={handleChange}
+          />
+          <InputField
+            label="CPF"
+            name="cpf"
+            placeholder="000.000.000-00"
+            maxLength={14}
+            form={form}
+            onChange={handleChange}
+          />
+          <InputField
+            label="Data de Nascimento"
+            name="dataNascimento"
+            type="date"
+            form={form}
+            onChange={handleChange}
+          />
 
-          <div className="form-group">
-            <label className="form-label">CPF</label>
-            <input name="cpf" placeholder="000.000.000-00" value={form.cpf} onChange={handleChange} maxLength={14} />
-          </div>
+          <SelectField
+            label="Sexo"
+            name="sexo"
+            opcoes={OPCOES_SEXO}
+            form={form}
+            onChange={handleChange}
+          />
 
-          <div className="form-group">
-            <label className="form-label">Naturalidade</label>
-            <input name="naturalidade" placeholder="Cidade / Estado de origem" value={form.naturalidade} onChange={handleChange} />
-          </div>
+          <InputField
+            label="Título Eclesiástico"
+            name="tituloEclesiastico"
+            placeholder="Ex: Membro, Diácono, Pastor, Obreiro..."
+            form={form}
+            onChange={handleChange}
+          />
 
-          <div className="form-group">
-            <label className="form-label">Data de Nascimento</label>
-            <input name="dataNascimento" type="date" value={form.dataNascimento} onChange={handleChange} />
-          </div>
+          <SelectField
+            label="Estado Civil"
+            name="estadoCivil"
+            opcoes={OPCOES_ESTADO_CIVIL}
+            form={form}
+            onChange={handleChange}
+          />
+          <SelectField
+            label="Grau de Instrução"
+            name="grauInstrucao"
+            opcoes={OPCOES_GRAU_INSTRUCAO}
+            form={form}
+            onChange={handleChange}
+          />
 
-          <div className="form-group">
-            <label className="form-label">Cargo</label>
-            <input name="cargo" placeholder="Ex: Diácono, Líder, Pastor..." value={form.cargo} onChange={handleChange} />
-          </div>
+          <InputField
+            label="Nacionalidade"
+            name="nacionalidade"
+            placeholder="Ex: Brasileiro(a)"
+            form={form}
+            onChange={handleChange}
+          />
+          <InputField
+            label="Naturalidade"
+            name="naturalidade"
+            placeholder="Cidade / Estado de origem"
+            form={form}
+            onChange={handleChange}
+          />
+
+          <InputField
+            label="Número de Telefone"
+            name="telefone"
+            placeholder="(00) 00000-0000"
+            maxLength={16}
+            form={form}
+            onChange={handleChange}
+          />
 
           <button className="btn-padrao" disabled={loading}>
             {loading ? "Salvando..." : `Cadastrar ${abaAtual?.singular}`}
@@ -399,9 +589,14 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
                   <th>Foto</th>
                   <th>Nome</th>
                   <th>CPF</th>
-                  <th>Naturalidade</th>
                   <th>Nascimento</th>
-                  <th>Cargo</th>
+                  <th>Sexo</th>
+                  <th>Título Ecl.</th>
+                  <th>Estado Civil</th>
+                  <th>Instrução</th>
+                  <th>Nacionalidade</th>
+                  <th>Naturalidade</th>
+                  <th>Telefone</th>
                   <th>Cadastro</th>
                   <th>Ações</th>
                 </tr>
@@ -411,22 +606,48 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
                   <tr key={m._id ?? m.id}>
                     <td>
                       {m.foto ? (
-                        <img src={m.foto} alt={m.nome} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "1px solid #ddd" }} />
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                          <img
+                            src={m.foto}
+                            alt={m.nome}
+                            style={{
+                              width: 38, height: 38, borderRadius: "50%",
+                              objectFit: "cover", border: "1px solid #ddd"
+                            }}
+                          />
+                          <button
+                            className="btn-secundario"
+                            style={{ fontSize: 10, padding: "2px 6px", color: "#2563eb" }}
+                            onClick={() => baixarFoto(m.foto, m.fotoNome || `foto-${m.nome}.jpg`)}
+                            title="Baixar foto"
+                          >
+                            <FaDownload />
+                          </button>
+                        </div>
                       ) : (
-                        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <div style={{
+                          width: 38, height: 38, borderRadius: "50%",
+                          background: "#f3f4f6", display: "flex",
+                          alignItems: "center", justifyContent: "center"
+                        }}>
                           <FaCamera size={14} color="#aaa" />
                         </div>
                       )}
                     </td>
                     <td><strong>{m.nome}</strong></td>
                     <td>{ocultarCPF(m.cpf)}</td>
-                    <td>{m.naturalidade || "—"}</td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       {m.dataNascimento
                         ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
                         : "—"}
                     </td>
-                    <td>{m.cargo || "—"}</td>
+                    <td>{m.sexo               || "—"}</td>
+                    <td>{m.tituloEclesiastico || "—"}</td>
+                    <td>{m.estadoCivil        || "—"}</td>
+                    <td>{m.grauInstrucao      || "—"}</td>
+                    <td>{m.nacionalidade      || "—"}</td>
+                    <td>{m.naturalidade       || "—"}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>{m.telefone || "—"}</td>
                     <td style={{ whiteSpace: "nowrap", fontSize: 12 }}>{m.data || "—"}</td>
                     <td>
                       <button
@@ -450,7 +671,7 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
 
 /* ================= CADASTRO GERAL ================= */
 function CadastroGeral({ todos, loadingGeral }) {
-  const abas = ABAS.filter((a) => a.id !== "geral");
+  const abas  = ABAS.filter((a) => a.id !== "geral");
   const total = Object.values(todos).flat().length;
   const [loadingPdf, setLoadingPdf] = useState(false);
 
@@ -462,17 +683,26 @@ function CadastroGeral({ todos, loadingGeral }) {
         m.nome,
         a.label,
         ocultarCPF(m.cpf),
-        m.naturalidade || "—",
         m.dataNascimento
           ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
           : "—",
-        m.cargo || "—",
-        m.data || "—",
+        m.sexo               || "—",
+        m.tituloEclesiastico || "—",
+        m.estadoCivil        || "—",
+        m.grauInstrucao      || "—",
+        m.nacionalidade      || "—",
+        m.naturalidade       || "—",
+        m.telefone           || "—",
+        m.data               || "—",
       ])
     );
     await exportarPDF({
       titulo: "Cadastro Geral de Membros",
-      colunas: ["Nome", "Categoria", "CPF", "Naturalidade", "Data de Nascimento", "Cargo", "Data de Cadastro"],
+      colunas: [
+        "Nome", "Categoria", "CPF", "Nascimento", "Sexo",
+        "Título Eclesiástico", "Estado Civil", "Grau de Instrução",
+        "Nacionalidade", "Naturalidade", "Telefone", "Cadastro",
+      ],
       linhas,
       nomeArquivo: `cadastro-geral-${new Date().toLocaleDateString("pt-BR").replace(/\//g, "-")}.pdf`,
     });
@@ -534,10 +764,15 @@ function CadastroGeral({ todos, loadingGeral }) {
                   <th>Nome</th>
                   <th>Categoria</th>
                   <th>CPF</th>
+                  <th>Nascimento</th>
+                  <th>Sexo</th>
+                  <th>Título Ecl.</th>
+                  <th>Estado Civil</th>
+                  <th>Instrução</th>
+                  <th>Nacionalidade</th>
                   <th>Naturalidade</th>
-                  <th>Data de Nascimento</th>
-                  <th>Cargo</th>
-                  <th>Data de Cadastro</th>
+                  <th>Telefone</th>
+                  <th>Cadastro</th>
                 </tr>
               </thead>
               <tbody>
@@ -547,9 +782,30 @@ function CadastroGeral({ todos, loadingGeral }) {
                     <tr key={m._id ?? m.id}>
                       <td>
                         {m.foto ? (
-                          <img src={m.foto} alt={m.nome} style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover", border: "1px solid #ddd" }} />
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                            <img
+                              src={m.foto}
+                              alt={m.nome}
+                              style={{
+                                width: 38, height: 38, borderRadius: "50%",
+                                objectFit: "cover", border: "1px solid #ddd"
+                              }}
+                            />
+                            <button
+                              className="btn-secundario"
+                              style={{ fontSize: 10, padding: "2px 6px", color: "#2563eb" }}
+                              onClick={() => baixarFoto(m.foto, m.fotoNome || `foto-${m.nome}.jpg`)}
+                              title="Baixar foto"
+                            >
+                              <FaDownload />
+                            </button>
+                          </div>
                         ) : (
-                          <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f3f4f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <div style={{
+                            width: 38, height: 38, borderRadius: "50%",
+                            background: "#f3f4f6", display: "flex",
+                            alignItems: "center", justifyContent: "center"
+                          }}>
                             <FaCamera size={14} color="#aaa" />
                           </div>
                         )}
@@ -557,13 +813,18 @@ function CadastroGeral({ todos, loadingGeral }) {
                       <td><strong>{m.nome}</strong></td>
                       <td><span className="badge-tipo"><IconeAba /> {a.singular}</span></td>
                       <td>{ocultarCPF(m.cpf)}</td>
-                      <td>{m.naturalidade || "—"}</td>
                       <td style={{ whiteSpace: "nowrap" }}>
                         {m.dataNascimento
                           ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
                           : "—"}
                       </td>
-                      <td>{m.cargo || "—"}</td>
+                      <td>{m.sexo               || "—"}</td>
+                      <td>{m.tituloEclesiastico || "—"}</td>
+                      <td>{m.estadoCivil        || "—"}</td>
+                      <td>{m.grauInstrucao      || "—"}</td>
+                      <td>{m.nacionalidade      || "—"}</td>
+                      <td>{m.naturalidade       || "—"}</td>
+                      <td style={{ whiteSpace: "nowrap" }}>{m.telefone || "—"}</td>
                       <td style={{ whiteSpace: "nowrap", fontSize: 12 }}>{m.data || "—"}</td>
                     </tr>
                   ));
@@ -579,7 +840,7 @@ function CadastroGeral({ todos, loadingGeral }) {
 
 /* ================= MAIN ================= */
 export default function CadastroMembros() {
-  const [aba, setAba] = useState("criancas");
+  const [aba, setAba]                   = useState("criancas");
   const [loadingLista, setLoadingLista] = useState(false);
   const [loadingGeral, setLoadingGeral] = useState(false);
 
@@ -590,17 +851,14 @@ export default function CadastroMembros() {
     homens:   [],
   });
 
-  // ✅ ATUALIZADO: lê o ?aba= da URL ao escanear o QR Code
-  // e salva no localStorage como fallback para caso passe pelo login
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params   = new URLSearchParams(window.location.search);
     const abaParam = params.get("aba");
     if (abaParam && ABAS.find((a) => a.id === abaParam)) {
       setAba(abaParam);
       localStorage.setItem("redirecionarAba", abaParam);
       window.history.replaceState({}, "", window.location.pathname);
     } else {
-      // Recupera a aba salva caso tenha passado pelo login
       const abaSalva = localStorage.getItem("redirecionarAba");
       if (abaSalva && ABAS.find((a) => a.id === abaSalva)) {
         setAba(abaSalva);
@@ -609,19 +867,18 @@ export default function CadastroMembros() {
     }
   }, []);
 
+  const normalizarMembro = (m) => ({
+    ...m,
+    data: m.createdAt ? formatarData(m.createdAt) : m.data || "—",
+  });
+
   const carregarMembros = useCallback(async (tipo) => {
     setLoadingLista(true);
     try {
-      const res = await fetch(apiUrl(tipo));
+      const res  = await fetch(apiUrl(tipo));
       if (!res.ok) throw new Error("Erro ao buscar membros.");
       const data = await res.json();
-
-      const normalizado = data.map((m) => ({
-        ...m,
-        data: m.createdAt ? formatarData(m.createdAt) : m.data || "—",
-      }));
-
-      setTodos((prev) => ({ ...prev, [tipo]: normalizado }));
+      setTodos((prev) => ({ ...prev, [tipo]: data.map(normalizarMembro) }));
     } catch (err) {
       console.error(err);
     } finally {
@@ -632,17 +889,12 @@ export default function CadastroMembros() {
   const carregarTodos = useCallback(async () => {
     setLoadingGeral(true);
     try {
-      const tipos = ["criancas", "jovens", "mulheres", "homens"];
+      const tipos      = ["criancas", "jovens", "mulheres", "homens"];
       const resultados = await Promise.all(
         tipos.map((t) =>
           fetch(apiUrl(t))
             .then((r) => r.ok ? r.json() : [])
-            .then((data) =>
-              data.map((m) => ({
-                ...m,
-                data: m.createdAt ? formatarData(m.createdAt) : m.data || "—",
-              }))
-            )
+            .then((data) => data.map(normalizarMembro))
         )
       );
       setTodos({
@@ -659,11 +911,8 @@ export default function CadastroMembros() {
   }, []);
 
   useEffect(() => {
-    if (aba === "geral") {
-      carregarTodos();
-    } else {
-      carregarMembros(aba);
-    }
+    if (aba === "geral") carregarTodos();
+    else                 carregarMembros(aba);
   }, [aba, carregarMembros, carregarTodos]);
 
   const handleCadastrar = useCallback((membroSalvo) => {
