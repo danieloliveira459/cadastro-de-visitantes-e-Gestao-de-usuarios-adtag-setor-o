@@ -35,7 +35,10 @@ const corsOptions = {
 
 app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
-app.use(express.json());
+
+// ✅ Limite aumentado para 20mb para suportar fotos em base64
+app.use(express.json({ limit: "20mb" }));
+app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
 /* ================= ROTAS API ================= */
 
@@ -60,9 +63,7 @@ app.get("/api", (req, res) => {
 const frontendPath = path.join(__dirname, "../frontend/dist");
 
 if (fs.existsSync(frontendPath)) {
-  // Serve arquivos estáticos do React/Vite
   app.use(express.static(frontendPath));
-
   console.log("✅ Servindo frontend estático de:", frontendPath);
 } else {
   console.warn(
@@ -73,14 +74,10 @@ if (fs.existsSync(frontendPath)) {
 /* ================= FALLBACK SPA ================= */
 
 app.get("*", (req, res) => {
-  // Ignora rotas da API
   if (req.path.startsWith("/api")) {
-    return res.status(404).json({
-      message: "Rota da API não encontrada",
-    });
+    return res.status(404).json({ message: "Rota da API não encontrada" });
   }
 
-  // Evita devolver index.html para arquivos estáticos
   if (
     req.path.startsWith("/assets") ||
     req.path.endsWith(".js") ||
@@ -115,3 +112,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+export default app;
