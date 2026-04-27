@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,6 +13,14 @@ import Membros from "./pages/CadastroMembros";
 import Qrcode from "./pages/QrExport";
 import MembrosPublico from "./pages/MembrosPublico"; 
 
+// ================= ROTAS PÚBLICAS — nunca exigem login =================
+const ROTAS_PUBLICAS = [
+  "/login",
+  "/register",
+  "/reset",
+  "/membros/publico", 
+];
+
 // FUNÇÃO SEGURA
 function getUsuario() {
   const data = localStorage.getItem("usuarioLogado");
@@ -24,14 +32,28 @@ function getUsuario() {
   }
 }
 
+// ================= FALLBACK INTELIGENTE =================
+// Só redireciona se a rota não for pública
+function FallbackRoute({ usuario }) {
+  const location = useLocation();
+
+  const isPublica = ROTAS_PUBLICAS.some((rota) =>
+    location.pathname.startsWith(rota)
+  );
+
+  // Se for rota pública, não faz nada (deixa o React Router tratar)
+  if (isPublica) return null;
+
+  return usuario
+    ? <Navigate to="/home" replace />
+    : <Navigate to="/login" replace />;
+}
+
 export default function App() {
   const [usuario, setUsuario] = useState(getUsuario());
 
-  // Atualiza se localStorage mudar (login/logout)
   useEffect(() => {
-    const handleStorage = () => {
-      setUsuario(getUsuario());
-    };
+    const handleStorage = () => setUsuario(getUsuario());
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
@@ -50,13 +72,13 @@ export default function App() {
           }
         />
 
+        {/*  ROTA PÚBLICA DO QR CODE — sem login, deve vir antes do fallback */}
+        <Route path="/membros/publico" element={<MembrosPublico />} />
+
         {/* ROTAS PÚBLICAS */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/reset" element={<ResetPassword />} />
-
-        {/* ✅ ROTA PÚBLICA DO QR CODE — SEM LOGIN */}
-        <Route path="/membros/publico" element={<MembrosPublico />} />
 
         {/* ADMIN */}
         <Route
@@ -118,15 +140,8 @@ export default function App() {
           }
         />
 
-        {/* FALLBACK */}
-        <Route
-          path="*"
-          element={
-            usuario
-              ? <Navigate to="/home" replace />
-              : <Navigate to="/login" replace />
-          }
-        />
+        {/* FALLBACK — só redireciona rotas desconhecidas */}
+        <Route path="*" element={<FallbackRoute usuario={usuario} />} />
 
       </Routes>
     </BrowserRouter>
