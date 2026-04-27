@@ -24,7 +24,7 @@ function formatarData(data) {
   });
 }
 
-/* ================= ESTILOS DA TABELA ================= */
+/* ================= ESTILOS ================= */
 const th = {
   padding: "10px 14px",
   textAlign: "left",
@@ -42,19 +42,13 @@ const td = {
 };
 
 /* ================= COMPONENTE PRINCIPAL ================= */
-export default function MembrosPublico() {
-  const [aba, setAba]         = useState("criancas");
+// ✅ Recebe abaInicial como prop — definida pelo parâmetro ?qr= da URL no App.jsx
+export default function MembrosPublico({ abaInicial = "criancas" }) {
+  const abaValida = ABAS.find((a) => a.id === abaInicial) ? abaInicial : "criancas";
+
+  const [aba, setAba]         = useState(abaValida);
   const [membros, setMembros] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // ✅ Lê o parâmetro ?aba= da URL ao entrar pela leitura do QR Code
-  useEffect(() => {
-    const params   = new URLSearchParams(window.location.search);
-    const abaParam = params.get("aba");
-    if (abaParam && ABAS.find((a) => a.id === abaParam)) {
-      setAba(abaParam);
-    }
-  }, []);
 
   // ✅ Carrega membros sempre que a aba mudar
   useEffect(() => {
@@ -95,8 +89,8 @@ export default function MembrosPublico() {
         borderBottom: "2px solid #fee2e2",
       }}>
         {ABAS.map((a) => {
-          const Icone  = a.Icon;
-          const ativa  = aba === a.id;
+          const Icone = a.Icon;
+          const ativa = aba === a.id;
           return (
             <button
               key={a.id}
@@ -192,7 +186,6 @@ export default function MembrosPublico() {
                       key={m._id ?? m.id}
                       style={{ background: i % 2 === 0 ? "#fff" : "#fff8f8" }}
                     >
-                      {/* Foto */}
                       <td style={td}>
                         {m.foto ? (
                           <img
@@ -221,20 +214,10 @@ export default function MembrosPublico() {
                           </div>
                         )}
                       </td>
-
-                      {/* Nome */}
                       <td style={{ ...td, fontWeight: 600 }}>{m.nome}</td>
-
-                      {/* Título Eclesiástico */}
                       <td style={td}>{m.tituloEclesiastico || "—"}</td>
-
-                      {/* Estado Civil */}
-                      <td style={td}>{m.estadoCivil || "—"}</td>
-
-                      {/* Telefone */}
+                      <td style={td}>{m.estadoCivil        || "—"}</td>
                       <td style={{ ...td, whiteSpace: "nowrap" }}>{m.telefone || "—"}</td>
-
-                      {/* Data de Cadastro */}
                       <td style={{ ...td, whiteSpace: "nowrap", fontSize: 12, color: "#999" }}>
                         {m.createdAt ? formatarData(m.createdAt) : "—"}
                       </td>

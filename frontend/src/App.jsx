@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -11,15 +11,7 @@ import AceitaramJesus from "./pages/AceitaramJesus";
 import ResetPassword from "./pages/ResetPassword";
 import Membros from "./pages/CadastroMembros";
 import Qrcode from "./pages/QrExport";
-import MembrosPublico from "./pages/MembrosPublico"; 
-
-// ================= ROTAS PÚBLICAS — nunca exigem login =================
-const ROTAS_PUBLICAS = [
-  "/login",
-  "/register",
-  "/reset",
-  "/membros/publico", 
-];
+import MembrosPublico from "./pages/MembrosPublico";
 
 // FUNÇÃO SEGURA
 function getUsuario() {
@@ -32,31 +24,28 @@ function getUsuario() {
   }
 }
 
-// ================= FALLBACK INTELIGENTE =================
-// Só redireciona se a rota não for pública
-function FallbackRoute({ usuario }) {
-  const location = useLocation();
-
-  const isPublica = ROTAS_PUBLICAS.some((rota) =>
-    location.pathname.startsWith(rota)
-  );
-
-  // Se for rota pública, não faz nada (deixa o React Router tratar)
-  if (isPublica) return null;
-
-  return usuario
-    ? <Navigate to="/home" replace />
-    : <Navigate to="/login" replace />;
+//  Lê o parâmetro ?qr= da URL (usado pelo QR Code)
+function getAbaQR() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("qr"); // ex: ?qr=criancas
 }
 
 export default function App() {
   const [usuario, setUsuario] = useState(getUsuario());
+
+  //  Se vier ?qr=criancas na URL, exibe a página pública como overlay
+  const [abaQR, setAbaQR] = useState(getAbaQR());
 
   useEffect(() => {
     const handleStorage = () => setUsuario(getUsuario());
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
+
+  //  Se houver ?qr= na URL, exibe MembrosPublico diretamente — sem login
+  if (abaQR) {
+    return <MembrosPublico abaInicial={abaQR} />;
+  }
 
   return (
     <BrowserRouter>
@@ -71,9 +60,6 @@ export default function App() {
               : <Navigate to="/login" replace />
           }
         />
-
-        {/*  ROTA PÚBLICA DO QR CODE — sem login, deve vir antes do fallback */}
-        <Route path="/membros/publico" element={<MembrosPublico />} />
 
         {/* ROTAS PÚBLICAS */}
         <Route path="/login" element={<Login />} />
@@ -140,8 +126,15 @@ export default function App() {
           }
         />
 
-        {/* FALLBACK — só redireciona rotas desconhecidas */}
-        <Route path="*" element={<FallbackRoute usuario={usuario} />} />
+        {/* FALLBACK */}
+        <Route
+          path="*"
+          element={
+            usuario
+              ? <Navigate to="/home" replace />
+              : <Navigate to="/login" replace />
+          }
+        />
 
       </Routes>
     </BrowserRouter>

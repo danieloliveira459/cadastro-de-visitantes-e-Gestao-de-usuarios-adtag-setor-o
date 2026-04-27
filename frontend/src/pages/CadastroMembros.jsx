@@ -181,8 +181,8 @@ function QRCodeMembros({ tipo, membros }) {
 
   const origin = window.location.origin;
 
-  // ✅ ALTERADO: aponta para rota pública — sem necessidade de login
-  const abaUrl = `${origin}/membros/publico?aba=${tipo}`;
+  // ✅ USA ?qr=criancas na URL raiz — funciona sem rota nova no servidor
+  const abaUrl = `${origin}/?qr=${tipo}`;
 
   const baixarSVG = () => {
     const svg = document.querySelector(`#qr-${tipo} svg`);
