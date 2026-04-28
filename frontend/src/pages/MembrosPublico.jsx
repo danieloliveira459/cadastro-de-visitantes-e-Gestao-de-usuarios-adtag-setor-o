@@ -174,10 +174,30 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
         justifyContent: "space-between",
         boxShadow: "0 3px 12px rgba(220,38,38,0.35)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <FaUsers size={22} />
-          <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0.3 }}>Cadastro de Membros</span>
-        </div>
+       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+  <img
+    src={adtagLogo}
+    alt="Logo"
+    style={{
+      width: 42,
+      height: 42,
+      objectFit: "contain",
+      borderRadius: 8,
+      background: "rgba(255,255,255,0.15)",
+      padding: 4,
+    }}
+  />
+
+  <div style={{ display: "flex", flexDirection: "column" }}>
+    <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0.3 }}>
+      Cadastro de Membros
+    </span>
+
+    <span style={{ fontSize: 11, opacity: 0.9 }}>
+      ADTAG EXPANSÃO SETOR "O"
+    </span>
+  </div>
+</div>
         <button
           onClick={() => { setView(view === "form" ? "lista" : "form"); setErro(""); setSucesso(false); }}
           style={{
