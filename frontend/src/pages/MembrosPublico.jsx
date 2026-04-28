@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { FaChildren, FaPerson, FaPersonDress, FaCamera, FaDownload, FaTrash, FaCheck, FaPlus, FaUsers } from "react-icons/fa6";
+import adtagLogo from "../assets/adtag.png";
 
 /* ================= ABAS ================= */
 const ABAS = [
