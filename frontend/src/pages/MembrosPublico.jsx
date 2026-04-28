@@ -238,7 +238,7 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
         })}
       </div>
 
-      <div style={{ padding: "16px 14px", maxWidth: 700 }}>
+      <div style={{ padding: "16px 14px", maxWidth: 700, margin: "0 auto" }}>
 
         {/* ══════════════ FORMULÁRIO ══════════════ */}
         {view === "form" && (
