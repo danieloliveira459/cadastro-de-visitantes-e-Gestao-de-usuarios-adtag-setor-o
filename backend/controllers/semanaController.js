@@ -80,7 +80,9 @@ export const dadosDaSemana = async (req, res) => {
     const { semana } = req.params;
 
     if (!semana || !/^\d{4}-\d{2}-\d{2}$/.test(semana)) {
-      return res.status(400).json({ error: "Parâmetro semana inválido. Use YYYY-MM-DD." });
+      return res.status(400).json({
+        error: "Parâmetro semana inválido. Use YYYY-MM-DD.",
+      });
     }
 
     const [
@@ -94,24 +96,60 @@ export const dadosDaSemana = async (req, res) => {
       [mulheres],
       [homens],
     ] = await Promise.all([
-      db.query("SELECT * FROM visitantes      WHERE semana = ? ORDER BY id DESC",         [semana]),
-      db.query("SELECT * FROM aceitaram_jesus WHERE semana = ? ORDER BY data DESC",       [semana]),
-      db.query("SELECT * FROM cadastro_geral  WHERE semana = ? ORDER BY data DESC",       [semana]),
-      db.query("SELECT * FROM avisos          WHERE semana = ? ORDER BY id DESC",         [semana]),
       db.query(
-        "SELECT id, dia, horario, atividade, data, dataAtividade FROM programacao WHERE semana = ? ORDER BY id DESC",
+        "SELECT * FROM visitantes WHERE semana = ? ORDER BY id DESC",
         [semana]
       ),
-      db.query("SELECT * FROM crianca  WHERE semana = ? ORDER BY created_at DESC",        [semana]),
-      db.query("SELECT * FROM jovens   WHERE semana = ? ORDER BY created_at DESC",        [semana]),
-      db.query("SELECT * FROM mulheres WHERE semana = ? ORDER BY created_at DESC",        [semana]),
-      db.query("SELECT * FROM homens   WHERE semana = ? ORDER BY created_at DESC",        [semana]),
+      db.query(
+        "SELECT * FROM aceitaram_jesus WHERE semana = ? ORDER BY data DESC",
+        [semana]
+      ),
+
+      // ✅ ALTERAÇÃO AQUI
+      db.query(
+        "SELECT * FROM cadastro_geral WHERE semana = ? ORDER BY created_at DESC",
+        [semana]
+      ),
+
+      db.query(
+        "SELECT * FROM avisos WHERE semana = ? ORDER BY id DESC",
+        [semana]
+      ),
+      db.query(
+        `SELECT id, dia, horario, atividade, data, dataAtividade
+         FROM programacao
+         WHERE semana = ?
+         ORDER BY id DESC`,
+        [semana]
+      ),
+      db.query(
+        "SELECT * FROM crianca WHERE semana = ? ORDER BY created_at DESC",
+        [semana]
+      ),
+      db.query(
+        "SELECT * FROM jovens WHERE semana = ? ORDER BY created_at DESC",
+        [semana]
+      ),
+      db.query(
+        "SELECT * FROM mulheres WHERE semana = ? ORDER BY created_at DESC",
+        [semana]
+      ),
+      db.query(
+        "SELECT * FROM homens WHERE semana = ? ORDER BY created_at DESC",
+        [semana]
+      ),
     ]);
 
     return res.json({
-      visitantes, aceitaramJesus, cadastroGeral,
-      avisos, programacoes,
-      criancas, jovens, mulheres, homens,
+      visitantes,
+      aceitaramJesus,
+      cadastroGeral,
+      avisos,
+      programacoes,
+      criancas,
+      jovens,
+      mulheres,
+      homens,
     });
   } catch (err) {
     console.error("ERRO DADOS SEMANA:", err);
@@ -120,10 +158,6 @@ export const dadosDaSemana = async (req, res) => {
 };
 
 // ─── RELATÓRIO MENSAL ─────────────────────────────────────────────────────────
-// GET /api/semanas/relatorio-mensal?mes=4&ano=2026
-// Retorna TODOS os registros do mês inteiro de todas as tabelas,
-// agrupando por semana dentro do mês. Os dados nunca são apagados do banco,
-// portanto mesmo após o reset semanal do front, o relatório continua completo.
 export const relatorioMensal = async (req, res) => {
   try {
     const mes = parseInt(req.query.mes) || new Date().getMonth() + 1;
@@ -133,9 +167,8 @@ export const relatorioMensal = async (req, res) => {
       return res.status(400).json({ error: "Mês inválido. Use 1-12." });
     }
 
-    // primeiro e último dia do mês
     const inicio = `${ano}-${String(mes).padStart(2, "0")}-01`;
-    const fim    = new Date(ano, mes, 0).toISOString().split("T")[0];
+    const fim = new Date(ano, mes, 0).toISOString().split("T")[0];
 
     const [
       [visitantes],
@@ -162,7 +195,9 @@ export const relatorioMensal = async (req, res) => {
       ),
       db.query(
         `SELECT id, dia, horario, atividade, data, dataAtividade, semana
-         FROM programacao WHERE semana >= ? AND semana <= ? ORDER BY semana ASC`,
+         FROM programacao
+         WHERE semana >= ? AND semana <= ?
+         ORDER BY semana ASC`,
         [inicio, fim]
       ),
       db.query(
@@ -181,8 +216,10 @@ export const relatorioMensal = async (req, res) => {
         "SELECT * FROM homens WHERE semana >= ? AND semana <= ? ORDER BY semana ASC, created_at ASC",
         [inicio, fim]
       ),
+
+      // ✅ ALTERAÇÃO AQUI
       db.query(
-        "SELECT * FROM cadastro_geral WHERE semana >= ? AND semana <= ? ORDER BY semana ASC, data ASC",
+        "SELECT * FROM cadastro_geral WHERE semana >= ? AND semana <= ? ORDER BY semana ASC, created_at ASC",
         [inicio, fim]
       ),
     ]);
@@ -193,16 +230,20 @@ export const relatorioMensal = async (req, res) => {
       inicio,
       fim,
       totais: {
-        visitantes:     visitantes.length,
+        visitantes: visitantes.length,
         aceitaramJesus: aceitaramJesus.length,
-        avisos:         avisos.length,
-        programacoes:   programacoes.length,
-        criancas:       criancas.length,
-        jovens:         jovens.length,
-        mulheres:       mulheres.length,
-        homens:         homens.length,
-        cadastroGeral:  cadastroGeral.length,
-        membros:        criancas.length + jovens.length + mulheres.length + homens.length,
+        avisos: avisos.length,
+        programacoes: programacoes.length,
+        criancas: criancas.length,
+        jovens: jovens.length,
+        mulheres: mulheres.length,
+        homens: homens.length,
+        cadastroGeral: cadastroGeral.length,
+        membros:
+          criancas.length +
+          jovens.length +
+          mulheres.length +
+          homens.length,
       },
       visitantes,
       aceitaramJesus,
