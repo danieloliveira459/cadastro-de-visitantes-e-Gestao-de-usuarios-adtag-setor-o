@@ -6,6 +6,7 @@ import { MdWarning } from "react-icons/md";
 import { PiUserSwitchLight } from "react-icons/pi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import RelatorioMensalAba from "./RelatorioMensalAba";
 import "./Pastor.css";
 
 const API = "https://cadatro-de-visitantes-e-gest-o-de.onrender.com/api";
@@ -280,12 +281,10 @@ export default function Pastor() {
     }
   };
 
-  // ✅ CORRIGIDO: evita o bug de timezone do new Date("yyyy-mm-dd")
-  // "2026-04-22" interpretado como UTC vira "21/04/2026" no Brasil — slice+split resolve isso
   const formatarDataAtividade = (data) => {
     if (!data) return "-";
     try {
-      const str = data.toString().slice(0, 10); // garante "yyyy-mm-dd"
+      const str = data.toString().slice(0, 10);
       const [ano, mes, dia] = str.split("-");
       if (!ano || !mes || !dia) return "-";
       return `${dia}/${mes}/${ano}`;
@@ -304,7 +303,6 @@ export default function Pastor() {
     });
   };
 
-  // ✅ HELPER: lê dataAtividade com fallback para casing diferente do MySQL
   const getDataAtividade = (p) => p.dataAtividade ?? p.dataatividade ?? null;
 
   // PDF
@@ -335,10 +333,7 @@ export default function Pastor() {
     if (tipo === "visitantes") {
       head = [["Nome", "Cargo", "Telefone", "Igreja", "Aceitou Jesus", "Data Cadastro Visitantes"]];
       tabela = visitantes.map((v) => [
-        v.nome,
-        v.cargo,
-        v.telefone,
-        v.igreja,
+        v.nome, v.cargo, v.telefone, v.igreja,
         v.aceitou_jesus == 1 ? "Sim" : "Não",
         formatarData(v.data),
       ]);
@@ -360,10 +355,8 @@ export default function Pastor() {
           return a.horario.localeCompare(b.horario);
         })
         .map((p) => [
-          p.dia,
-          p.horario,
-          p.atividade,
-          formatarDataAtividade(getDataAtividade(p)), // ✅ usa helper
+          p.dia, p.horario, p.atividade,
+          formatarDataAtividade(getDataAtividade(p)),
           formatarData(p.data),
         ]);
     }
@@ -371,11 +364,7 @@ export default function Pastor() {
     if (tipo === "aceitaram-jesus") {
       head = [["Nome", "Telefone", "Endereço", "Observações", "Data Cadastro Aceitaram Jesus"]];
       tabela = aceitaramJesus.map((v) => [
-        v.nome,
-        v.telefone,
-        v.endereco,
-        v.observacoes,
-        formatarData(v.data),
+        v.nome, v.telefone, v.endereco, v.observacoes, formatarData(v.data),
       ]);
     }
 
@@ -479,31 +468,16 @@ export default function Pastor() {
         </div>
 
         <div className="menu">
-          <button
-            className={aba === "visitantes" ? "active" : ""}
-            onClick={() => setAba("visitantes")}
-          >
+          <button className={aba === "visitantes" ? "active" : ""} onClick={() => setAba("visitantes")}>
             <FaUsers color="#e02020" /> Visitantes
           </button>
-
-          <button
-            className={aba === "avisos" ? "active" : ""}
-            onClick={() => setAba("avisos")}
-          >
+          <button className={aba === "avisos" ? "active" : ""} onClick={() => setAba("avisos")}>
             <MdWarning color="#e02020" /> Avisos Importantes
           </button>
-
-          <button
-            className={aba === "programacao" ? "active" : ""}
-            onClick={() => setAba("programacao")}
-          >
+          <button className={aba === "programacao" ? "active" : ""} onClick={() => setAba("programacao")}>
             <FaCalendarAlt color="#e02020" /> Programação da Semana
           </button>
-
-          <button
-            className={aba === "aceitaramJesus" ? "active" : ""}
-            onClick={() => setAba("aceitaramJesus")}
-          >
+          <button className={aba === "aceitaramJesus" ? "active" : ""} onClick={() => setAba("aceitaramJesus")}>
             <PiUserSwitchLight color="#e02020" /> Aceitaram a Jesus
           </button>
         </div>
@@ -587,9 +561,7 @@ export default function Pastor() {
                             color="#25D366"
                             style={{ cursor: "pointer", marginRight: 10 }}
                             title="Enviar WhatsApp"
-                            onClick={() =>
-                              abrirModalWhatsApp(v.telefone, v.nome, v.aceitou_jesus == 1)
-                            }
+                            onClick={() => abrirModalWhatsApp(v.telefone, v.nome, v.aceitou_jesus == 1)}
                           />
                           <FaTrash
                             className="delete"
@@ -601,6 +573,27 @@ export default function Pastor() {
                   </tbody>
                 </table>
               )}
+
+              {/* ▼ RELATÓRIO MENSAL ▼ */}
+              <RelatorioMensalAba
+                tipo="visitantes"
+                titulo="Visitantes"
+                colunas={["Nome", "Telefone", "Igreja", "Aceitou Jesus", "Data Cadastro"]}
+                renderLinha={(v) => [
+                  v.nome,
+                  v.telefone || "—",
+                  v.igreja   || "—",
+                  v.aceitou_jesus == 1
+                    ? <span style={{ color: "#16a34a", fontWeight: 700 }}>✓ Sim</span>
+                    : <span style={{ color: "#9ca3af" }}>Não</span>,
+                  formatarData(v.data),
+                ]}
+                renderLinhaPdf={(v) => [
+                  v.nome, v.telefone || "—", v.igreja || "—",
+                  v.aceitou_jesus == 1 ? "Sim" : "Não",
+                  formatarData(v.data),
+                ]}
+              />
             </div>
           </div>
         )}
@@ -652,15 +645,21 @@ export default function Pastor() {
                       <td>{a.descricao}</td>
                       <td>{formatarData(a.data)}</td>
                       <td style={{ textAlign: "center" }}>
-                        <FaTrash
-                          className="delete"
-                          onClick={() => handleDeleteAviso(a.id)}
-                        />
+                        <FaTrash className="delete" onClick={() => handleDeleteAviso(a.id)} />
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+
+              {/* ▼ RELATÓRIO MENSAL ▼ */}
+              <RelatorioMensalAba
+                tipo="avisos"
+                titulo="Avisos"
+                colunas={["Título", "Descrição", "Data Cadastro"]}
+                renderLinha={(a) => [a.titulo, a.descricao, formatarData(a.data)]}
+                renderLinhaPdf={(a) => [a.titulo, a.descricao, formatarData(a.data)]}
+              />
             </div>
           </div>
         )}
@@ -748,7 +747,6 @@ export default function Pastor() {
                       <td>{p.dia}</td>
                       <td style={{ whiteSpace: "nowrap" }}>{p.horario}</td>
                       <td>{p.atividade}</td>
-                      {/* ✅ CORRIGIDO: usa helper para lidar com casing do MySQL */}
                       <td style={{ whiteSpace: "nowrap" }}>{formatarDataAtividade(getDataAtividade(p))}</td>
                       <td>{formatarData(p.data)}</td>
                       <td style={{ textAlign: "center" }}>
@@ -761,6 +759,23 @@ export default function Pastor() {
                   ))}
                 </tbody>
               </table>
+
+              {/* ▼ RELATÓRIO MENSAL ▼ */}
+              <RelatorioMensalAba
+                tipo="programacoes"
+                titulo="Programações"
+                colunas={["Dia", "Horário", "Atividade", "Data da Atividade", "Data Cadastro"]}
+                renderLinha={(p) => [
+                  p.dia, p.horario, p.atividade,
+                  p.dataAtividade ? formatarDataAtividade(p.dataAtividade) : "—",
+                  formatarData(p.data),
+                ]}
+                renderLinhaPdf={(p) => [
+                  p.dia, p.horario, p.atividade,
+                  p.dataAtividade ? formatarDataAtividade(p.dataAtividade) : "—",
+                  formatarData(p.data),
+                ]}
+              />
             </div>
           </div>
         )}
@@ -821,6 +836,21 @@ export default function Pastor() {
                   ))}
                 </tbody>
               </table>
+
+              {/* ▼ RELATÓRIO MENSAL ▼ */}
+              <RelatorioMensalAba
+                tipo="aceitaramJesus"
+                titulo="Aceitaram Jesus"
+                colunas={["Nome", "Telefone", "Endereço", "Observações", "Data Cadastro"]}
+                renderLinha={(v) => [
+                  v.nome, v.telefone || "—", v.endereco || "—",
+                  v.observacoes || "—", formatarData(v.data),
+                ]}
+                renderLinhaPdf={(v) => [
+                  v.nome, v.telefone || "—", v.endereco || "—",
+                  v.observacoes || "—", formatarData(v.data),
+                ]}
+              />
             </div>
           </div>
         )}

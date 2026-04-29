@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FaChildren, FaPerson, FaPersonDress, FaCamera, FaDownload, FaTrash, FaCheck, FaPlus, FaUsers } from "react-icons/fa6";
+import { FaChildren, FaPerson, FaPersonDress, FaCamera, FaDownload, FaTrash, FaCheck, FaPlus } from "react-icons/fa6";
 import adtagLogo from "../assets/adtag.png";
 
 /* ================= ABAS ================= */
@@ -44,14 +44,6 @@ function ocultarCPF(cpf) {
   return `${d.slice(0, 3)}.***.***-${d.slice(9, 11)}`;
 }
 
-function formatarData(data) {
-  if (!data) return "—";
-  return new Date(data).toLocaleDateString("pt-BR", {
-    timeZone: "America/Sao_Paulo",
-    day: "2-digit", month: "2-digit", year: "numeric",
-  });
-}
-
 function lerArquivoBase64(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -74,12 +66,13 @@ const formVazio = () => ({
   foto: "", fotoMime: "", fotoNome: "",
 });
 
+
 /* ================= COMPONENTE PRINCIPAL ================= */
 export default function MembrosPublico({ abaInicial = "criancas" }) {
   const abaValida = ABAS.find((a) => a.id === abaInicial) ? abaInicial : "criancas";
 
   const [aba, setAba]           = useState(abaValida);
-  const [view, setView]         = useState("lista");   // "lista" | "form"
+  const [view, setView]         = useState("lista");
   const [membros, setMembros]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [salvando, setSalvando] = useState(false);
@@ -88,7 +81,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
   const [form, setForm]         = useState(formVazio());
   const fotoRef                 = useRef(null);
 
-  /* carrega membros sempre que muda a aba */
   useEffect(() => {
     setLoading(true);
     setMembros([]);
@@ -99,7 +91,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
       .finally(() => setLoading(false));
   }, [aba]);
 
-  /* troca aba → volta pra lista */
   const trocarAba = (id) => {
     setAba(id);
     setView("lista");
@@ -108,7 +99,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
     setSucesso(false);
   };
 
-  /* handle campos */
   const handleChange = (e) => {
     const { name, value } = e.target;
     let v = value;
@@ -117,7 +107,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
     setForm((p) => ({ ...p, [name]: v }));
   };
 
-  /* handle foto */
   const handleFoto = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -125,7 +114,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
     setForm((p) => ({ ...p, foto: base64, fotoMime: file.type, fotoNome: file.name }));
   };
 
-  /* submit */
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.nome.trim()) { setErro("Nome é obrigatório."); return; }
@@ -157,10 +145,20 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
     }
   };
 
+  /* ── deletar membro ── */
+  const handleDeletar = async (id) => {
+    if (!window.confirm("Deseja remover este membro?")) return;
+    try {
+      await fetch(`${BASE_URL}/api/${aba}/${id}`, { method: "DELETE" });
+      setMembros((p) => p.filter((m) => (m._id ?? m.id) !== id));
+    } catch {
+      alert("Erro ao remover membro.");
+    }
+  };
+
   const abaAtual = ABAS.find((a) => a.id === aba);
   const IconeAba = abaAtual?.Icon;
 
-  /* ─────────────────── RENDER ─────────────────── */
   return (
     <div style={{ minHeight: "100vh", background: "#fff8f8", fontFamily: "'Segoe UI', sans-serif" }}>
 
@@ -174,30 +172,24 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
         justifyContent: "space-between",
         boxShadow: "0 3px 12px rgba(220,38,38,0.35)",
       }}>
-       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-  <img
-    src={adtagLogo}
-    alt="Logo"
-    style={{
-      width: 42,
-      height: 42,
-      objectFit: "contain",
-      borderRadius: 8,
-      background: "rgba(255,255,255,0.15)",
-      padding: 4,
-    }}
-  />
-
-  <div style={{ display: "flex", flexDirection: "column" }}>
-    <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0.3 }}>
-      Cadastro de Membros
-    </span>
-
-    <span style={{ fontSize: 11, opacity: 0.9 }}>
-      ADTAG EXPANSÃO SETOR "O"
-    </span>
-  </div>
-</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <img
+            src={adtagLogo}
+            alt="Logo"
+            style={{
+              width: 42, height: 42, objectFit: "contain",
+              borderRadius: 8, background: "rgba(255,255,255,0.15)", padding: 4,
+            }}
+          />
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: 0.3 }}>
+              Cadastro de Membros
+            </span>
+            <span style={{ fontSize: 11, opacity: 0.9 }}>
+              ADTAG EXPANSÃO SETOR "O"
+            </span>
+          </div>
+        </div>
         <button
           onClick={() => { setView(view === "form" ? "lista" : "form"); setErro(""); setSucesso(false); }}
           style={{
@@ -215,7 +207,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
       {/* ── ABAS ── */}
       <div style={{
         display: "flex", gap: 0, overflowX: "auto",
-        borderBottom: "2.5px solid #fca5a5",
         background: "#fff",
       }}>
         {ABAS.map((a) => {
@@ -238,7 +229,7 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
         })}
       </div>
 
-      <div style={{ padding: "16px 14px", maxWidth: 700, margin: "0 auto" }}>
+      <div style={{ padding: "16px 14px", maxWidth: 1100, margin: "0 auto" }}>
 
         {/* ══════════════ FORMULÁRIO ══════════════ */}
         {view === "form" && (
@@ -247,7 +238,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
             boxShadow: "0 4px 20px rgba(0,0,0,0.08)",
             overflow: "hidden",
           }}>
-            {/* topo do form */}
             <div style={{
               background: "linear-gradient(135deg, #dc2626, #b91c1c)",
               padding: "16px 20px",
@@ -271,7 +261,7 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
                   <div onClick={() => fotoRef.current?.click()}
                     style={{ width: 100, height: 100, borderRadius: "50%", background: "#fee2e2",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      border: "2.5px dashed #fca5a5", cursor: "pointer", transition: "all 0.2s" }}>
+                      border: "2.5px dashed #fca5a5", cursor: "pointer" }}>
                     <FaCamera size={28} color="#dc2626" />
                   </div>
                 )}
@@ -283,7 +273,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
                   <BtnSecundario onClick={() => fotoRef.current?.click()}>
                     <FaCamera size={12} /> {form.foto ? "Trocar foto" : "Selecionar foto"}
                   </BtnSecundario>
-
                   {form.foto && (
                     <>
                       <BtnSecundario cor="#2563eb"
@@ -306,67 +295,55 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
 
               {/* ── CAMPOS ── */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px 16px" }}>
-
                 <Campo label="Nome Completo *" span={2}>
                   <input name="nome" value={form.nome} onChange={handleChange}
                     placeholder="Digite o nome completo" style={inputStyle} />
                 </Campo>
-
                 <Campo label="CPF">
                   <input name="cpf" value={form.cpf} onChange={handleChange}
                     placeholder="000.000.000-00" maxLength={14} style={inputStyle} />
                 </Campo>
-
                 <Campo label="Data de Nascimento">
                   <input name="dataNascimento" type="date" value={form.dataNascimento}
                     onChange={handleChange} style={inputStyle} />
                 </Campo>
-
                 <Campo label="Sexo">
                   <select name="sexo" value={form.sexo} onChange={handleChange} style={inputStyle}>
                     <option value="">Selecione...</option>
                     {OPCOES_SEXO.map((o) => <option key={o}>{o}</option>)}
                   </select>
                 </Campo>
-
                 <Campo label="Título Eclesiástico">
                   <input name="tituloEclesiastico" value={form.tituloEclesiastico}
                     onChange={handleChange} placeholder="Ex: Membro, Diácono, Pastor..."
                     style={inputStyle} />
                 </Campo>
-
                 <Campo label="Estado Civil">
                   <select name="estadoCivil" value={form.estadoCivil} onChange={handleChange} style={inputStyle}>
                     <option value="">Selecione...</option>
                     {OPCOES_ESTADO_CIVIL.map((o) => <option key={o}>{o}</option>)}
                   </select>
                 </Campo>
-
                 <Campo label="Grau de Instrução">
                   <select name="grauInstrucao" value={form.grauInstrucao} onChange={handleChange} style={inputStyle}>
                     <option value="">Selecione...</option>
                     {OPCOES_GRAU_INSTRUCAO.map((o) => <option key={o}>{o}</option>)}
                   </select>
                 </Campo>
-
                 <Campo label="Nacionalidade">
                   <input name="nacionalidade" value={form.nacionalidade}
                     onChange={handleChange} placeholder="Ex: Brasileiro(a)" style={inputStyle} />
                 </Campo>
-
                 <Campo label="Naturalidade">
                   <input name="naturalidade" value={form.naturalidade}
                     onChange={handleChange} placeholder="Cidade / Estado" style={inputStyle} />
                 </Campo>
-
                 <Campo label="Número de Telefone">
                   <input name="telefone" value={form.telefone} onChange={handleChange}
                     placeholder="(00) 00000-0000" maxLength={16} style={inputStyle} />
                 </Campo>
-
               </div>
 
-              {/* feedback */}
               {erro && (
                 <div style={{
                   marginTop: 14, padding: "10px 14px", borderRadius: 8,
@@ -376,7 +353,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
                   {erro}
                 </div>
               )}
-
               {sucesso && (
                 <div style={{
                   marginTop: 14, padding: "10px 14px", borderRadius: 8,
@@ -387,7 +363,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
                 </div>
               )}
 
-              {/* botão submit */}
               <button type="submit" disabled={salvando} style={{
                 marginTop: 20, width: "100%", padding: "13px",
                 background: salvando ? "#fca5a5" : "linear-gradient(135deg, #dc2626, #b91c1c)",
@@ -398,7 +373,6 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
               }}>
                 {salvando ? "Salvando..." : <><FaCheck size={14} /> Cadastrar Membro</>}
               </button>
-
             </form>
           </div>
         )}
@@ -418,8 +392,9 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
             }}>
               <span style={{ fontWeight: 700, fontSize: 15, color: "#dc2626",
                 display: "flex", alignItems: "center", gap: 8 }}>
-                {IconeAba && <IconeAba size={16} />} {abaAtual?.label}
+                {IconeAba && <IconeAba size={16} />} {abaAtual?.label} Cadastrados
               </span>
+
               <span style={{
                 background: "#fee2e2", color: "#dc2626",
                 borderRadius: 20, padding: "3px 14px",
@@ -429,10 +404,10 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
               </span>
             </div>
 
-            {/* corpo */}
+            {/* tabela */}
             {loading ? (
-              <div style={{ padding: 50, textAlign: "center" }}>
-                <div style={{ color: "#dc2626", fontSize: 13 }}>Carregando...</div>
+              <div style={{ padding: 50, textAlign: "center", color: "#dc2626", fontSize: 13 }}>
+                Carregando...
               </div>
             ) : membros.length === 0 ? (
               <div style={{ padding: 50, textAlign: "center" }}>
@@ -450,108 +425,144 @@ export default function MembrosPublico({ abaInicial = "criancas" }) {
                 </button>
               </div>
             ) : (
-              <div>
-                {membros.map((m, i) => (
-                  <CardMembro key={m._id ?? m.id} m={m} index={i} />
-                ))}
+              <div style={{ overflowX: "auto" }}>
+                <table style={{
+                  width: "100%", borderCollapse: "collapse",
+                  fontSize: 13, minWidth: 900,
+                }}>
+                  <thead>
+                    <tr style={{ background: "#f9fafb", borderBottom: "2px solid #fee2e2" }}>
+                      {["Foto","Nome","CPF","Nascimento","Sexo","Título Ecl.","Estado Civil","Instrução","Nacionalidade","Naturalidade","Telefone","Cadastro","Ações"].map((col) => (
+                        <th key={col} style={{
+                          padding: "10px 12px",
+                          textAlign: "left",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#6b7280",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.4,
+                          whiteSpace: "nowrap",
+                        }}>
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {membros.map((m, i) => {
+                      const nascimento = m.dataNascimento
+                        ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
+                        : "—";
+                      const cadastro = m.createdAt
+                        ? new Date(m.createdAt).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })
+                        : "—";
+                      return (
+                        <tr key={m._id ?? m.id} style={{
+                          background: i % 2 === 0 ? "#fff" : "#fff8f8",
+                          borderBottom: "1px solid #fee2e2",
+                          transition: "background 0.15s",
+                        }}>
+                          {/* Foto */}
+                          <td style={{ padding: "10px 12px" }}>
+                            {m.foto ? (
+                              <img src={m.foto} alt={m.nome}
+                                style={{ width: 36, height: 36, borderRadius: "50%",
+                                  objectFit: "cover", border: "2px solid #dc2626", display: "block" }} />
+                            ) : (
+                              <div style={{
+                                width: 36, height: 36, borderRadius: "50%",
+                                background: "#fee2e2", display: "flex",
+                                alignItems: "center", justifyContent: "center",
+                              }}>
+                                <FaCamera size={14} color="#dc2626" />
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Nome */}
+                          <td style={{ padding: "10px 12px", fontWeight: 600, color: "#111", minWidth: 140 }}>
+                            {m.nome || "—"}
+                          </td>
+
+                          {/* CPF */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>
+                            {ocultarCPF(m.cpf)}
+                          </td>
+
+                          {/* Nascimento */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>
+                            {nascimento}
+                          </td>
+
+                          {/* Sexo */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                            {m.sexo || "—"}
+                          </td>
+
+                          {/* Título Ecl. */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                            {m.tituloEclesiastico || "—"}
+                          </td>
+
+                          {/* Estado Civil */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                            {m.estadoCivil || "—"}
+                          </td>
+
+                          {/* Instrução */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                            {m.grauInstrucao || "—"}
+                          </td>
+
+                          {/* Nacionalidade */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                            {m.nacionalidade || "—"}
+                          </td>
+
+                          {/* Naturalidade */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280" }}>
+                            {m.naturalidade || "—"}
+                          </td>
+
+                          {/* Telefone */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>
+                            {m.telefone || "—"}
+                          </td>
+
+                          {/* Cadastro */}
+                          <td style={{ padding: "10px 12px", color: "#6b7280", whiteSpace: "nowrap" }}>
+                            {cadastro}
+                          </td>
+
+                          {/* Ações */}
+                          <td style={{ padding: "10px 12px" }}>
+                            <button
+                              onClick={() => handleDeletar(m._id ?? m.id)}
+                              title="Remover membro"
+                              style={{
+                                background: "none", border: "none",
+                                cursor: "pointer", color: "#9ca3af",
+                                padding: 4, borderRadius: 6,
+                                transition: "color 0.15s",
+                                fontSize: 15,
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.color = "#dc2626"}
+                              onMouseLeave={(e) => e.currentTarget.style.color = "#9ca3af"}
+                            >
+                              <FaTrash size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
         )}
 
       </div>
-    </div>
-  );
-}
-
-/* ── CARD DE MEMBRO (lista) ── */
-function CardMembro({ m, index }) {
-  const [aberto, setAberto] = useState(false);
-
-  return (
-    <div style={{
-      borderBottom: "1px solid #fee2e2",
-      background: index % 2 === 0 ? "#fff" : "#fff8f8",
-    }}>
-      {/* linha resumo — clicável */}
-      <div
-        onClick={() => setAberto((v) => !v)}
-        style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "12px 16px", cursor: "pointer",
-          transition: "background 0.15s",
-        }}
-      >
-        {/* foto */}
-        {m.foto ? (
-          <img src={m.foto} alt={m.nome}
-            style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover",
-              border: "2px solid #dc2626", flexShrink: 0 }} />
-        ) : (
-          <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#fee2e2",
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <FaCamera size={16} color="#dc2626" />
-          </div>
-        )}
-
-        {/* nome + cargo */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 14, color: "#111",
-            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {m.nome}
-          </div>
-          <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 1 }}>
-            {m.tituloEclesiastico || "—"} · {m.estadoCivil || "—"}
-          </div>
-        </div>
-
-        {/* seta */}
-        <span style={{ color: "#dc2626", fontSize: 12, transition: "transform 0.2s",
-          transform: aberto ? "rotate(180deg)" : "rotate(0deg)" }}>▼</span>
-      </div>
-
-      {/* detalhes expandidos */}
-      {aberto && (
-        <div style={{
-          padding: "0 16px 16px 72px",
-          display: "grid", gridTemplateColumns: "1fr 1fr",
-          gap: "8px 16px",
-        }}>
-          <DetalheItem label="CPF"               value={ocultarCPF(m.cpf)} />
-          <DetalheItem label="Data Nascimento"
-            value={m.dataNascimento
-              ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
-              : "—"} />
-          <DetalheItem label="Sexo"              value={m.sexo               || "—"} />
-          <DetalheItem label="Titulo Ecl."              value={m.titulo           || "—"} />
-          <DetalheItem label="Estado Civil"              value={m.estadoCivil             || "—"} />
-          <DetalheItem label="Grau de Instrução" value={m.grauInstrucao      || "—"} />
-          <DetalheItem label="Nacionalidade"     value={m.nacionalidade      || "—"} />
-          <DetalheItem label="Naturalidade"      value={m.naturalidade       || "—"} />
-          <DetalheItem label="Telefone"          value={m.telefone           || "—"} />
-          <DetalheItem label="Cadastro"
-            value={m.createdAt ? new Date(m.createdAt).toLocaleDateString("pt-BR", {
-              timeZone: "America/Sao_Paulo"
-            }) : "—"} />
-
-          {/* download da foto */}
-          {m.foto && (
-            <div style={{ gridColumn: "1 / -1", marginTop: 4 }}>
-              <button
-                onClick={() => baixarFoto(m.foto, m.fotoNome || `foto-${m.nome}.jpg`)}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 6,
-                  padding: "7px 14px", background: "#eff6ff",
-                  border: "1px solid #bfdbfe", borderRadius: 8,
-                  color: "#2563eb", fontSize: 12, fontWeight: 600, cursor: "pointer",
-                }}
-              >
-                <FaDownload size={11} /> Baixar foto para sistema da igreja
-              </button>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
@@ -579,18 +590,6 @@ function BtnSecundario({ children, onClick, cor = "#374151" }) {
     }}>
       {children}
     </button>
-  );
-}
-
-function DetalheItem({ label, value }) {
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af",
-        textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 1 }}>
-        {label}
-      </div>
-      <div style={{ fontSize: 13, color: "#111", fontWeight: 500 }}>{value}</div>
-    </div>
   );
 }
 
