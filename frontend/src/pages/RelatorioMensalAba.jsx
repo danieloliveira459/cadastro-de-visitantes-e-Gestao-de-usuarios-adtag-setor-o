@@ -24,7 +24,7 @@ function nomeMes(n) {
 function formatarSemana(semana) {
   if (!semana) return "—";
 
-  const seg = new Date(`${semana}T00:00:00`);
+  const seg = new Date(semana);
 
   if (isNaN(seg.getTime())) return "—";
 
