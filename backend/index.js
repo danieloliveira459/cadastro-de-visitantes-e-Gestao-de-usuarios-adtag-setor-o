@@ -15,6 +15,7 @@ import criancasRoutes from "./routes/criancasRoutes.js";
 import jovensRoutes from "./routes/jovensRoutes.js";
 import mulheresRoutes from "./routes/mulheresRoutes.js";
 import homensRoutes from "./routes/homensRoutes.js";
+import semanaRoutes from "./routes/semanaRoutes.js";
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use("/api/criancas", criancasRoutes);
 app.use("/api/jovens", jovensRoutes);
 app.use("/api/mulheres", mulheresRoutes);
 app.use("/api/homens", homensRoutes);
+app.use("/api/semanas", semanasRoutes); 
 
 app.get("/api", (req, res) => {
   res.json({ message: "API rodando com sucesso!" });
