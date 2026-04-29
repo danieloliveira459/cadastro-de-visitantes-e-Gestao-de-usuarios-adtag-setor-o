@@ -15,7 +15,7 @@ import criancasRoutes from "./routes/criancasRoutes.js";
 import jovensRoutes from "./routes/jovensRoutes.js";
 import mulheresRoutes from "./routes/mulheresRoutes.js";
 import homensRoutes from "./routes/homensRoutes.js";
-import semanaRoutes from "./routes/semanaRoutes.js";
+import semanasRoutes from "./routes/semanaRoutes.js"; 
 
 const app = express();
 
@@ -37,7 +37,6 @@ const corsOptions = {
 app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 
-// ✅ Limite aumentado para 20mb para suportar fotos em base64
 app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
@@ -66,10 +65,10 @@ const frontendPath = path.join(__dirname, "../frontend/dist");
 
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
-  console.log("✅ Servindo frontend estático de:", frontendPath);
+  console.log(" Servindo frontend estático de:", frontendPath);
 } else {
   console.warn(
-    "⚠️ frontend/dist não encontrado. Rode 'npm run build' no frontend."
+    " frontend/dist não encontrado. Rode 'npm run build' no frontend."
   );
 }
 
