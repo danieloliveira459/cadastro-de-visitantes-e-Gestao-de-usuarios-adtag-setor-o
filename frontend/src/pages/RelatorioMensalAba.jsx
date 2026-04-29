@@ -23,9 +23,14 @@ function nomeMes(n) {
 
 function formatarSemana(semana) {
   if (!semana) return "—";
-  const seg = new Date(semana + "T00:00:00");
+
+  const seg = new Date(`${semana}T00:00:00`);
+
+  if (isNaN(seg.getTime())) return "—";
+
   const sab = new Date(seg);
   sab.setDate(seg.getDate() + 5);
+
   return `${seg.toLocaleDateString("pt-BR")} – ${sab.toLocaleDateString("pt-BR")}`;
 }
 
