@@ -28,10 +28,16 @@ function formatarSemana(semana) {
 
   if (isNaN(seg.getTime())) return "—";
 
-  const sab = new Date(seg);
-  sab.setDate(seg.getDate() + 5);
+  const segLocal = new Date(
+    seg.getUTCFullYear(),
+    seg.getUTCMonth(),
+    seg.getUTCDate()
+  );
 
-  return `${seg.toLocaleDateString("pt-BR")} – ${sab.toLocaleDateString("pt-BR")}`;
+  const sab = new Date(segLocal);
+  sab.setDate(segLocal.getDate() + 5);
+
+  return `${segLocal.toLocaleDateString("pt-BR")} – ${sab.toLocaleDateString("pt-BR")}`;
 }
 
 export default function RelatorioMensalAba({
@@ -61,9 +67,12 @@ export default function RelatorioMensalAba({
       const res = await fetch(
         `${BASE_URL}/api/semanas/relatorio-mensal?mes=${mes}&ano=${ano}`
       );
-      if (!res.ok) throw new Error("Erro ao buscar relatório.");
+      if (!res.ok) {
+  const erro = await res.json().catch(() => ({}));
+  throw new Error(erro.error || "Erro ao buscar relatório.");
+}
       const json = await res.json();
-      setDados(json[tipo] ?? []);
+      setDados(Array.isArray(json[tipo]) ? json[tipo] : []);
       setAberto(true);
     } catch (e) {
       setErro(e.message);
