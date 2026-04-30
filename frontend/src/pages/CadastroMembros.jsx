@@ -14,6 +14,7 @@ import {
 import { QRCode } from "react-qr-code";
 import "./CadastroMembros.css";
 import Header from "../components/Header";
+import RelatorioMensalAba from "./RelatorioMensalAba";
 
 const ABAS = [
   { id: "criancas", label: "Crianças",      singular: "Criança", Icon: FaChildren    },
@@ -576,7 +577,6 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
               />
 
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
-                {/* Botão: selecionar arquivo */}
                 <button
                   type="button"
                   className="btn-secundario"
@@ -587,7 +587,6 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
                   {form.foto ? "Trocar arquivo" : "Selecionar arquivo"}
                 </button>
 
-                {/* Botão: tirar foto pela câmera */}
                 <button
                   type="button"
                   className="btn-secundario"
@@ -736,6 +735,39 @@ function FormularioComLista({ tipo, membros, onCadastrar, onDeletar, loadingList
             </button>
           </div>
         </div>
+
+        {/* ▼ RELATÓRIO MENSAL — acima da tabela, igual ao Pastor ▼ */}
+        <RelatorioMensalAba
+          tipo={tipo}
+          titulo={abaAtual?.label ?? tipo}
+          colunas={["Nome", "CPF", "Nascimento", "Sexo", "Título Ecl.", "Estado Civil", "Instrução", "Telefone", "Cadastro"]}
+          renderLinha={(m) => [
+            m.nome,
+            ocultarCPF(m.cpf),
+            m.dataNascimento
+              ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
+              : "—",
+            m.sexo                || "—",
+            m.titulo_eclesiastico || m.tituloEclesiastico || "—",
+            m.estado_civil        || m.estadoCivil        || "—",
+            m.grau_instrucao      || m.grauInstrucao      || "—",
+            m.telefone            || "—",
+            m.createdAt ? formatarData(m.createdAt) : m.data || "—",
+          ]}
+          renderLinhaPdf={(m) => [
+            m.nome,
+            ocultarCPF(m.cpf),
+            m.dataNascimento
+              ? new Date(m.dataNascimento + "T00:00:00").toLocaleDateString("pt-BR")
+              : "—",
+            m.sexo                || "—",
+            m.titulo_eclesiastico || m.tituloEclesiastico || "—",
+            m.estado_civil        || m.estadoCivil        || "—",
+            m.grau_instrucao      || m.grauInstrucao      || "—",
+            m.telefone            || "—",
+            m.createdAt ? formatarData(m.createdAt) : m.data || "—",
+          ]}
+        />
 
         {loadingLista ? (
           <div className="empty-state">
