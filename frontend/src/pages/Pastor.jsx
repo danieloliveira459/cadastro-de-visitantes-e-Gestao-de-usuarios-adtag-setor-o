@@ -507,6 +507,27 @@ export default function Pastor() {
 
               <span>Total: {visitantes.length}</span>
 
+              {/* ▼ RELATÓRIO MENSAL — acima da tabela ▼ */}
+              <RelatorioMensalAba
+                tipo="visitantes"
+                titulo="Visitantes"
+                colunas={["Nome", "Telefone", "Igreja", "Aceitou Jesus", "Data Cadastro"]}
+                renderLinha={(v) => [
+                  v.nome,
+                  v.telefone || "—",
+                  v.igreja   || "—",
+                  v.aceitou_jesus == 1
+                    ? <span style={{ color: "#16a34a", fontWeight: 700 }}>✓ Sim</span>
+                    : <span style={{ color: "#9ca3af" }}>Não</span>,
+                  formatarData(v.data),
+                ]}
+                renderLinhaPdf={(v) => [
+                  v.nome, v.telefone || "—", v.igreja || "—",
+                  v.aceitou_jesus == 1 ? "Sim" : "Não",
+                  formatarData(v.data),
+                ]}
+              />
+
               {visitantes.length === 0 ? (
                 <div className="empty">
                   <FaUsers size={40} />
@@ -573,27 +594,6 @@ export default function Pastor() {
                   </tbody>
                 </table>
               )}
-
-              {/* ▼ RELATÓRIO MENSAL ▼ */}
-              <RelatorioMensalAba
-                tipo="visitantes"
-                titulo="Visitantes"
-                colunas={["Nome", "Telefone", "Igreja", "Aceitou Jesus", "Data Cadastro"]}
-                renderLinha={(v) => [
-                  v.nome,
-                  v.telefone || "—",
-                  v.igreja   || "—",
-                  v.aceitou_jesus == 1
-                    ? <span style={{ color: "#16a34a", fontWeight: 700 }}>✓ Sim</span>
-                    : <span style={{ color: "#9ca3af" }}>Não</span>,
-                  formatarData(v.data),
-                ]}
-                renderLinhaPdf={(v) => [
-                  v.nome, v.telefone || "—", v.igreja || "—",
-                  v.aceitou_jesus == 1 ? "Sim" : "Não",
-                  formatarData(v.data),
-                ]}
-              />
             </div>
           </div>
         )}
@@ -629,6 +629,15 @@ export default function Pastor() {
                 <span>Total: {avisos.length}</span>
               </div>
 
+              {/* ▼ RELATÓRIO MENSAL — acima da tabela ▼ */}
+              <RelatorioMensalAba
+                tipo="avisos"
+                titulo="Avisos"
+                colunas={["Título", "Descrição", "Data Cadastro"]}
+                renderLinha={(a) => [a.titulo, a.descricao, formatarData(a.data)]}
+                renderLinhaPdf={(a) => [a.titulo, a.descricao, formatarData(a.data)]}
+              />
+
               <table className="tabela">
                 <thead>
                   <tr>
@@ -651,15 +660,6 @@ export default function Pastor() {
                   ))}
                 </tbody>
               </table>
-
-              {/* ▼ RELATÓRIO MENSAL ▼ */}
-              <RelatorioMensalAba
-                tipo="avisos"
-                titulo="Avisos"
-                colunas={["Título", "Descrição", "Data Cadastro"]}
-                renderLinha={(a) => [a.titulo, a.descricao, formatarData(a.data)]}
-                renderLinhaPdf={(a) => [a.titulo, a.descricao, formatarData(a.data)]}
-              />
             </div>
           </div>
         )}
@@ -724,6 +724,23 @@ export default function Pastor() {
                 </button>
               </h3>
 
+              {/* ▼ RELATÓRIO MENSAL — acima da tabela ▼ */}
+              <RelatorioMensalAba
+                tipo="programacoes"
+                titulo="Programações"
+                colunas={["Dia", "Horário", "Atividade", "Data da Atividade", "Data Cadastro"]}
+                renderLinha={(p) => [
+                  p.dia, p.horario, p.atividade,
+                  p.dataAtividade ? formatarDataAtividade(p.dataAtividade) : "—",
+                  formatarData(p.data),
+                ]}
+                renderLinhaPdf={(p) => [
+                  p.dia, p.horario, p.atividade,
+                  p.dataAtividade ? formatarDataAtividade(p.dataAtividade) : "—",
+                  formatarData(p.data),
+                ]}
+              />
+
               <table className="tabela">
                 <thead>
                   <tr>
@@ -759,23 +776,6 @@ export default function Pastor() {
                   ))}
                 </tbody>
               </table>
-
-              {/* ▼ RELATÓRIO MENSAL ▼ */}
-              <RelatorioMensalAba
-                tipo="programacoes"
-                titulo="Programações"
-                colunas={["Dia", "Horário", "Atividade", "Data da Atividade", "Data Cadastro"]}
-                renderLinha={(p) => [
-                  p.dia, p.horario, p.atividade,
-                  p.dataAtividade ? formatarDataAtividade(p.dataAtividade) : "—",
-                  formatarData(p.data),
-                ]}
-                renderLinhaPdf={(p) => [
-                  p.dia, p.horario, p.atividade,
-                  p.dataAtividade ? formatarDataAtividade(p.dataAtividade) : "—",
-                  formatarData(p.data),
-                ]}
-              />
             </div>
           </div>
         )}
@@ -799,6 +799,21 @@ export default function Pastor() {
                 </button>
                 <span>Total: {aceitaramJesus.length}</span>
               </div>
+
+              {/* ▼ RELATÓRIO MENSAL — acima da tabela ▼ */}
+              <RelatorioMensalAba
+                tipo="aceitaramJesus"
+                titulo="Aceitaram Jesus"
+                colunas={["Nome", "Telefone", "Endereço", "Observações", "Data Cadastro"]}
+                renderLinha={(v) => [
+                  v.nome, v.telefone || "—", v.endereco || "—",
+                  v.observacoes || "—", formatarData(v.data),
+                ]}
+                renderLinhaPdf={(v) => [
+                  v.nome, v.telefone || "—", v.endereco || "—",
+                  v.observacoes || "—", formatarData(v.data),
+                ]}
+              />
 
               <table className="tabela">
                 <thead>
@@ -836,21 +851,6 @@ export default function Pastor() {
                   ))}
                 </tbody>
               </table>
-
-              {/* ▼ RELATÓRIO MENSAL ▼ */}
-              <RelatorioMensalAba
-                tipo="aceitaramJesus"
-                titulo="Aceitaram Jesus"
-                colunas={["Nome", "Telefone", "Endereço", "Observações", "Data Cadastro"]}
-                renderLinha={(v) => [
-                  v.nome, v.telefone || "—", v.endereco || "—",
-                  v.observacoes || "—", formatarData(v.data),
-                ]}
-                renderLinhaPdf={(v) => [
-                  v.nome, v.telefone || "—", v.endereco || "—",
-                  v.observacoes || "—", formatarData(v.data),
-                ]}
-              />
             </div>
           </div>
         )}
